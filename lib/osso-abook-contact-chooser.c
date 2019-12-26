@@ -42,7 +42,7 @@ struct _OssoABookContactChooserPrivate
   GDestroyNotify visible_destroy;
   OssoABookFilterModel *filter_model;
   OssoABookContactModel *contact_model;
-  OssoABookContactView *contact_view;
+  GtkWidget *contact_view;
   GtkWidget *live_search;
   GtkWidget *done_button;
   GtkWidget *alpha_shortcuts;
@@ -907,11 +907,56 @@ osso_abook_contact_chooser_set_property(GObject *object, guint property_id,
 }
 
 static void
+osso_abook_contact_chooser_constructed(GObject *object)
+{
+  OssoABookContactChooser *chooser = OSSO_ABOOK_CONTACT_CHOOSER(object);
+  OssoABookContactChooserPrivate *priv =
+      osso_abook_contact_chooser_get_instance_private(chooser);
+  GtkWidget *align;
+  OssoABookContactModel *model;
+
+  if (!priv->contact_model)
+  {
+    if (priv->contact_order != -1 &&
+        (model = create_custom_model(chooser, priv->contact_order)))
+    {
+      osso_abook_contact_chooser_real_set_model(chooser, model);
+    }
+    else
+    {
+      osso_abook_contact_chooser_real_set_model(
+            chooser, osso_abook_contact_model_get_default());
+    }
+  }
+
+  priv->contact_view = osso_abook_contact_view_new(HILDON_UI_MODE_NORMAL,
+                                                   priv->contact_model,
+                                                   priv->filter_model);
+
+  g_signal_connect(priv->contact_view, "selection-changed",
+                   G_CALLBACK(_selection_changed_cb), chooser);
+  g_signal_connect(priv->contact_view, "notify::maximum-selection",
+                   G_CALLBACK(_maximum_selection_cb), chooser);
+
+  align = gtk_alignment_new(0.0, 0.0, 1.0, 1.0);
+  gtk_alignment_set_padding(GTK_ALIGNMENT(align), 4, 0, 0, 0);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(chooser)->vbox), align, TRUE, TRUE, 0);
+  priv->hbox = gtk_hbox_new(FALSE, 0);
+  gtk_container_add(GTK_CONTAINER(align), priv->hbox);
+  gtk_box_pack_start(GTK_BOX(priv->hbox), priv->contact_view, TRUE, TRUE, 0);
+  gtk_widget_show_all(align);
+  update_widgets(chooser);
+  g_signal_connect(
+        G_OBJECT(gtk_widget_get_screen(GTK_WIDGET(chooser))), "size-changed",
+        G_CALLBACK(_screen_size_changed_cb), chooser);
+}
+
+static void
 osso_abook_contact_chooser_class_init(OssoABookContactChooserClass *klass)
 {
   GObjectClass *object_class  = G_OBJECT_CLASS(klass);
 
-//  object_class->constructed = osso_abook_contact_chooser_constructed;
+  object_class->constructed = osso_abook_contact_chooser_constructed;
   object_class->set_property = osso_abook_contact_chooser_set_property;
   object_class->get_property = osso_abook_contact_chooser_get_property;
   object_class->dispose = osso_abook_contact_chooser_dispose;
