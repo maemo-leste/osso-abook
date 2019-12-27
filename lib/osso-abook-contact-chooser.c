@@ -1,3 +1,10 @@
+#include <gtk/gtkprivate.h>
+
+#include <libintl.h>
+#include <string.h>
+
+#include "config.h"
+
 #include "osso-abook-contact-chooser.h"
 #include "osso-abook-contact-view.h"
 #include "osso-abook-contact-model.h"
@@ -9,11 +16,7 @@
 #include "osso-abook-row-model.h"
 #include "osso-abook-alpha-shortcuts.h"
 #include "osso-abook-init.h"
-
-#include "config.h"
-
-#include <libintl.h>
-#include <string.h>
+#include "osso-abook-log.h"
 
 #define DONE_BUTTON_ID 1
 
@@ -523,7 +526,7 @@ create_custom_model(OssoABookContactChooser *chooser,
 
   if (error)
   {
-    g_warning("%s: %s", __FUNCTION__, error->message);
+    OSSO_ABOOK_WARN("%s", error->message);
     g_clear_error(&error);
   }
 
@@ -626,8 +629,7 @@ _roster_is_ready_cb(OssoABookWaitable *waitable, const GError *error,
 
   if (error)
   {
-    g_warning("%s: Returning early due to error: %s",
-              __FUNCTION__, error->message);
+    OSSO_ABOOK_WARN("Returning early due to error: %s", error->message);
     return;
   }
 
@@ -800,9 +802,9 @@ osso_abook_contact_chooser_real_set_hide_offline_contacts(
 
   if (priv->show_empty_note)
   {
-    g_warning(
-      "%s: Setting property \"hide-offline-contacts\" after \"show-empty-note\" is slow. Please set \"show-empty-note"
-      "\" first, then \"hide-offline-contacts\".", __FUNCTION__);
+    OSSO_ABOOK_WARN("Setting property \"hide-offline-contacts\" after "
+                    "\"show-empty-note\" is slow. Please set \"show-empty-note"
+                    "\" first, then \"hide-offline-contacts\".");
     setup_roster_waitable(chooser);
   }
 }
@@ -970,16 +972,16 @@ osso_abook_contact_chooser_class_init(OssoABookContactChooserClass *klass)
           "The set of permitted contact capabilities",
           OSSO_ABOOK_TYPE_CAPS,
           OSSO_ABOOK_CAPS_ALL,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(
         object_class, PROP_CONTACTS_ORDER,
         g_param_spec_enum(
                  "contact-order",
                  "Contact order",
                  "Sort order for contacts",
-                 OSSO_TYPE_ABOOK_CONTACT_ORDER,
+                 OSSO_ABOOK_TYPE_CONTACT_ORDER,
                  -1,
-                 G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                 GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(
         object_class, PROP_EXCLUDED_CONTACTS,
         g_param_spec_boxed(
@@ -987,27 +989,27 @@ osso_abook_contact_chooser_class_init(OssoABookContactChooserClass *klass)
                  "Excluded Contacts",
                  "UIDs of contacts explicitly excluded from the model",
                  OSSO_ABOOK_TYPE_STRING_LIST,
-                 G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+                 GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(
         object_class, PROP_MINIMUM_SELECTION,
         g_param_spec_uint(
                   "minimum-selection",
                   "Minimum Selection",
                   "The minimum number of rows to be selected",
-                  PROP_CAPABILITIES,
+                  1,
                   G_MAXUINT,
-                  PROP_CAPABILITIES,
-                  G_PARAM_READWRITE));
+                  1,
+                  GTK_PARAM_READWRITE));
   g_object_class_install_property(
         object_class, PROP_MAXIMUM_SELECTION,
         g_param_spec_uint(
                   "maximum-selection",
                   "Maximum Selection",
                   "The maximum number of rows to be selected",
-                  PROP_CAPABILITIES,
+                  1,
                   G_MAXUINT,
-                  PROP_CAPABILITIES,
-                  G_PARAM_READWRITE));
+                  1,
+                  GTK_PARAM_READWRITE));
 
   g_object_class_install_property(
         object_class, PROP_DONE_LABEL,
@@ -1016,7 +1018,7 @@ osso_abook_contact_chooser_class_init(OssoABookContactChooserClass *klass)
                   "Done Label",
                   "The text shown on the Done button when visible",
                   dgettext("hildon-libs", "wdgt_bd_done"),
-                  G_PARAM_READWRITE));
+                  GTK_PARAM_READWRITE));
   g_object_class_install_property(
         object_class, PROP_CONTACT_VIEW,
         g_param_spec_object(
@@ -1024,7 +1026,7 @@ osso_abook_contact_chooser_class_init(OssoABookContactChooserClass *klass)
                   "Contact View",
                   "The tree view listing the contacts",
                   OSSO_ABOOK_TYPE_CONTACT_VIEW,
-                  G_PARAM_READABLE));
+                  GTK_PARAM_READABLE));
   g_object_class_install_property(
         object_class, PROP_MODEL,
         g_param_spec_object(
@@ -1032,7 +1034,7 @@ osso_abook_contact_chooser_class_init(OssoABookContactChooserClass *klass)
                   "Model",
                   "The tree model from which to retrieve contacts",
                   OSSO_ABOOK_TYPE_CONTACT_MODEL,
-                  G_PARAM_READWRITE));
+                  GTK_PARAM_READWRITE));
   g_object_class_install_property(
         object_class, PROP_HIDE_OFFLINE_CONTACTS,
         g_param_spec_boolean(
@@ -1040,7 +1042,7 @@ osso_abook_contact_chooser_class_init(OssoABookContactChooserClass *klass)
                   "Hide offline contacts",
                   "Whether to hide offline contacts in the chooser",
                   FALSE,
-                  G_PARAM_READWRITE));
+                  GTK_PARAM_READWRITE));
   g_object_class_install_property(
         object_class, PROP_SHOW_EMPTY_NOTE,
         g_param_spec_boolean(
@@ -1048,7 +1050,7 @@ osso_abook_contact_chooser_class_init(OssoABookContactChooserClass *klass)
           "Show empty note",
           "Whether to show empty note when no contacts exist",
           FALSE,
-          G_PARAM_READWRITE));
+          GTK_PARAM_READWRITE));
 
   g_object_class_override_property(object_class, PROP_TITLE, "title");
 }
