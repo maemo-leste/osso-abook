@@ -716,3 +716,78 @@ osso_abook_list_store_set_group_sort_func(
   priv->group_sort_data = user_data;
   osso_abook_list_store_idle_sort(store);
 }
+
+OssoABookNameOrder
+osso_abook_list_store_get_name_order(OssoABookListStore *store)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_LIST_STORE (store),
+                       OSSO_ABOOK_NAME_ORDER_FIRST);
+
+  return store->priv->name_order;
+}
+
+void
+osso_abook_list_store_set_name_order(OssoABookListStore *store,
+                                     OssoABookNameOrder order)
+{
+  OssoABookListStorePrivate *priv;
+
+  g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE (store));
+
+  priv = store->priv;
+
+  if (osso_abook_list_store_get_name_order(store) != order)
+  {
+    priv = store->priv;
+    priv->name_order = order;
+    osso_abook_list_store_set_sort_func_by_order(
+          store, osso_abook_list_store_get_contact_order(store),
+          priv->name_order);
+
+    if (priv->roster && !osso_abook_roster_is_running(priv->roster))
+      osso_abook_roster_set_name_order(priv->roster, order);
+
+    g_object_notify(G_OBJECT(store), "name-order");
+  }
+}
+
+gboolean
+osso_abook_list_store_is_loading(OssoABookListStore *store)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_LIST_STORE (store), FALSE);
+
+  return store->priv->roster_is_running;
+}
+
+OssoABookContactOrder
+osso_abook_list_store_get_contact_order(OssoABookListStore *store)
+{
+  OssoABookListStoreCompareFunc sort_func;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_LIST_STORE (store),
+                       OSSO_ABOOK_CONTACT_ORDER_NONE);
+
+  sort_func = store->priv->sort_func;
+
+  if (sort_func == osso_abook_list_store_sort_name)
+    return OSSO_ABOOK_CONTACT_ORDER_NAME;
+  else if (sort_func == osso_abook_list_store_sort_presence)
+    return OSSO_ABOOK_CONTACT_ORDER_PRESENCE;
+  else if (sort_func)
+     return OSSO_ABOOK_CONTACT_ORDER_CUSTOM;
+  else
+    return OSSO_ABOOK_CONTACT_ORDER_NONE;
+}
+
+void
+osso_abook_list_store_set_contact_order(OssoABookListStore *store,
+                                        OssoABookContactOrder order)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE (store));
+
+  if (osso_abook_list_store_get_contact_order(store) != order)
+  {
+    osso_abook_list_store_set_sort_func_by_order(
+          store, order, osso_abook_list_store_get_name_order(store));
+  }
+}
