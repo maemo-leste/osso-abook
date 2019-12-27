@@ -1054,3 +1054,111 @@ osso_abook_contact_chooser_class_init(OssoABookContactChooserClass *klass)
 
   g_object_class_override_property(object_class, PROP_TITLE, "title");
 }
+
+void
+osso_abook_contact_chooser_deselect_all(OssoABookContactChooser *chooser)
+{
+  OssoABookContactChooserPrivate *priv;
+  GtkTreeSelection *selection;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER (chooser));
+
+  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  selection = osso_abook_tree_view_get_tree_selection(
+        OSSO_ABOOK_TREE_VIEW(priv->contact_view));
+  gtk_tree_selection_unselect_all(selection);
+}
+
+OssoABookCapsFlags
+osso_abook_contact_chooser_get_capabilities(OssoABookContactChooser *chooser)
+{
+  OssoABookCapsFlags rv;
+  OssoABookContactChooserPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER (chooser),
+                       OSSO_ABOOK_CAPS_ALL);
+
+  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+
+  g_object_get(priv->filter_model, "capabilities", &rv, NULL);
+
+  return rv;
+}
+
+OssoABookContactOrder
+osso_abook_contact_chooser_get_contact_order(OssoABookContactChooser *chooser)
+{
+  OssoABookContactOrder rv;
+  OssoABookContactChooserPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER (chooser),
+                       OSSO_ABOOK_CONTACT_ORDER_NONE);
+
+  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+
+  g_object_get(priv->contact_model, "contact-order", &rv, NULL);
+
+  return rv;
+}
+
+GList *
+osso_abook_contact_chooser_get_excluded_contacts(OssoABookContactChooser *chooser)
+{
+  OssoABookContactChooserPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER (chooser), NULL);
+
+  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+
+  return priv->excluded_contacts;
+}
+
+const char *
+osso_abook_contact_chooser_get_done_label(OssoABookContactChooser *chooser)
+{
+  OssoABookContactChooserPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER (chooser), NULL);
+
+  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+
+  return gtk_button_get_label(GTK_BUTTON(priv->done_button));
+}
+
+GtkWidget *
+osso_abook_contact_chooser_get_contact_view(OssoABookContactChooser *chooser)
+{
+  OssoABookContactChooserPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER (chooser), NULL);
+
+  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+
+  return priv->contact_view;
+
+}
+
+OssoABookContactModel *
+osso_abook_contact_chooser_get_model(OssoABookContactChooser *chooser)
+{
+  OssoABookContactChooserPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER (chooser), NULL);
+
+  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+
+  return priv->contact_model;
+}
+
+void
+osso_abook_contact_chooser_refilter(OssoABookContactChooser *chooser)
+{
+  OssoABookContactChooserPrivate *priv;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER (chooser));
+
+  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+
+  if (priv->filter_model)
+    gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(priv->filter_model));
+}
