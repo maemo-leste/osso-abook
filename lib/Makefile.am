@@ -73,7 +73,9 @@ osso-abook-marshal.h: osso-abook-marshal.list
 	$< > $@
 
 osso-abook-marshal.c: osso-abook-marshal.list
-	$(AM_V_GEN)$(GLIB_GENMARSHAL) --body --prefix=osso_abook_marshal $< > $@
+	(cd $(srcdir) && echo "#include \"config.h\"" > $@) && \
+	$(AM_V_GEN)$(GLIB_GENMARSHAL) --body --prefix=osso_abook_marshal \
+	$< >> $@
 
 BUILT_SOURCES = \
 	osso-abook-enum-types.h \
