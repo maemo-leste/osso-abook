@@ -21,6 +21,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-debug.c \
 		osso-abook-string-list.c \
 		osso-abook-contact-chooser.c \
+		osso-abook-filter-model.c \
 		osso-abook-row-model.c \
 		osso-abook-list-store.c
 
