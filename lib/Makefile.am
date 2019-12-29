@@ -23,8 +23,8 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-contact-chooser.c \
 		osso-abook-filter-model.c \
 		osso-abook-row-model.c \
-		osso-abook-list-store.c
-
+		osso-abook-list-store.c \
+		osso-abook-waitable.c
 #
 #		osso-abook-contact.c
 
