@@ -7,6 +7,7 @@
 
 #include "osso-abook-filter-model.h"
 #include "osso-abook-row-model.h"
+#include "osso-abook-utils-private.h"
 
 enum
 {
@@ -174,13 +175,6 @@ osso_abook_filter_model_real_set_text(OssoABookFilterModel *model,
                                       const char *text, gboolean prefix);
 
 static void
-disconnect_base_model(OssoABookListStore *base_model, gulong handler)
-{
-  if (g_signal_handler_is_connected(base_model, handler))
-    g_signal_handler_disconnect(base_model, handler);
-}
-
-static void
 remove_group(OssoABookFilterModelPrivate *model)
 {
 
@@ -202,7 +196,8 @@ osso_abook_filter_model_dispose(GObject *object)
 
   if (priv->sort_column_changed_id)
   {
-    disconnect_base_model(priv->base_model, priv->sort_column_changed_id);
+    disconnect_signal_if_connected(priv->base_model,
+                                   priv->sort_column_changed_id);
     priv->sort_column_changed_id = 0;
   }
 

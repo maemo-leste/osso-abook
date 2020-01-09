@@ -26,7 +26,9 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-list-store.c \
 		osso-abook-waitable.c \
 		osso-abook-util.c \
-		osso-abook-contact-view.c
+		osso-abook-contact-view.c \
+		osso-abook-tree-view.c \
+		osso-abook-utils-private.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-settings.h \
