@@ -39,8 +39,8 @@ struct _OssoABookTreeViewPrivate
   GtkCellRenderer *contact_presence;
   GtkCellRenderer *contact_avatar;
   guint sync_view_id;
-  int contact_order_notify_id;
-  int name_order_notify_id;
+  guint contact_order_notify_id;
+  guint name_order_notify_id;
   gulong row_inserted_id;
   gulong row_deleted_id;
   gboolean show_contact_name;
@@ -48,8 +48,8 @@ struct _OssoABookTreeViewPrivate
   gboolean show_contact_presence;
   gboolean show_contact_telephone;
   gboolean use_sim_avatar;
-  int sensitive_caps;
-  int avatar_radius;
+  guint sensitive_caps;
+  gint avatar_radius;
   gboolean avatar_border;
   guint8 border_color[4];
   GHashTable *contact_data;
@@ -1733,4 +1733,45 @@ osso_abook_tree_view_class_init(OssoABookTreeViewClass *klass)
                   "Color of the avatar borders",
                   GDK_TYPE_COLOR,
                   GTK_PARAM_READWRITE));
+}
+
+GtkTreeSelection *
+osso_abook_tree_view_get_tree_selection(OssoABookTreeView *view)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW (view), NULL);
+
+  return gtk_tree_view_get_selection(osso_abook_tree_view_get_tree_view(view));
+}
+
+GtkTreeView *
+osso_abook_tree_view_get_tree_view(OssoABookTreeView *view)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW (view), NULL);
+
+  return GTK_TREE_VIEW(view->priv->tree_view);
+}
+
+void
+osso_abook_tree_view_set_ui_mode(OssoABookTreeView *view, HildonUIMode mode)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_TREE_VIEW (view));
+
+  g_object_set(G_OBJECT(view), "hildon-ui-mode", mode, NULL);
+}
+
+GtkTreeModel *
+osso_abook_tree_view_get_model(OssoABookTreeView *view)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW (view), NULL);
+
+  return gtk_tree_view_get_model(GTK_TREE_VIEW(view->priv->tree_view));
+}
+
+void
+osso_abook_tree_view_set_empty_text(OssoABookTreeView *view, const char *text)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_TREE_VIEW (view));
+  g_return_if_fail(text != NULL);
+
+  g_object_set(G_OBJECT(view), "empty-text", text, NULL);
 }
