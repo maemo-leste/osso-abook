@@ -43,6 +43,9 @@ struct _OssoABookListStorePrivate
 
 typedef struct _OssoABookListStorePrivate OssoABookListStorePrivate;
 
+#define OSSO_ABOOK_LIST_STORE_PRIVATE(store) \
+                osso_abook_list_store_get_instance_private(store)
+
 static gboolean
 osso_abook_list_iter_nth_child(GtkTreeModel *tree_model, GtkTreeIter *iter,
                                GtkTreeIter *parent, gint n)
@@ -456,16 +459,133 @@ osso_abook_list_store_set_property(GObject *object, guint property_id,
 }
 
 static void
+row_notify_cb(OssoABookContact *contact, GParamSpec *arg1,
+              OssoABookListStore *store)
+{
+  osso_abook_list_store_contact_changed(store, contact);
+}
+
+static void
+osso_abook_list_store_row_added(OssoABookListStore *store,
+                                OssoABookListStoreRow *row)
+{
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
+  const char *name;
+  GArray *rows;
+
+  name = e_contact_get_const(E_CONTACT(row->contact), E_CONTACT_UID);
+  rows = g_hash_table_lookup(priv->names, name);
+
+  if (!rows)
+  {
+    rows = g_array_new(TRUE, FALSE, sizeof(row));
+    g_hash_table_insert(priv->names, g_strdup(name), rows);
+  }
+
+  g_array_append_vals(rows, &row, 1);
+  g_signal_connect(row->contact, "notify::avatar-image",
+                   G_CALLBACK(row_notify_cb), store);
+  g_signal_connect(row->contact, "notify::capabilities",
+                   G_CALLBACK(row_notify_cb), store);
+  g_signal_connect(row->contact, "notify::presence-type",
+                   G_CALLBACK(row_notify_cb), store);
+  g_signal_connect(row->contact, "notify::presence-status",
+                   G_CALLBACK(row_notify_cb), store);
+  g_signal_connect(row->contact, "notify::presence-status-message",
+                   G_CALLBACK(row_notify_cb), store);
+}
+
+static void
+osso_abook_list_store_row_removed(OssoABookListStore *store,
+                                  OssoABookListStoreRow *row)
+{
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
+
+  g_signal_handlers_disconnect_matched(
+        row->contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+        row_notify_cb, store);
+  g_hash_table_remove(
+        priv->names,
+        e_contact_get_const(E_CONTACT(row->contact), E_CONTACT_UID));
+  g_boxed_free(OSSO_ABOOK_LIST_STORE_GET_CLASS(store)->row_type, row);
+}
+
+static void
+osso_abook_list_store_real_contact_changed(OssoABookListStore *store,
+                                           OssoABookListStoreRow **changed)
+{
+  GtkTreeModel *tree_model = GTK_TREE_MODEL(store);
+  OssoABookListStoreRow **row;
+  GtkTreePath *path;
+  GtkTreeIter iter;
+
+  for (row = changed; *row; row++)
+  {
+    if (osso_abook_list_store_row_get_iter(store, *row, &iter))
+    {
+      path = gtk_tree_model_get_path(tree_model, &iter);
+      gtk_tree_model_row_changed(tree_model, path, &iter);
+      gtk_tree_path_free(path);
+    }
+  }
+}
+
+static void
+osso_abook_list_store_clear(OssoABookListStore *store)
+{
+  OssoABookListStoreClass *klass = OSSO_ABOOK_LIST_STORE_GET_CLASS(store);
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
+  GtkTreeModel *tree_model = GTK_TREE_MODEL(store);
+  GtkTreePath *path;
+
+  g_return_if_fail(klass->row_removed != NULL);
+
+  for (path = gtk_tree_path_new_from_indices(priv->extra + priv->count, -1);
+       gtk_tree_path_prev(path);
+       gtk_tree_model_row_deleted(tree_model, path))
+  {
+    gint i = *gtk_tree_path_get_indices(path);
+
+    if (i < priv->count)
+    {
+      if (i < priv->balloon_offset)
+      {
+        if (priv->balloon_size)
+        {
+          priv->balloon_offset = G_MAXINT;
+          priv->balloon_size = 0;
+        }
+      }
+      else
+        i += priv->balloon_size;
+
+      priv->count--;
+
+      g_warn_if_fail(priv->rows[i] != NULL);
+
+      if (priv->rows[i])
+        klass->row_removed(store, priv->rows[i]);
+
+      priv->rows[i] = NULL;
+    }
+    else
+      priv->extra--;
+  }
+
+  gtk_tree_path_free(path);
+}
+
+static void
 osso_abook_list_store_class_init(OssoABookListStoreClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS(klass);
-/*
+
   klass->row_added = osso_abook_list_store_row_added;
   klass->row_removed = osso_abook_list_store_row_removed;
   klass->contact_changed = osso_abook_list_store_real_contact_changed;
   klass->clear = osso_abook_list_store_clear;
-  klass->row_type = NULL;
-*/
+  klass->row_type = G_TYPE_INVALID;
+
   object_class->set_property = osso_abook_list_store_set_property;
   object_class->get_property = osso_abook_list_store_get_property;
   object_class->finalize = osso_abook_list_store_finalize;
