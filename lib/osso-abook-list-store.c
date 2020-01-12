@@ -10,6 +10,7 @@
 #include "osso-abook-roster.h"
 #include "osso-abook-row-model.h"
 #include "osso-abook-log.h"
+#include "osso-abook-aggregator.h"
 
 struct _OssoABookListStorePrivate
 {
@@ -910,4 +911,105 @@ osso_abook_list_store_set_contact_order(OssoABookListStore *store,
     osso_abook_list_store_set_sort_func_by_order(
           store, order, osso_abook_list_store_get_name_order(store));
   }
+}
+
+OssoABookRoster *
+osso_abook_list_store_get_roster(OssoABookListStore *store)
+{
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
+
+  return priv->roster;
+}
+
+static gint
+get_offset(OssoABookListStorePrivate *priv, const gint *offset)
+{
+  gint balloon_offset = priv->balloon_offset;
+  gint n = *offset;
+
+  if ( *offset >= balloon_offset )
+    n -= priv->balloon_size;
+
+  return n;
+}
+
+gboolean
+osso_abook_list_store_row_get_iter(OssoABookListStore *store,
+                                   const OssoABookListStoreRow *row,
+                                   GtkTreeIter *iter)
+{
+  if (row == NULL || iter ==NULL)
+    return FALSE;
+
+  return osso_abook_list_iter_nth_child((GtkTreeModel *)store, iter, NULL,
+                                        get_offset(store->priv, &row->offset));
+}
+
+OssoABookListStoreRow *
+osso_abook_list_store_iter_get_row(OssoABookListStore *store, GtkTreeIter *iter)
+{
+  OssoABookListStorePrivate *priv;
+  gint row_index;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_LIST_STORE (store), NULL);
+  g_return_val_if_fail(iter != NULL, NULL);
+  g_return_val_if_fail(iter->user_data == store, NULL);
+
+  priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
+
+  g_return_val_if_fail(iter->stamp == priv->stamp, NULL);
+
+  row_index = GPOINTER_TO_INT(iter->user_data2);
+
+  if (row_index == -1)
+    return iter->user_data3;
+
+  g_return_val_if_fail(row_index >= 0, NULL);
+  g_return_val_if_fail(row_index < priv->count + priv->extra, NULL);
+
+  if (row_index >= priv->count)
+    return NULL;
+
+  if (row_index >= priv->balloon_offset)
+    row_index += priv->balloon_size;
+
+  return priv->rows[row_index];
+}
+
+void
+osso_abook_list_store_set_book_view(OssoABookListStore *store,
+                                    EBookView *book_view)
+{
+  OssoABookRoster *roster = NULL;
+
+  g_return_if_fail(E_IS_BOOK_VIEW(book_view) || book_view == NULL);
+
+  if (E_IS_BOOK_VIEW(book_view))
+    roster = OSSO_ABOOK_ROSTER(osso_abook_aggregator_new_with_view(book_view));
+
+  osso_abook_list_store_set_roster(store, roster);
+
+  if (roster)
+    g_object_unref(roster);
+}
+
+EBookView *
+osso_abook_list_store_get_book_view(OssoABookListStore *store)
+{
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
+
+  return osso_abook_roster_get_book_view(priv->roster);
+}
+
+OssoABookListStoreRow *
+osso_abook_list_store_row_new(OssoABookContact *contact)
+{
+  OssoABookListStoreRow *row;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  row = g_slice_new0(OssoABookListStoreRow);
+  row->contact = g_object_ref(contact);
+
+  return row;
 }
