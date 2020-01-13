@@ -1013,3 +1013,19 @@ osso_abook_list_store_row_new(OssoABookContact *contact)
 
   return row;
 }
+
+OssoABookListStoreRow **
+osso_abook_list_store_find_contacts(OssoABookListStore *store, const char *uid)
+{
+  GArray *array;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_LIST_STORE(store), NULL);
+  g_return_val_if_fail(uid != NULL, NULL);
+
+  array = g_hash_table_lookup(store->priv->names, uid);
+
+  if (array)
+    return (OssoABookListStoreRow **)array->data;
+  else
+    return NULL;
+}
