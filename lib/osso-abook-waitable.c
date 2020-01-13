@@ -41,7 +41,7 @@ osso_abook_waitable_cancel(OssoABookWaitable *waitable,
   g_return_val_if_fail(OSSO_ABOOK_IS_WAITABLE (waitable), FALSE);
   g_return_val_if_fail(closure != NULL, FALSE);
 
-  iface = g_type_interface_peek(waitable, OSSO_ABOOK_TYPE_WAITABLE);
+  iface = OSSO_ABOOK_WAITABLE_GET_IFACE(waitable);
 
   g_return_val_if_fail(iface->pop != NULL, FALSE);
 
@@ -66,7 +66,7 @@ osso_abook_waitable_call_when_ready(OssoABookWaitable *waitable,
   g_return_val_if_fail(OSSO_ABOOK_IS_WAITABLE (waitable), NULL);
   g_return_val_if_fail(callback != NULL, NULL);
 
-  iface = g_type_interface_peek(waitable, OSSO_ABOOK_TYPE_WAITABLE);
+  iface = OSSO_ABOOK_WAITABLE_GET_IFACE(waitable);
 
   g_return_val_if_fail(iface->is_ready != NULL, NULL);
 
