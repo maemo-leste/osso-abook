@@ -14,10 +14,10 @@ G_DEFINE_INTERFACE(
 );
 
 static void
-osso_abook_caps_default_init(OssoABookCapsIface *klass)
+osso_abook_caps_default_init(OssoABookCapsIface *iface)
 {
   g_object_interface_install_property(
-        klass,
+        iface,
         g_param_spec_uint(
                  "capabilities",
                  "Capabilities",

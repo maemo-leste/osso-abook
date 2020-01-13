@@ -34,10 +34,10 @@ G_DEFINE_INTERFACE(
 );
 
 static void
-osso_abook_presence_default_init(OssoABookPresenceIface *klass)
+osso_abook_presence_default_init(OssoABookPresenceIface *iface)
 {
   g_object_interface_install_property(
-        klass,
+        iface,
         g_param_spec_uint(
                  "presence-type",
                  "Presence Type",
@@ -45,7 +45,7 @@ osso_abook_presence_default_init(OssoABookPresenceIface *klass)
                  0, G_MAXUINT, 0,
                  GTK_PARAM_READABLE));
   g_object_interface_install_property(
-        klass,
+        iface,
         g_param_spec_string(
                  "presence-status",
                  "Presence Status",
@@ -53,7 +53,7 @@ osso_abook_presence_default_init(OssoABookPresenceIface *klass)
                  NULL,
                  GTK_PARAM_READABLE));
   g_object_interface_install_property(
-        klass,
+        iface,
         g_param_spec_string(
                  "presence-status-message",
                  "Presence Status Message",
@@ -61,7 +61,7 @@ osso_abook_presence_default_init(OssoABookPresenceIface *klass)
                  NULL,
                  GTK_PARAM_READABLE));
   g_object_interface_install_property(
-        klass,
+        iface,
         g_param_spec_string(
                  "presence-location-string",
                  "Presence Location String",
