@@ -19,6 +19,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-marshal.c \
 		osso-abook-init.c \
 		osso-abook-debug.c \
+		osso-abook-errors.c \
 		osso-abook-string-list.c \
 		osso-abook-contact-chooser.c \
 		osso-abook-filter-model.c \
@@ -34,6 +35,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-settings.c \
 		osso-abook-avatar.c \
 		osso-abook-group.c \
+		osso-abook-all-group.c \
 		osso-abook-utils-private.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
