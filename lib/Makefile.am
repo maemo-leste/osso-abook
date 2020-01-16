@@ -32,6 +32,8 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-presence.c \
 		osso-abook-caps.c \
 		osso-abook-settings.c \
+		osso-abook-avatar.c \
+		osso-abook-group.c \
 		osso-abook-utils-private.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
