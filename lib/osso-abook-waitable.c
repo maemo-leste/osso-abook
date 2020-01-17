@@ -87,3 +87,29 @@ osso_abook_waitable_call_when_ready(OssoABookWaitable *waitable,
 
   return closure;
 }
+
+gboolean
+osso_abook_waitable_is_ready(OssoABookWaitable *waitable, GError **error)
+{
+  OssoABookWaitableIface *iface;
+  const GError *err = NULL;
+  gboolean rv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_WAITABLE (waitable), FALSE);
+
+  iface = OSSO_ABOOK_WAITABLE_GET_IFACE(waitable);
+
+  g_return_val_if_fail(iface->is_ready != NULL, FALSE);
+
+  rv = iface->is_ready(waitable, &err);
+
+  if (error)
+  {
+    g_return_val_if_fail(*error == NULL, rv);
+
+    if (err)
+      *error = g_error_copy(err);
+  }
+
+  return rv;
+}
