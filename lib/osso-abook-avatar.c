@@ -107,3 +107,22 @@ osso_abook_avatar_get_image(OssoABookAvatar *avatar)
 
   return image;
 }
+
+const char *
+osso_abook_avatar_get_fallback_icon_name(OssoABookAvatar *avatar)
+{
+  OssoABookAvatarIface *iface;
+  const char *icon_name = NULL;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR(avatar), NULL);
+
+  iface = OSSO_ABOOK_AVATAR_GET_IFACE(avatar);
+
+  if (iface->get_fallback_icon_name)
+    icon_name = iface->get_fallback_icon_name(avatar);
+
+  if (!icon_name)
+    icon_name = "general_default_avatar";
+
+  return icon_name;
+}
