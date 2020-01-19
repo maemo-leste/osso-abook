@@ -1775,3 +1775,52 @@ osso_abook_tree_view_set_empty_text(OssoABookTreeView *view, const char *text)
 
   g_object_set(G_OBJECT(view), "empty-text", text, NULL);
 }
+
+static void
+notify_group_cb(GObject *gobject, GParamSpec *arg1, OssoABookTreeView *view)
+{
+  sync_view(view);
+}
+
+static void
+notify_text_cb(GObject *gobject, GParamSpec *arg1, OssoABookTreeView *view)
+{
+  OssoABookTreeViewPrivate *priv = OSSO_ABOOK_TREE_VIEW_PRIVATE(view);
+
+  sync_view(view);
+  gtk_widget_queue_draw(priv->tree_view);
+}
+
+void
+osso_abook_tree_view_set_filter_model(OssoABookTreeView *view,
+                                      OssoABookFilterModel *model)
+{
+  OssoABookTreeViewPrivate *priv;
+  gpointer tree_model;
+
+  g_return_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view));
+  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model) || model == NULL);
+
+  priv = OSSO_ABOOK_TREE_VIEW_PRIVATE(view);
+
+  if (model)
+    g_object_ref(model);
+
+  if (priv->filter_model)
+    g_object_unref(priv->filter_model);
+
+  priv->filter_model = model;
+
+  if (model)
+  {
+    g_signal_connect_object(model, "notify::group",
+                            G_CALLBACK(notify_group_cb), view, 0);
+    g_signal_connect_object(model, "notify::text",
+                            G_CALLBACK(notify_text_cb), view, 0);
+    tree_model = model;
+  }
+  else
+    tree_model = priv->base_model;
+
+  osso_abook_tree_view_set_model(view, tree_model);
+}

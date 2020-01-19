@@ -1,6 +1,7 @@
 #include "config.h"
 
 #include "osso-abook-util.h"
+#include "osso-abook-filter-model.h"
 
 gboolean
 osso_abook_screen_is_landscape_mode(GdkScreen *screen)
@@ -52,4 +53,30 @@ osso_abook_pannable_area_new(void)
                    G_CALLBACK(osso_abook_pannable_area_size_request),NULL);
 
   return area;
+}
+
+static gboolean
+_live_search_refilter_cb(HildonLiveSearch *live_search)
+{
+  GtkTreeModelFilter *filter = hildon_live_search_get_filter(live_search);
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(filter), FALSE);
+
+  osso_abook_filter_model_set_prefix(OSSO_ABOOK_FILTER_MODEL(filter),
+                                     hildon_live_search_get_text(live_search));
+
+  return TRUE;
+}
+
+GtkWidget *
+osso_abook_live_search_new_with_filter(OssoABookFilterModel *filter)
+{
+  GtkWidget *live_search = hildon_live_search_new();
+
+  hildon_live_search_set_filter(HILDON_LIVE_SEARCH(live_search),
+                                GTK_TREE_MODEL_FILTER(filter));
+  g_signal_connect(live_search, "refilter",
+                   G_CALLBACK(_live_search_refilter_cb), 0);
+
+  return live_search;
 }
