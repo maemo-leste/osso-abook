@@ -806,3 +806,53 @@ osso_abook_filter_model_is_row_visible(OssoABookFilterModel *model,
   priv = model->priv;
   return visible_func(GTK_TREE_MODEL(priv->base_model), iter, priv);
 }
+
+static void
+refilter_contact_cb(OssoABookGroup *group, OssoABookContact *contact,
+                    OssoABookFilterModelPrivate *priv)
+{
+  osso_abook_list_store_contact_changed(priv->base_model, contact);
+}
+
+static void
+refilter_group_cb(OssoABookGroup *group, OssoABookFilterModel *model)
+{
+  osso_abook_filter_model_refilter(model, model->priv);
+}
+
+void
+osso_abook_filter_model_set_group(OssoABookFilterModel *model,
+                                  OssoABookGroup *group)
+{
+  OssoABookFilterModelPrivate *priv;
+
+  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model));
+  g_return_if_fail(OSSO_ABOOK_IS_GROUP(group) || group == NULL);
+
+  priv = model->priv;
+
+  remove_group(model->priv);
+
+  if (group)
+  {
+
+    priv->group = g_object_ref(group);
+
+    if (priv->base_model)
+    {
+      osso_abook_list_store_set_group_sort_func(
+            priv->base_model, osso_abook_group_get_sort_func(group),
+            g_object_ref(group), g_object_unref);
+    }
+
+    priv->refilter_contact_id =
+        g_signal_connect(priv->group, "refilter-contact",
+                         G_CALLBACK(refilter_contact_cb), priv);
+    priv->refilter_group_id =
+        g_signal_connect(priv->group, "refilter-group",
+                         G_CALLBACK(refilter_group_cb), model);
+  }
+
+  osso_abook_filter_model_refilter(model, priv);
+  g_object_notify(G_OBJECT(model), "group");
+}
