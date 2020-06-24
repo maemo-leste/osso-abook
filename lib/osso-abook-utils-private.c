@@ -1,5 +1,7 @@
 #include "osso-abook-utils-private.h"
 
+#include "config.h"
+
 __attribute__ ((visibility ("hidden"))) void
 disconnect_signal_if_connected(gpointer instance, gulong handler)
 {
@@ -31,4 +33,42 @@ create_avatar_name(int width, int height, gboolean crop, int radius,
   }
 
   return g_string_free(name, FALSE);
+}
+
+__attribute__ ((visibility ("hidden"))) void
+osso_abook_list_push(GList **list, gpointer data)
+{
+  g_return_if_fail(NULL != list);
+  g_return_if_fail(NULL != data);
+
+  *list = g_list_prepend(*list, data);
+}
+
+__attribute__ ((visibility ("hidden"))) gpointer
+osso_abook_list_pop(GList **list, gpointer data)
+{
+  GList *l;
+
+  g_return_val_if_fail(NULL != list, NULL);
+
+  if (data)
+  {
+    l = g_list_find(*list, data);
+
+    if (!l)
+      return data;
+  }
+  else
+  {
+    l = *list;
+
+    if (!l)
+      return data;
+
+    data = l->data;
+  }
+
+  *list = g_list_delete_link(*list, l);
+
+  return data;
 }

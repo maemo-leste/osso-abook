@@ -1,6 +1,14 @@
-#include "config.h"
+#include <gdk/gdk.h>
 
 #include "osso-abook-waitable.h"
+
+#include "config.h"
+
+struct waitable_notify_data
+{
+  gpointer waitable;
+  GError *error;
+};
 
 typedef OssoABookWaitableIface OssoABookWaitableInterface;
 
@@ -10,7 +18,6 @@ struct _OssoABookWaitableClosure
   gpointer user_data;
   GDestroyNotify destroy;
 };
-
 
 G_DEFINE_INTERFACE(
     OssoABookWaitable,
@@ -112,4 +119,65 @@ osso_abook_waitable_is_ready(OssoABookWaitable *waitable, GError **error)
   }
 
   return rv;
+}
+
+static void
+osso_abook_waitable_for_each(OssoABookWaitable *waitable, gboolean call_closure,
+                             const GError *error)
+{
+  OssoABookWaitableIface *iface = OSSO_ABOOK_WAITABLE_GET_IFACE(waitable);
+  OssoABookWaitableClosure *closure;
+
+  g_return_if_fail(iface->pop != NULL);
+
+  while ((closure = iface->pop(waitable, NULL)))
+  {
+    if (call_closure)
+      closure->callback(waitable, error, closure->user_data);
+
+    osso_abook_waitable_destroy_closure(closure);
+  }
+}
+
+void
+osso_abook_waitable_reset(OssoABookWaitable *waitable)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_WAITABLE(waitable));
+
+  osso_abook_waitable_for_each(waitable, FALSE, NULL);
+}
+
+static gboolean
+waitable_notify_cb(gpointer user_data)
+{
+  struct waitable_notify_data *data = user_data;
+
+  osso_abook_waitable_for_each(data->waitable, TRUE, data->error);
+  g_object_unref(data->waitable);
+
+  if (data->error)
+    g_error_free(data->error);
+
+  g_slice_free(struct waitable_notify_data, data);
+
+  return FALSE;
+}
+
+void
+osso_abook_waitable_notify(OssoABookWaitable *waitable, const GError *error)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_WAITABLE (waitable));
+
+  if (osso_abook_waitable_is_ready(waitable, NULL))
+  {
+    struct waitable_notify_data *data =
+        g_slice_new0(struct waitable_notify_data);
+
+    data->waitable = g_object_ref(waitable);
+
+    if (error)
+      data->error = g_error_copy(error);
+
+    gdk_threads_add_idle(waitable_notify_cb, data);
+  }
 }

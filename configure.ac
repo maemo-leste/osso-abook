@@ -53,6 +53,10 @@ PKG_CHECK_MODULES(TPGLIB, telepathy-glib)
 AC_SUBST(TPGLIB_CFLAGS)
 AC_SUBST(TPGLIB_LIBS)
 
+PKG_CHECK_MODULES(RTCOM, rtcom-eventlogger)
+AC_SUBST(RTCOM_CFLAGS)
+AC_SUBST(RTCOM_LIBS)
+
 AC_ARG_ENABLE([maemo-launcher],
               [AS_HELP_STRING([--enable-maemo-launcher],
                               [build with maemo-launcher support])],

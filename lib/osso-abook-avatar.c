@@ -51,7 +51,7 @@ osso_abook_avatar_default_init(OssoABookAvatarIface *iface)
   g_signal_new("load-error",
                G_TYPE_FROM_CLASS(iface), G_SIGNAL_RUN_LAST,
                G_STRUCT_OFFSET(OssoABookAvatarIface, load_error),
-               0,NULL,
+               0, NULL,
                g_cclosure_marshal_VOID__POINTER,
                G_TYPE_NONE,
                1, G_TYPE_POINTER);
