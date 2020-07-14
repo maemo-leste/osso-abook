@@ -43,7 +43,9 @@ struct _OssoABookRosterPrivate
   gchar *vcard_field;
   OssoABookNameOrder name_order;
   GList *closures;
-  int flags;
+  gboolean backend_died : 1;
+  gboolean is_ready : 1;
+  gboolean is_running : 1;
 };
 
 typedef struct _OssoABookRosterPrivate OssoABookRosterPrivate;
@@ -93,9 +95,8 @@ osso_abook_roster_waitable_is_ready(OssoABookWaitable *waitable,
                                     const GError **error)
 {
   OssoABookRoster *roster = OSSO_ABOOK_ROSTER(waitable);
-  OssoABookRosterPrivate *priv = OSSO_ABOOK_ROSTER_PRIVATE(roster);
 
-  return priv->flags & (1 << 2);
+  return OSSO_ABOOK_ROSTER_PRIVATE(roster)->is_ready;
 }
 
 static void
@@ -552,9 +553,9 @@ sequence_complete_cb(EBookView *view, gint status, OssoABookRoster *roster)
 {
   OssoABookRosterPrivate *priv = OSSO_ABOOK_ROSTER_PRIVATE(roster);
 
-  if (!(priv->flags & 4))
+  if (!(priv->is_ready))
   {
-    priv->flags |= 4;
+    priv->is_ready = TRUE;
 
     if (status)
     {
@@ -584,7 +585,7 @@ backend_died_cb(OssoABookRoster *roster)
 {
   OssoABookRosterPrivate *priv = OSSO_ABOOK_ROSTER_PRIVATE(roster);
 
-  priv->flags |= 1;
+  priv->backend_died = TRUE;
   g_object_set(roster, "book-view", NULL);
 }
 
@@ -601,7 +602,7 @@ osso_abook_roster_set_book_view(OssoABookRoster *roster, EBookView *book_view)
   {
     EBook *book = e_book_view_get_book(priv->book_view);
 
-    if (!(priv->flags & 1))
+    if (!(priv->backend_died))
       e_book_view_stop(priv->book_view);
 
     g_signal_handlers_disconnect_matched(priv->book_view, G_SIGNAL_MATCH_DATA,
@@ -641,7 +642,7 @@ osso_abook_roster_set_book_view(OssoABookRoster *roster, EBookView *book_view)
     g_signal_connect_swapped(e_book_view_get_book(priv->book_view),
                              "backend-died", G_CALLBACK(backend_died_cb),
                              roster);
-    if (priv->flags & 2)
+    if (priv->is_running)
       osso_abook_roster_real_start(roster);
   }
 
@@ -729,7 +730,7 @@ osso_abook_roster_is_running(OssoABookRoster *roster)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER (roster), FALSE);
 
-  return OSSO_ABOOK_ROSTER_PRIVATE(roster)->flags & (1 >> 1);
+  return OSSO_ABOOK_ROSTER_PRIVATE(roster)->is_running;
 }
 
 void
@@ -750,9 +751,9 @@ osso_abook_roster_stop(OssoABookRoster *roster)
   priv = OSSO_ABOOK_ROSTER_PRIVATE(roster);
   g_object_freeze_notify(G_OBJECT(roster));
 
-  if (priv->flags & 2)
+  if (priv->is_running)
   {
-    priv->flags &= ~2;
+    priv->is_running = FALSE;
     g_object_notify(G_OBJECT(roster), "running");
   }
 
