@@ -15,7 +15,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_LIBADD = \
 		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS)
 
 libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
-		osso-abook-enum-types.c \
+		osso-abook-enums.c \
 		osso-abook-marshal.c \
 		osso-abook-init.c \
 		osso-abook-debug.c \
@@ -39,12 +39,17 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-avatar-cache.c \
 		eds.c \
 		osso-abook-roster.c \
+		osso-abook-contact.c \
 		osso-abook-utils-private.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
+		osso-abook-aggregator.h \
 		osso-abook-settings.h \
 		osso-abook-caps.h \
-		osso-abook-debug.h
+		osso-abook-debug.h \
+		osso-abook-presence.h \
+		osso-abook-contact.h \
+		osso-abook-errors.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
 		osso-abook-enum-types.h
@@ -53,31 +58,14 @@ libosso_abook_@API_VERSION_MAJOR@_include_HEADERS = \
 		$(libosso_abook_@API_VERSION_MAJOR@_public_headers) \
 		$(libosso_abook_@API_VERSION_MAJOR@_built_public_headers)
 
-osso-abook-enum-types.h: $(libosso_abook_$(API_VERSION_MAJOR)_public_headers) Makefile
-	(cd $(srcdir) && glib-mkenums					\
-	--identifier-prefix OssoABook					\
-	--symbol-prefix OSSO_ABOOK					\
-	--fhead "#ifndef __OSSO_ABOOK_ENUM_TYPES_H_INCLUDED__\n"	\
-	--fhead "#define __OSSO_ABOOK_ENUM_TYPES_H_INCLUDED__\n"	\
-	--fhead "\n" 							\
-	--fhead "#include <glib-object.h>\n"				\
-	--fhead "\n"							\
-	--fhead "G_BEGIN_DECLS\n" 					\
-	--fhead "\n"							\
-	--fprod "/* Enumerations from \"@filename@\" */\n"		\
-	--vhead "GType @enum_name@_get_type (void);\n"			\
-	--vhead "#define @ENUMPREFIX@_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n" \
-	--ftail "\nG_END_DECLS\n\n#endif /* __OSSO_ABOOK_ENUM_TYPES_H_INCLUDED__ */" \
+osso-abook-enums.h: $(libosso_abook_$(API_VERSION_MAJOR)_public_headers) Makefile
+	(cd $(srcdir) && glib-mkenums --identifier-prefix OssoABook \
+	--symbol-prefix OSSO_ABOOK --template osso-abook-enums.h.glib-mkenums \
 	$(libosso_abook_$(API_VERSION_MAJOR)_public_headers)) > $@
 
-osso-abook-enum-types.c: $(libosso_abook_$(API_VERSION_MAJOR)_public_headers) Makefile
-	(cd $(srcdir) && glib-mkenums 				\
-	--fhead "#include \"osso-abook-enum-types.h\"\n"	\
-	--fprod "\n/* enumerations from \"@filename@\" */" 	\
-	--fprod "#include \"@filename@\"\n" 			\
-	--vhead "GType\n@enum_name@_get_type (void)\n{\n  static GType etype = 0;\n  if (etype == 0) {\n    static const G@Type@Value values[] = {" 	\
-	--vprod "      { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
-	--vtail "      { 0, NULL, NULL }\n    };\n    etype = g_@type@_register_static (\"@EnumName@\", values);\n  }\n  return etype;\n}\n" \
+osso-abook-enums.c: $(libosso_abook_$(API_VERSION_MAJOR)_public_headers) Makefile
+	(cd $(srcdir) && glib-mkenums \
+	--template osso-abook-enums.c.glib-mkenums \
 	$(libosso_abook_$(API_VERSION_MAJOR)_public_headers)) > $@
 
 osso-abook-marshal.h: osso-abook-marshal.list
@@ -90,8 +78,8 @@ osso-abook-marshal.c: osso-abook-marshal.list
 	$< >> $@
 
 BUILT_SOURCES = \
-	osso-abook-enum-types.h \
-	osso-abook-enum-types.c \
+	osso-abook-enums.h \
+	osso-abook-enums.c \
 	osso-abook-marshal.h \
 	osso-abook-marshal.c
 

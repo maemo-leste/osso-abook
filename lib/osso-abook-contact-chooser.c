@@ -9,7 +9,7 @@
 #include "osso-abook-contact-view.h"
 #include "osso-abook-contact-model.h"
 #include "osso-abook-string-list.h"
-#include "osso-abook-enum-types.h"
+#include "osso-abook-enums.h"
 #include "osso-abook-waitable.h"
 #include "osso-abook-util.h"
 #include "osso-abook-aggregator.h"

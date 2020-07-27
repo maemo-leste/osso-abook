@@ -6,7 +6,7 @@
 
 #include "osso-abook-list-store.h"
 #include "osso-abook-contact.h"
-#include "osso-abook-enum-types.h"
+#include "osso-abook-enums.h"
 #include "osso-abook-roster.h"
 #include "osso-abook-row-model.h"
 #include "osso-abook-log.h"

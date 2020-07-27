@@ -12,7 +12,7 @@
 #include "osso-abook-avatar-cache.h"
 #include "osso-abook-util.h"
 #include "osso-abook-roster.h"
-#include "osso-abook-enum-types.h"
+#include "osso-abook-enums.h"
 #include "osso-abook-waitable.h"
 
 //#define MC_ACCOUNT

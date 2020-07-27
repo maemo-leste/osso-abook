@@ -3,7 +3,7 @@
 #include "osso-abook-roster.h"
 #include "osso-abook-waitable.h"
 #include "osso-abook-utils-private.h"
-#include "osso-abook-enum-types.h"
+#include "osso-abook-enums.h"
 #include "osso-abook-debug.h"
 #include "eds.h"
 
