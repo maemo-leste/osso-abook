@@ -17,6 +17,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_LIBADD = \
 libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-enums.c \
 		osso-abook-marshal.c \
+		tp-glib-enums.c \
 		osso-abook-init.c \
 		osso-abook-debug.c \
 		osso-abook-errors.c \
@@ -58,15 +59,16 @@ libosso_abook_@API_VERSION_MAJOR@_include_HEADERS = \
 		$(libosso_abook_@API_VERSION_MAJOR@_public_headers) \
 		$(libosso_abook_@API_VERSION_MAJOR@_built_public_headers)
 
-osso-abook-enums.h: $(libosso_abook_$(API_VERSION_MAJOR)_public_headers) Makefile
+osso-abook-enums.h: $(libosso_abook_$(API_VERSION_MAJOR)_public_headers)
 	(cd $(srcdir) && glib-mkenums --identifier-prefix OssoABook \
-	--symbol-prefix OSSO_ABOOK --template osso-abook-enums.h.glib-mkenums \
-	$(libosso_abook_$(API_VERSION_MAJOR)_public_headers)) > $@
+	--symbol-prefix OSSO_ABOOK --template osso-abook-enums.h.in \
+	--output $@ \
+	$(libosso_abook_$(API_VERSION_MAJOR)_public_headers))
 
-osso-abook-enums.c: $(libosso_abook_$(API_VERSION_MAJOR)_public_headers) Makefile
-	(cd $(srcdir) && glib-mkenums \
-	--template osso-abook-enums.c.glib-mkenums \
-	$(libosso_abook_$(API_VERSION_MAJOR)_public_headers)) > $@
+osso-abook-enums.c: $(libosso_abook_$(API_VERSION_MAJOR)_public_headers)
+	(cd $(srcdir) && glib-mkenums --output $@ \
+	--template osso-abook-enums.c.in \
+	$(libosso_abook_$(API_VERSION_MAJOR)_public_headers))
 
 osso-abook-marshal.h: osso-abook-marshal.list
 	$(AM_V_GEN)$(GLIB_GENMARSHAL) --header --prefix=osso_abook_marshal \
@@ -77,11 +79,27 @@ osso-abook-marshal.c: osso-abook-marshal.list
 	$(AM_V_GEN)$(GLIB_GENMARSHAL) --body --prefix=osso_abook_marshal \
 	$< >> $@
 
+tp-glib-enums.tmp.h:
+	(cd $(srcdir) && (echo | \
+	gcc -E -P -include telepathy-glib/_gen/telepathy-enums.h \
+	$(TPGLIB_CFLAGS) -o $@ -))
+
+tp-glib-enums.h: tp-glib-enums.tmp.h
+	(cd $(srcdir) && glib-mkenums --identifier-prefix Tp \
+	--symbol-prefix TP --template tp-glib-enums.h.in --output $@ $<)
+
+tp-glib-enums.c: tp-glib-enums.tmp.h
+	(cd $(srcdir) && glib-mkenums --identifier-prefix Tp \
+	--symbol-prefix TP --template tp-glib-enums.c.in --output $@ $<)
+
 BUILT_SOURCES = \
 	osso-abook-enums.h \
 	osso-abook-enums.c \
 	osso-abook-marshal.h \
-	osso-abook-marshal.c
+	osso-abook-marshal.c \
+	tp-glib-enums.tmp.h \
+	tp-glib-enums.h \
+	tp-glib-enums.c
 
 CLEANFILES = $(BUILT_SOURCES)
 
