@@ -6,6 +6,7 @@
 #include "osso-abook-enums.h"
 
 #include "config.h"
+#include "osso-abook-util.h"
 
 /* FIXME */
 #define OSSO_ABOOK_NAME_ORDER_COUNT 4
@@ -369,4 +370,152 @@ osso_abook_contact_get_blocked(OssoABookContact *contact)
 
   return osso_abook_presence_get_blocked(OSSO_ABOOK_PRESENCE(contact)) ==
       OSSO_ABOOK_PRESENCE_STATE_YES;
+}
+
+OssoABookContact *
+osso_abook_contact_new_from_template(EContact *templ)
+{
+  OssoABookContact *contact;
+  char *vcard;
+
+  g_return_val_if_fail(E_IS_CONTACT (templ), NULL);
+
+  vcard = e_vcard_to_string(E_VCARD(templ), EVC_FORMAT_VCARD_30);
+  contact = osso_abook_contact_new_from_vcard(
+        e_contact_get_const(templ, E_CONTACT_UID), vcard);
+  g_free(vcard);
+
+  return contact;
+}
+
+GList *
+osso_abook_contact_get_values(EContact *contact, const char *attr_name)
+{
+  EVCardAttribute *attr;
+
+  g_return_val_if_fail(E_IS_CONTACT(contact), NULL);
+  g_return_val_if_fail(NULL != attr_name, NULL);
+
+  attr = e_vcard_get_attribute(E_VCARD(contact), attr_name);
+
+  if (attr)
+    return e_vcard_attribute_get_values(attr);
+
+  return NULL;
+}
+
+void
+osso_abook_contact_set_value(EContact *contact, const char *attr_name,
+                             const char *value)
+{
+  EVCard *evc;
+  EVCardAttribute *attr;
+
+  g_return_if_fail(E_IS_CONTACT(contact));
+  g_return_if_fail(NULL != attr_name);
+
+  evc = E_VCARD(contact);
+  attr = e_vcard_get_attribute(evc, attr_name);
+
+  if (attr)
+  {
+    if (value)
+    {
+      e_vcard_attribute_remove_values(attr);
+      e_vcard_attribute_add_value(attr, value);
+    }
+    else
+      e_vcard_remove_attribute(evc, attr);
+  }
+  else if (value)
+  {
+    e_vcard_add_attribute_with_value(evc,
+                                     e_vcard_attribute_new(NULL, attr_name),
+                                     value);
+  }
+
+  if (OSSO_ABOOK_IS_CONTACT(contact))
+  {
+    osso_abook_contact_update_attributes(OSSO_ABOOK_CONTACT(contact),
+                                         attr_name);
+
+  }
+}
+
+gboolean
+osso_abook_contact_has_invalid_username(OssoABookContact *contact)
+{
+  const char *vcf;
+  EVCardAttribute *attr;
+  GList *l;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), TRUE);
+  g_return_val_if_fail(osso_abook_contact_is_roster_contact(contact), TRUE);
+
+  vcf = osso_abook_contact_get_vcard_field(contact);
+
+  if (!vcf)
+    return TRUE;
+
+  attr = e_vcard_get_attribute(E_VCARD(contact), vcf);
+
+  if (!attr)
+    return TRUE;
+
+  for (l = e_vcard_attribute_get_param(attr, "X-OSSO-VALID"); l; l = l->next)
+  {
+    if (!g_ascii_strcasecmp(l->data, "no"))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+const char *
+osso_abook_contact_get_vcard_field(OssoABookContact *contact)
+{
+  OssoABookRoster *roster;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  roster = OSSO_ABOOK_CONTACT_PRIVATE(contact)->roster;
+
+  if (roster)
+    return osso_abook_roster_get_vcard_field(roster);
+
+  return NULL;
+}
+
+const char *
+osso_abook_contact_get_name(OssoABookContact *contact)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  return osso_abook_contact_get_name_with_order(
+        contact, osso_abook_settings_get_name_order());
+}
+
+const char *
+osso_abook_contact_get_name_with_order(OssoABookContact *contact,
+                                       OssoABookNameOrder order)
+{
+  OssoABookContactPrivate *priv;
+  char *secondary;
+  char *primary;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+  g_return_val_if_fail(order < OSSO_ABOOK_NAME_ORDER_COUNT, NULL);
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  if (!priv->name[order])
+  {
+    osso_abook_contact_get_name_components(E_CONTACT(contact), order, FALSE,
+                                           &primary, &secondary);
+    priv->name[order] = osso_abook_concat_names(order, primary, secondary);
+    g_free(secondary);
+    g_free(primary);
+  }
+
+  return priv->name[order];
 }

@@ -80,3 +80,23 @@ osso_abook_live_search_new_with_filter(OssoABookFilterModel *filter)
 
   return live_search;
 }
+
+char *
+osso_abook_concat_names(OssoABookNameOrder order, const gchar *primary,
+                        const gchar *secondary)
+{
+  const char *sep;
+
+  if (!primary || !*primary)
+    return g_strdup(secondary);
+
+  if (!secondary || !*secondary)
+    return g_strdup(primary);
+
+  if (order == OSSO_ABOOK_NAME_ORDER_LAST)
+    sep = ", ";
+  else
+    sep = " ";
+
+  return g_strchomp(g_strchug(g_strconcat(primary, sep, secondary, NULL)));
+}

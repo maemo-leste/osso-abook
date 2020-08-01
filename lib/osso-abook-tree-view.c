@@ -1824,3 +1824,63 @@ osso_abook_tree_view_set_filter_model(OssoABookTreeView *view,
 
   osso_abook_tree_view_set_model(view, tree_model);
 }
+
+static void
+on_roster_ready(OssoABookWaitable *waitable, const GError *error, gpointer data)
+{
+  OssoABookTreeView *view = data;
+  OssoABookTreeViewPrivate *priv = view->priv;
+
+  priv->closure = NULL;
+
+  g_return_if_fail(
+        waitable == (OssoABookWaitable *)osso_abook_list_store_get_roster(
+          priv->base_model));
+
+  sync_view(view);
+}
+
+void
+osso_abook_tree_view_set_base_model(OssoABookTreeView *view,
+                                    OssoABookListStore *model)
+{
+  OssoABookTreeViewPrivate *priv;
+
+  g_return_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view));
+  g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE(model));
+
+  priv = view->priv;
+
+  if (priv->base_model == model)
+    return;
+
+  if (priv->waitable && priv->closure)
+  {
+    osso_abook_waitable_cancel(OSSO_ABOOK_WAITABLE(priv->waitable),
+                               priv->closure);
+  }
+
+  priv->closure = NULL;
+  g_object_ref(model);
+
+  if (priv->base_model)
+    g_object_unref(priv->base_model);
+
+  priv->base_model = model;
+  osso_abook_tree_view_set_model(view, (GtkTreeModel *)model);
+
+  if (!priv->base_model)
+    return;
+
+  if (priv->waitable)
+    g_object_remove_weak_pointer(G_OBJECT(priv->waitable), &priv->waitable);
+
+  priv->waitable = osso_abook_list_store_get_roster(priv->base_model);
+
+  if (priv->waitable)
+  {
+    g_object_add_weak_pointer(priv->waitable, &priv->waitable);
+    priv->closure = osso_abook_waitable_call_when_ready(
+          OSSO_ABOOK_WAITABLE(priv->waitable), on_roster_ready, view, NULL);
+  }
+}
