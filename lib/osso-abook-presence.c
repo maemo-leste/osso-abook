@@ -172,8 +172,8 @@ osso_abook_presence_get_location_string(OssoABookPresence *presence)
   return iface->get_location_string(presence);
 }
 
-static void
-presence_hash_atexit()
+__attribute__((destructor)) static void
+icon_names_hash_destroy()
 {
   if (icon_names)
   {
@@ -190,7 +190,6 @@ create_icon_names_hash()
     icon_names = g_hash_table_new_full(g_str_hash, g_str_equal,
                                        (GDestroyNotify)&g_free,
                                        (GDestroyNotify)&g_free);
-    atexit(presence_hash_atexit);
   }
 }
 

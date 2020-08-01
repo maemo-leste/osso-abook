@@ -19,8 +19,7 @@ _osso_abook_book_view_set_freezable(EBookView *view, gboolean freezable)
   {
     if (freezable)
     {
-      OSSO_ABOOK_NOTE(OSSO_ABOOK_DEBUG_EDS,
-                      "activating freeze/thaw support on %s",
+      OSSO_ABOOK_NOTE(EDS, "activating freeze/thaw support on %s",
                       e_book_get_uri(book));
 
       g_signal_connect_after(view, "contacts-added",
@@ -33,8 +32,7 @@ _osso_abook_book_view_set_freezable(EBookView *view, gboolean freezable)
     }
     else
     {
-      OSSO_ABOOK_NOTE(OSSO_ABOOK_DEBUG_EDS,
-                      "deactivating freeze/thaw support on %s",
+      OSSO_ABOOK_NOTE(EDS, "deactivating freeze/thaw support on %s",
                       e_book_get_uri(book));
       g_signal_handlers_disconnect_matched(
             view,

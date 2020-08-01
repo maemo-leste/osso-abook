@@ -298,7 +298,7 @@ osso_abook_roster_real_start(OssoABookRoster *roster)
   if (!priv->book_view)
     return;
 
-  OSSO_ABOOK_NOTE(OSSO_ABOOK_DEBUG_EDS, "starting book view for %s (view=%p)\n",
+  OSSO_ABOOK_NOTE(EDS, "starting book view for %s (view=%p)\n",
                   osso_abook_roster_get_book_uri(roster), priv->book_view);
 #if 0
   switch (priv->name_order)
@@ -496,7 +496,7 @@ contacts_added_cb(EBookView *view, GList *vcards, OssoABookRoster *roster)
     OssoABookContact *contact = osso_abook_contact_new_from_vcard(
           e_contact_get_const(l->data, E_CONTACT_UID), vcard);
 
-    OSSO_ABOOK_DUMP_VCARD_STRING(OSSO_ABOOK_DEBUG_EDS, "adding", vcard);
+    OSSO_ABOOK_DUMP_VCARD_STRING(EDS, "adding", vcard);
     g_free(vcard);
 
     if (contact)

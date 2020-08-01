@@ -54,7 +54,7 @@ osso_abook_contact_model_is_default(OssoABookContactModel *model)
   return model == osso_abook_contact_model_default;
 }
 
-static void
+__attribute__((destructor)) static void
 osso_abook_contact_model_at_exit(void)
 {
   if (osso_abook_contact_model_default)
@@ -74,7 +74,6 @@ osso_abook_contact_model_get_default()
     GError *error = NULL;
 
     osso_abook_contact_model_default = osso_abook_contact_model_new();
-    atexit(osso_abook_contact_model_at_exit);
     aggr = osso_abook_aggregator_get_default(&error);
 
     if (error)

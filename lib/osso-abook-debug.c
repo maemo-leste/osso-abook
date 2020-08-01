@@ -33,6 +33,12 @@ static GTimer *_osso_debug_timer = NULL;
 static GQuark _osso_debug_timer_name;
 static GQuark _osso_debug_timer_domain;
 
+double
+_osso_abook_debug_timestamp()
+{
+  return g_timer_elapsed(_osso_debug_timer, NULL);
+}
+
 void
 osso_abook_debug_init(void)
 {
@@ -61,4 +67,32 @@ osso_abook_debug_init(void)
 
     g_free(debug_string);
   }
+}
+
+void
+_osso_abook_log(const char *domain, const char *strloc, const char *strfunc,
+               const char *strtype, int type, const char *format, ...)
+{
+  gchar *msg;
+  const char *debug_type;
+  gchar *log_domain;
+  double ts;
+  va_list va;
+
+  va_start(va, format);
+  msg = g_strdup_vprintf(format, va);
+
+  if (type == OSSO_ABOOK_DEBUG_ALL)
+    debug_type = NULL;
+  else
+    debug_type = strtype;
+
+  log_domain = g_strconcat(domain, debug_type, NULL);
+
+  ts = _osso_abook_debug_timestamp();
+
+  g_log(log_domain, G_LOG_LEVEL_DEBUG, "%.3f s:\n---- %s(%s):\n---- %s",
+        ts, strfunc, strloc, msg);
+  g_free(log_domain);
+  g_free(msg);
 }

@@ -451,7 +451,7 @@ sync_tree(OssoABookTreeView *view)
 static void
 show_tree_view(OssoABookTreeViewPrivate *priv)
 {
-  OSSO_ABOOK_NOTE(OSSO_ABOOK_DEBUG_GTK, "showing tree-view");
+  OSSO_ABOOK_NOTE(GTK, "showing tree-view");
   gtk_widget_hide(priv->event_box);
   gtk_widget_show(priv->pannable_area);
 }
@@ -496,7 +496,7 @@ show_empty_widget(OssoABookTreeViewPrivate *priv)
     gtk_container_add(GTK_CONTAINER(empty_widget), empty_label);
   }
 
-  OSSO_ABOOK_NOTE(OSSO_ABOOK_DEBUG_GTK, "showing empty widget %s",
+  OSSO_ABOOK_NOTE(GTK, "showing empty widget %s",
                   GTK_IS_LABEL(empty_widget) ?
                     gtk_label_get_text(GTK_LABEL(empty_widget)) :
                     g_type_name(G_TYPE_FROM_INSTANCE(empty_widget)));
@@ -514,7 +514,7 @@ sync_view_idle(gpointer user_data)
   GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(priv->tree_view));
   GtkTreeIter iter;
 
-  OSSO_ABOOK_NOTE(OSSO_ABOOK_DEBUG_GTK, "%s: %d child(ren)",
+  OSSO_ABOOK_NOTE(GTK, "%s: %d child(ren)",
                   g_type_name(G_TYPE_FROM_INSTANCE(model)),
                   gtk_tree_model_iter_n_children(model, NULL));
 

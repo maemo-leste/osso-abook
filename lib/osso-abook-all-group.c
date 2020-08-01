@@ -208,20 +208,21 @@ osso_abook_all_group_class_init(OssoABookAllGroupClass *klass)
                  GTK_PARAM_READWRITE));
 }
 
-static void
+__attribute__((destructor)) static void
 osso_abook_all_group_at_exit()
 {
-  g_object_unref(all_group_singleton);
+  if (all_group_singleton)
+  {
+    g_object_unref(all_group_singleton);
+    all_group_singleton = NULL;
+  }
 }
 
 OssoABookGroup *
 osso_abook_all_group_get(void)
 {
   if (!all_group_singleton)
-  {
     all_group_singleton = g_object_new(OSSO_ABOOK_TYPE_ALL_GROUP, NULL);
-    atexit(osso_abook_all_group_at_exit);
-  }
 
   return all_group_singleton;
 }

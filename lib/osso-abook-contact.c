@@ -519,3 +519,11 @@ osso_abook_contact_get_name_with_order(OssoABookContact *contact,
 
   return priv->name[order];
 }
+
+OssoABookRoster *
+osso_abook_contact_get_roster(OssoABookContact *contact)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  return OSSO_ABOOK_CONTACT_PRIVATE(contact)->roster;
+}
