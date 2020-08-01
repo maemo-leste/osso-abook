@@ -6,6 +6,7 @@
 #include "osso-abook-enums.h"
 #include "osso-abook-debug.h"
 #include "eds.h"
+#include "osso-abook-account-manager.h"
 
 #include "config.h"
 
@@ -746,6 +747,7 @@ void
 osso_abook_roster_stop(OssoABookRoster *roster)
 {
   OssoABookRosterPrivate *priv;
+
   g_return_if_fail(OSSO_ABOOK_IS_ROSTER(roster));
 
   priv = OSSO_ABOOK_ROSTER_PRIVATE(roster);
@@ -759,4 +761,41 @@ osso_abook_roster_stop(OssoABookRoster *roster)
 
   OSSO_ABOOK_ROSTER_GET_CLASS(roster)->stop(roster);
   g_object_thaw_notify(G_OBJECT(roster));
+}
+
+void
+osso_abook_roster_start(OssoABookRoster *roster)
+{
+  OssoABookRosterPrivate *priv;
+
+  g_return_if_fail(OSSO_ABOOK_IS_ROSTER(roster));
+
+  priv = OSSO_ABOOK_ROSTER_PRIVATE(roster);
+
+  g_object_freeze_notify(G_OBJECT(roster));
+  OSSO_ABOOK_ROSTER_GET_CLASS(roster)->start(roster);
+
+  if (!priv->is_running)
+  {
+    priv->is_running = TRUE;
+    g_object_notify(G_OBJECT(roster), "running");
+  }
+
+  g_object_thaw_notify(G_OBJECT(roster));
+}
+
+TpAccount *
+osso_abook_roster_get_account(OssoABookRoster *roster)
+{
+  TpAccount *account = NULL;
+  gchar *name;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER(roster), NULL);
+
+  name = OSSO_ABOOK_ROSTER_PRIVATE(roster)->name;
+
+  if (name)
+    account = osso_abook_account_manager_lookup_by_name(NULL, name);
+
+  return account;
 }

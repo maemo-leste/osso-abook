@@ -18,7 +18,7 @@ struct _OssoABookContactPrivate
   gchar *name[OSSO_ABOOK_NAME_ORDER_COUNT];
   const char **collate_keys[OSSO_ABOOK_NAME_ORDER_COUNT];
   OssoABookRoster *roster;
-  GHashTable *field_24;
+  GHashTable *contacts;
   int field_28;
   int field_2C;
   int field_30;
@@ -57,6 +57,12 @@ enum
   CONTACT_ATTACHED,
   CONTACT_DETACHED,
   LAST_SIGNAL,
+};
+
+struct roster_contact
+{
+  gpointer uid;
+  gpointer contact;
 };
 
 static guint signals[LAST_SIGNAL];
@@ -564,4 +570,54 @@ osso_abook_contact_get_collate_keys(OssoABookContact *contact,
   }
 
   return collate_key;
+}
+
+gboolean
+osso_abook_is_temporary_uid(const char *uid)
+{
+  if (!uid)
+    return FALSE;
+
+  return g_str_has_prefix(uid, "osso-abook-tmc");
+}
+
+GList *
+osso_abook_contact_get_roster_contacts(OssoABookContact *master_contact)
+{
+  OssoABookContactPrivate *priv;
+  GList *contacts = NULL;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(master_contact), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(master_contact);
+
+  if (priv->contacts)
+  {
+    GHashTableIter iter;
+    struct roster_contact *c;
+
+    g_hash_table_iter_init(&iter, priv->contacts);
+
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&c))
+      contacts = g_list_prepend(contacts, c->contact);
+  }
+
+  return contacts;
+}
+
+gboolean
+osso_abook_contact_is_roster_contact(OssoABookContact *contact)
+{
+
+  OssoABookRoster *roster;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
+
+  roster = OSSO_ABOOK_CONTACT_PRIVATE(contact)->roster;
+
+  if (roster)
+    return osso_abook_roster_get_account(roster) != NULL;
+
+
+  return FALSE;
 }
