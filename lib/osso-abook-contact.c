@@ -4,8 +4,10 @@
 #include "osso-abook-contact.h"
 #include "osso-abook-presence.h"
 #include "osso-abook-enums.h"
+#include "osso-abook-roster.h"
 
 #include "config.h"
+
 #include "osso-abook-util.h"
 
 /* FIXME */
@@ -13,11 +15,8 @@
 
 struct _OssoABookContactPrivate
 {
-  const char *name[4];
-  gchar **field_10;
-  int field_14;
-  int field_18;
-  int field_1C;
+  gchar *name[OSSO_ABOOK_NAME_ORDER_COUNT];
+  const char **collate_keys[OSSO_ABOOK_NAME_ORDER_COUNT];
   OssoABookRoster *roster;
   GHashTable *field_24;
   int field_28;
@@ -25,10 +24,10 @@ struct _OssoABookContactPrivate
   int field_30;
   int field_34;
   int field_38;
-  int presence_type;
-  int presence_status;
+  TpConnectionPresenceType presence_type;
+  gchar *presence_status;
   gchar *presence_status_message;
-  int location;
+  gchar *presence_location_string;
   int field_4C;
   int flags;
 };
@@ -526,4 +525,43 @@ osso_abook_contact_get_roster(OssoABookContact *contact)
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
 
   return OSSO_ABOOK_CONTACT_PRIVATE(contact)->roster;
+}
+
+const char **
+osso_abook_contact_get_collate_keys(OssoABookContact *contact,
+                                    OssoABookNameOrder order)
+{
+  static const char *no_collate_keys[] = {NULL};
+  OssoABookContactPrivate *priv;
+  gchar *secondary_out;
+  gchar *primary_out;
+  const char **collate_key;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), no_collate_keys);
+  g_return_val_if_fail(order < OSSO_ABOOK_NAME_ORDER_COUNT, no_collate_keys);
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  if (priv->collate_keys[order])
+    return priv->collate_keys[order];
+
+
+  osso_abook_contact_get_name_components(E_CONTACT(contact), order, FALSE,
+                                         &primary_out, &secondary_out);
+  collate_key = g_new0(const char *, 3);
+  priv->collate_keys[order] = collate_key;
+
+  if (primary_out)
+  {
+    collate_key[0] = g_utf8_collate_key(primary_out, -1);
+    g_free(primary_out);
+  }
+
+  if (secondary_out)
+  {
+    collate_key[1] = g_utf8_collate_key(secondary_out, -1);
+    g_free(secondary_out);
+  }
+
+  return collate_key;
 }
