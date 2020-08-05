@@ -1,6 +1,8 @@
 #include <glib.h>
 #include <telepathy-glib/enums.h>
 
+#include <string.h>
+
 #include "osso-abook-contact.h"
 #include "osso-abook-presence.h"
 #include "osso-abook-enums.h"
@@ -620,4 +622,23 @@ osso_abook_contact_is_roster_contact(OssoABookContact *contact)
 
 
   return FALSE;
+}
+
+int
+osso_abook_contact_uid_compare(OssoABookContact *a, OssoABookContact *b)
+{
+  const char *uid_a = e_contact_get_const(E_CONTACT(a), E_CONTACT_UID);
+  const char *uid_b = e_contact_get_const(E_CONTACT(b), E_CONTACT_UID);
+
+  if (uid_a)
+  {
+    if (uid_b)
+      return strverscmp(uid_a, uid_b);
+    else
+      return 1;
+  }
+  else if (uid_b)
+    return -1;
+
+  return 0;
 }

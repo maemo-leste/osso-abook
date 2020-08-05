@@ -4,7 +4,7 @@ libosso_abook_@API_VERSION_MAJOR@_includedir = \
 		$(includedir)/$(PACKAGE)-$(API_VERSION_MAJOR)/$(PACKAGE)
 
 libosso_abook_@API_VERSION_MAJOR@_la_CFLAGS = \
-		$(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
+		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
 		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
 		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
 		-DOSSOLOG_COMPILE=1 -Wno-format-extra-args $(DGETTEXT)

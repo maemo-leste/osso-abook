@@ -1029,3 +1029,285 @@ osso_abook_list_store_find_contacts(OssoABookListStore *store, const char *uid)
   else
     return NULL;
 }
+
+static inline const char *
+get_store_book_uri(OssoABookListStore *store)
+{
+  return osso_abook_list_store_get_roster(store) ?
+        osso_abook_roster_get_book_uri(
+                      osso_abook_list_store_get_roster(store)) : "<none>";
+}
+
+static void
+contacts_added_cb(OssoABookRoster *roster, gpointer contacts,
+                  OssoABookListStore *user_data)
+{
+  OssoABookListStoreClass *klass = OSSO_ABOOK_LIST_STORE_GET_CLASS(user_data);
+
+  OSSO_ABOOK_NOTE(LIST_STORE, "%s@%p: contacts added",
+                  get_store_book_uri(user_data), user_data);
+
+  g_return_if_fail(NULL != klass->contacts_added);
+
+  klass->contacts_added(user_data, contacts);
+}
+
+static void
+contacts_changed_master_cb(OssoABookRoster *roster, gpointer contacts,
+                           gpointer user_data)
+{
+  OssoABookContact **c = contacts;
+
+  while (*c)
+  {
+    osso_abook_list_store_contact_changed(user_data, *c);
+    c++;
+  }
+}
+
+static void
+contacts_removed_cb(OssoABookRoster *roster, const char **uids,
+                    gpointer user_data)
+{
+  OssoABookListStore *store = user_data;
+  GPtrArray *arr = g_ptr_array_new();
+  while (*uids)
+  {
+    OssoABookListStoreRow **rows =
+        osso_abook_list_store_find_contacts(store, *uids);
+
+    if (rows)
+    {
+      while (*rows)
+      {
+        OSSO_ABOOK_NOTE(LIST_STORE,
+                        "%s@%p: removing row %p with contact %p(%s) for UID %s",
+                        get_store_book_uri(store), store, *rows, (*rows)->contact,
+                        e_contact_get_const(E_CONTACT((*rows)->contact),
+                                            E_CONTACT_UID), *uids);
+
+        g_ptr_array_add(arr, *rows);
+        rows++;
+      }
+    }
+
+    uids++;
+  }
+
+  if (arr->len)
+  {
+    osso_abook_list_store_remove_rows(store,
+                                      (OssoABookListStoreRow **)arr->pdata,
+                                      arr->len);
+  }
+
+  g_ptr_array_free(arr, TRUE);
+}
+
+static void
+sequence_complete_cb(OssoABookRoster *roster, guint status, gpointer user_data)
+{
+  OssoABookListStore *store = user_data;
+  OssoABookListStorePrivate *priv = store->priv;
+
+  priv->roster_is_running = FALSE;
+
+  OSSO_ABOOK_NOTE(LIST_STORE, "%s@%p: sequence-complete, status=%d",
+                  get_store_book_uri(store), store, status);
+
+  g_signal_handler_disconnect(priv->roster, priv->sequence_complete_id);
+  priv->sequence_complete_id = 0;
+  g_object_notify(G_OBJECT(store), "loading");
+}
+
+static void
+notify_book_view_cb(OssoABookListStore *store)
+{
+  g_object_notify(G_OBJECT(store), "book-view");
+}
+
+void
+osso_abook_list_store_set_roster(OssoABookListStore *store,
+                                 OssoABookRoster *roster)
+{
+  OssoABookListStorePrivate *priv;
+  OssoABookRoster *old_roster;
+  EBookView *book_view = NULL;
+  gboolean old_roster_is_running;
+
+  g_return_if_fail(OSSO_ABOOK_IS_ROSTER(roster) || !roster);
+
+  priv = store->priv;
+  old_roster = priv->roster;
+  old_roster_is_running = priv->roster_is_running;
+
+  if (priv->roster == roster)
+    return;
+
+  if (!OSSO_ABOOK_IS_AGGREGATOR(roster) && osso_abook_roster_is_running(roster))
+  {
+    g_warning("Cannot attach already running roster of type %s",
+              g_type_name(G_TYPE_FROM_INSTANCE(roster)));
+    return;
+  }
+
+  if (old_roster)
+  {
+    if (priv->notify_book_view_id)
+    {
+      g_signal_handler_disconnect(old_roster, priv->notify_book_view_id);
+      priv->notify_book_view_id = 0;
+    }
+
+    osso_abook_list_store_cancel_loading(store);
+    g_object_unref(priv->roster);
+    OSSO_ABOOK_LIST_STORE_GET_CLASS(store)->clear(store);
+    priv->roster_is_running = FALSE;
+    priv->roster = NULL;
+  }
+
+  if ( roster )
+  {
+    OSSO_ABOOK_NOTE(LIST_STORE, "%s@%p: new roster: %s",
+                    get_store_book_uri(store),
+                    store,
+                    osso_abook_roster_get_book_uri(roster));
+
+    priv->roster = g_object_ref(roster);
+    priv->contacts_added_id =
+        g_signal_connect(priv->roster, "contacts-added",
+                         G_CALLBACK(contacts_added_cb), store);
+    priv->contacts_changed_master_id =
+        g_signal_connect(priv->roster, "contacts-changed::master",
+                         G_CALLBACK(contacts_changed_master_cb), store);
+    priv->contacts_removed_id =
+        g_signal_connect(priv->roster, "contacts-removed",
+                         G_CALLBACK(contacts_removed_cb), store);
+    priv->sequence_complete_id =
+        g_signal_connect(priv->roster, "sequence-complete",
+                         G_CALLBACK(sequence_complete_cb), store);
+    priv->notify_book_view_id =
+        g_signal_connect_swapped(priv->roster, "notify::book-view",
+                                 G_CALLBACK(notify_book_view_cb), store);
+
+    book_view = osso_abook_roster_get_book_view(priv->roster);
+
+    if (book_view)
+      notify_book_view_cb(store);
+
+    priv->roster_is_running = osso_abook_roster_is_running(roster) == 0;
+
+    if (priv->roster_is_running)
+      osso_abook_roster_set_name_order(roster, priv->name_order);
+
+    if (OSSO_ABOOK_IS_AGGREGATOR(roster))
+    {
+      GPtrArray *arr;
+      GList *master_contacts = osso_abook_aggregator_list_master_contacts(
+            OSSO_ABOOK_AGGREGATOR(roster));
+      GList *l = master_contacts;
+
+      for (arr = g_ptr_array_sized_new(g_list_length(master_contacts)); l;
+           l = g_list_delete_link(l, l))
+      {
+        g_ptr_array_add(arr, l->data);
+      }
+
+      if (arr->len)
+      {
+        g_ptr_array_add(arr, NULL);
+        contacts_added_cb(roster, arr->pdata, store);
+      }
+
+      g_ptr_array_free(arr, TRUE);
+    }
+  }
+
+  g_object_notify(G_OBJECT(store), "roster");
+
+  if (!priv->roster || book_view)
+    g_object_notify(G_OBJECT(store), "book-view");
+
+  if (priv->roster_is_running != old_roster_is_running)
+    g_object_notify(G_OBJECT(store), "loading");
+}
+
+static int
+compare_row_offset(const void *a, const void *b)
+{
+  const OssoABookListStoreRow *const *row_a = a;
+  const OssoABookListStoreRow *const *row_b = b;
+
+  return (*row_a)->offset - (*row_b)->offset;
+}
+
+void
+osso_abook_list_store_remove_rows(OssoABookListStore *store,
+                                  OssoABookListStoreRow **rows, gssize n_rows)
+{
+  OssoABookListStorePrivate *priv;
+  OssoABookListStoreClass *klass = OSSO_ABOOK_LIST_STORE_GET_CLASS(store);
+
+  g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE(store));
+  g_return_if_fail(NULL != rows);
+  g_return_if_fail(NULL != klass->row_removed);
+
+  priv = store->priv;
+
+  g_return_if_fail(priv->balloon_offset);
+
+  if (n_rows < 0)
+  {
+    n_rows = 0;
+
+    while (rows[n_rows])
+      n_rows++;
+  }
+
+  qsort(rows, n_rows, sizeof(rows[0]), compare_row_offset);
+
+  for (int i = 0; i < n_rows; i++)
+  {
+    OssoABookListStoreRow *row = rows[i];
+    gint idx = get_offset(priv, &rows[i]->offset);
+    gint offset = row->offset;
+    GtkTreePath *path = gtk_tree_path_new_from_indices(idx, -1);
+    gint new_balloon = offset;
+
+    if (priv->balloon_size > 0)
+    {
+      gint balloon_offset = priv->balloon_offset;
+
+      if (offset < balloon_offset)
+      {
+        osso_abook_list_store_move_rows(store, offset + priv->balloon_size + 1,
+                                        offset + 1,
+                                        balloon_offset - offset - 1);
+      }
+      else if (offset > balloon_offset)
+      {
+        osso_abook_list_store_move_rows(
+              store, priv->balloon_offset,
+              priv->balloon_offset + priv->balloon_size,
+              offset - balloon_offset - priv->balloon_size);
+        new_balloon = offset - priv->balloon_size;
+
+        g_warn_if_fail(new_balloon >= 0);
+      }
+    }
+
+    priv->balloon_size++;
+    priv->balloon_offset = new_balloon;
+    klass->row_removed(store, row);
+    priv->rows[offset] = 0;
+    priv->count--;
+    gtk_tree_model_row_deleted(GTK_TREE_MODEL(store), path);
+    gtk_tree_path_free(path);
+  }
+
+  if (priv->balloon_offset == priv->count)
+  {
+    priv->balloon_offset = G_MAXINT;
+    priv->balloon_size = 0;
+  }
+}
