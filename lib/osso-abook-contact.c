@@ -642,3 +642,16 @@ osso_abook_contact_uid_compare(OssoABookContact *a, OssoABookContact *b)
 
   return 0;
 }
+
+const char *
+osso_abook_contact_get_display_name(OssoABookContact *contact)
+{
+  const char *name;
+
+  name = osso_abook_contact_get_name(contact);
+
+  if (!name || !*name)
+    name = g_dgettext("osso-addressbook", "addr_li_unnamed_contact");
+
+  return name;
+}

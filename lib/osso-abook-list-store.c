@@ -31,7 +31,7 @@ struct _OssoABookListStorePrivate
   gint balloon_size;
   gint balloon_offset;
   GHashTable *names;
-  GHashTable *hash2;
+  GHashTable *pending;
   OssoABookListStoreCompareFunc sort_func;
   gpointer sort_data;
   GDestroyNotify sort_destroy;
@@ -45,14 +45,34 @@ struct _OssoABookListStorePrivate
 typedef struct _OssoABookListStorePrivate OssoABookListStorePrivate;
 
 #define OSSO_ABOOK_LIST_STORE_PRIVATE(store) \
-                osso_abook_list_store_get_instance_private(store)
+                ((OssoABookListStorePrivate *)osso_abook_list_store_get_instance_private(store))
+
+static void osso_abook_list_store_gtk_tree_model_iface_init(
+    GtkTreeModelIface *g_iface, gpointer iface_data);
+static void osso_abook_list_store_gtk_tree_sortable_iface_init(
+    GtkTreeSortableIface *g_iface, gpointer iface_data);
+static void osso_abook_list_store_osso_abook_row_model_iface_init(
+    OssoABookRowModelIface *g_iface, gpointer iface_data);
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE(
+  OssoABookListStore,
+  osso_abook_list_store,
+  G_TYPE_OBJECT,
+  G_IMPLEMENT_INTERFACE(GTK_TYPE_TREE_MODEL,
+                        osso_abook_list_store_gtk_tree_model_iface_init);
+  G_IMPLEMENT_INTERFACE(GTK_TYPE_TREE_SORTABLE,
+                        osso_abook_list_store_gtk_tree_sortable_iface_init);
+  G_IMPLEMENT_INTERFACE(OSSO_ABOOK_TYPE_ROW_MODEL,
+                        osso_abook_list_store_osso_abook_row_model_iface_init);
+  G_ADD_PRIVATE (OssoABookListStore);
+);
 
 static gboolean
 osso_abook_list_iter_nth_child(GtkTreeModel *tree_model, GtkTreeIter *iter,
                                GtkTreeIter *parent, gint n)
 {
   OssoABookListStore *store = (OssoABookListStore *)tree_model;
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   if (parent || n < 0 || n >= (priv->extra + priv->count))
     return FALSE;
@@ -92,7 +112,7 @@ osso_abook_list_model_get_iter(GtkTreeModel *tree_model, GtkTreeIter *iter,
                                GtkTreePath *path)
 {
   OssoABookListStore *store = (OssoABookListStore *)tree_model;
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
   gint index;
 
   if (gtk_tree_path_get_depth(path) != 1)
@@ -115,7 +135,7 @@ osso_abook_list_store_get_path(GtkTreeModel *tree_model,
                                GtkTreeIter *iter)
 {
   OssoABookListStore *store = (OssoABookListStore *)tree_model;
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   g_return_val_if_fail(iter->stamp == priv->stamp, NULL);
   g_return_val_if_fail(iter->user_data == tree_model, NULL);
@@ -144,7 +164,7 @@ static gboolean
 osso_abook_list_store_iter_next(GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
   OssoABookListStore *store = (OssoABookListStore *)tree_model;
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
   gint row_index;
 
   g_return_val_if_fail(iter->stamp == priv->stamp, FALSE);
@@ -181,7 +201,7 @@ osso_abook_list_store_iter_n_children(GtkTreeModel *tree_model,
                                       GtkTreeIter *iter)
 {
   OssoABookListStore *store = (OssoABookListStore *)tree_model;
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   if (iter)
     return 0;
@@ -248,19 +268,6 @@ osso_abook_list_store_osso_abook_row_model_iface_init(
   g_iface->row_get_iter = (row_get_iter_fn)osso_abook_list_store_row_get_iter;
   g_iface->iter_get_row = (iter_get_row)osso_abook_list_store_iter_get_row;
 }
-
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE(
-  OssoABookListStore,
-  osso_abook_list_store,
-  G_TYPE_OBJECT,
-  G_IMPLEMENT_INTERFACE(GTK_TYPE_TREE_MODEL,
-                        osso_abook_list_store_gtk_tree_model_iface_init);
-  G_IMPLEMENT_INTERFACE(GTK_TYPE_TREE_SORTABLE,
-                        osso_abook_list_store_gtk_tree_sortable_iface_init);
-  G_IMPLEMENT_INTERFACE(OSSO_ABOOK_TYPE_ROW_MODEL,
-                        osso_abook_list_store_osso_abook_row_model_iface_init);
-  G_ADD_PRIVATE (OssoABookListStore);
-);
 
 static void
 destroy_array(gpointer data)
@@ -329,23 +336,20 @@ osso_abook_list_store_set_sort_func_by_order(
 }
 
 static void
-osso_abook_list_store_init(OssoABookListStore *list_store)
+osso_abook_list_store_init(OssoABookListStore *store)
 {
-  OssoABookListStorePrivate *priv =
-      osso_abook_list_store_get_instance_private(list_store);
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   priv->balloon_offset = G_MAXINT;
   priv->roster = NULL;
   priv->name_order = osso_abook_settings_get_name_order();
   priv->names =
       g_hash_table_new_full(g_str_hash, g_str_equal, g_free, destroy_array);
-  priv->hash2 =
+  priv->pending =
       g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
 
-  list_store->priv = priv;
-
   osso_abook_list_store_set_sort_func_by_order(
-        list_store, osso_abook_settings_get_contact_order(), priv->name_order);
+        store, osso_abook_settings_get_contact_order(), priv->name_order);
 }
 
 enum
@@ -374,7 +378,7 @@ static void
 osso_abook_list_store_finalize(GObject *object)
 {
   OssoABookListStore *store = OSSO_ABOOK_LIST_STORE(object);
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   g_warn_if_fail(priv->count == 0);
   g_warn_if_fail(priv->extra == 0);
@@ -391,7 +395,7 @@ osso_abook_list_store_finalize(GObject *object)
   if (priv->group_sort_destroy)
     priv->group_sort_destroy(priv->group_sort_data);
 
-  g_hash_table_unref(priv->hash2);
+  g_hash_table_unref(priv->pending);
   g_hash_table_unref(priv->names);
   g_free(priv->rows);
 
@@ -403,14 +407,14 @@ osso_abook_list_store_get_property(GObject *object, guint property_id,
                                    GValue *value, GParamSpec *pspec)
 {
   OssoABookListStore *store = OSSO_ABOOK_LIST_STORE(object);
-
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
   switch (property_id)
   {
     case PROP_LOADING:
-      g_value_set_boolean(value, store->priv->roster_is_running);
+      g_value_set_boolean(value, priv->roster_is_running);
       break;
     case PROP_ROSTER:
-      g_value_set_object(value, store->priv->roster);
+      g_value_set_object(value, priv->roster);
       break;
     case PROP_BOOK_VIEW:
       g_value_set_object(value, osso_abook_list_store_get_book_view(store));
@@ -422,10 +426,10 @@ osso_abook_list_store_get_property(GObject *object, guint property_id,
       g_value_set_enum(value, osso_abook_list_store_get_name_order(store));
       break;
     case PROP_ROW_COUNT:
-      g_value_set_uint(value, store->priv->extra + store->priv->count);
+      g_value_set_uint(value, priv->extra + priv->count);
       break;
     case PROP_PRE_ALLOCATED_ROWS:
-      g_value_set_uint(value, store->priv->extra);
+      g_value_set_uint(value, priv->extra);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -663,7 +667,7 @@ static void
 osso_abook_list_store_move_rows(OssoABookListStore *store, guint src_idx,
                                 guint dst_idx, gint n)
 {
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
   OssoABookListStoreRow **rows = priv->rows;
 
   if (src_idx >= dst_idx)
@@ -725,7 +729,7 @@ osso_abook_list_store_move_rows(OssoABookListStore *store, guint src_idx,
 static void
 osso_abook_list_store_move_baloon(OssoABookListStore *store)
 {
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   if (priv->balloon_size)
   {
@@ -744,7 +748,7 @@ osso_abook_list_store_sort(gconstpointer a, gconstpointer b, gpointer user_data)
   const OssoABookListStoreRow *row_a = a;
   const OssoABookListStoreRow *row_b = b;
   OssoABookListStore *store = user_data;
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
   int rv;
 
   if (!priv->group_sort_func ||
@@ -763,7 +767,7 @@ static gboolean
 idle_sort_cb(gpointer user_data)
 {
   OssoABookListStore *store = user_data;
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
   gint new_order[priv->count];
   OssoABookListStoreRow **rows = priv->rows;
   GtkTreePath *path;
@@ -790,7 +794,7 @@ idle_sort_cb(gpointer user_data)
 static void
 osso_abook_list_store_idle_sort(OssoABookListStore *store)
 {
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   if (!priv->idle_sort_id)
     priv->idle_sort_id = gdk_threads_add_idle(idle_sort_cb, store);
@@ -806,7 +810,7 @@ osso_abook_list_store_set_sort_func(OssoABookListStore *store,
 
   g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE (store));
 
-  priv = store->priv;
+  priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   if (priv->sort_destroy)
     priv->sort_destroy(priv->sort_data);
@@ -827,7 +831,7 @@ osso_abook_list_store_set_group_sort_func(
 
   g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE (store));
 
-  priv = store->priv;
+  priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   if (priv->group_sort_destroy)
     priv->group_sort_destroy(priv->group_sort_data);
@@ -844,7 +848,7 @@ osso_abook_list_store_get_name_order(OssoABookListStore *store)
   g_return_val_if_fail(OSSO_ABOOK_IS_LIST_STORE (store),
                        OSSO_ABOOK_NAME_ORDER_FIRST);
 
-  return store->priv->name_order;
+  return OSSO_ABOOK_LIST_STORE_PRIVATE(store)->name_order;
 }
 
 void
@@ -855,11 +859,11 @@ osso_abook_list_store_set_name_order(OssoABookListStore *store,
 
   g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE (store));
 
-  priv = store->priv;
+  priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   if (osso_abook_list_store_get_name_order(store) != order)
   {
-    priv = store->priv;
+    priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
     priv->name_order = order;
     osso_abook_list_store_set_sort_func_by_order(
           store, osso_abook_list_store_get_contact_order(store),
@@ -877,7 +881,7 @@ osso_abook_list_store_is_loading(OssoABookListStore *store)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_LIST_STORE (store), FALSE);
 
-  return store->priv->roster_is_running;
+  return OSSO_ABOOK_LIST_STORE_PRIVATE(store)->roster_is_running;
 }
 
 OssoABookContactOrder
@@ -888,7 +892,7 @@ osso_abook_list_store_get_contact_order(OssoABookListStore *store)
   g_return_val_if_fail(OSSO_ABOOK_IS_LIST_STORE (store),
                        OSSO_ABOOK_CONTACT_ORDER_NONE);
 
-  sort_func = store->priv->sort_func;
+  sort_func = OSSO_ABOOK_LIST_STORE_PRIVATE(store)->sort_func;
 
   if (sort_func == osso_abook_list_store_sort_name)
     return OSSO_ABOOK_CONTACT_ORDER_NAME;
@@ -941,8 +945,9 @@ osso_abook_list_store_row_get_iter(OssoABookListStore *store,
   if (row == NULL || iter ==NULL)
     return FALSE;
 
-  return osso_abook_list_iter_nth_child((GtkTreeModel *)store, iter, NULL,
-                                        get_offset(store->priv, &row->offset));
+  return osso_abook_list_iter_nth_child(
+        (GtkTreeModel *)store, iter, NULL,
+        get_offset(OSSO_ABOOK_LIST_STORE_PRIVATE(store), &row->offset));
 }
 
 OssoABookListStoreRow *
@@ -1022,7 +1027,7 @@ osso_abook_list_store_find_contacts(OssoABookListStore *store, const char *uid)
   g_return_val_if_fail(OSSO_ABOOK_IS_LIST_STORE(store), NULL);
   g_return_val_if_fail(uid != NULL, NULL);
 
-  array = g_hash_table_lookup(store->priv->names, uid);
+  array = g_hash_table_lookup(OSSO_ABOOK_LIST_STORE_PRIVATE(store)->names, uid);
 
   if (array)
     return (OssoABookListStoreRow **)array->data;
@@ -1108,7 +1113,7 @@ static void
 sequence_complete_cb(OssoABookRoster *roster, guint status, gpointer user_data)
 {
   OssoABookListStore *store = user_data;
-  OssoABookListStorePrivate *priv = store->priv;
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   priv->roster_is_running = FALSE;
 
@@ -1137,7 +1142,7 @@ osso_abook_list_store_set_roster(OssoABookListStore *store,
 
   g_return_if_fail(OSSO_ABOOK_IS_ROSTER(roster) || !roster);
 
-  priv = store->priv;
+  priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
   old_roster = priv->roster;
   old_roster_is_running = priv->roster_is_running;
 
@@ -1252,7 +1257,7 @@ osso_abook_list_store_remove_rows(OssoABookListStore *store,
   g_return_if_fail(NULL != rows);
   g_return_if_fail(NULL != klass->row_removed);
 
-  priv = store->priv;
+  priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
   g_return_if_fail(priv->balloon_offset);
 
@@ -1310,4 +1315,64 @@ osso_abook_list_store_remove_rows(OssoABookListStore *store,
     priv->balloon_offset = G_MAXINT;
     priv->balloon_size = 0;
   }
+}
+
+static gboolean
+update_contacts_cb(gpointer user_data)
+{
+  OssoABookListStore *store = user_data;
+  OssoABookListStoreClass *klass = OSSO_ABOOK_LIST_STORE_GET_CLASS(store);
+  OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
+  GHashTableIter iter;
+  OssoABookContact *contact;
+
+  priv->update_contacts_id = 0;
+
+  g_return_val_if_fail(klass->contact_changed, FALSE);
+
+  g_hash_table_iter_init(&iter, priv->pending);
+
+  while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&contact))
+  {
+    const char *uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+    OssoABookListStoreRow **contacts =
+        osso_abook_list_store_find_contacts(store, uid);
+
+    OSSO_ABOOK_NOTE(LIST_STORE,
+                    "%s@%p: contact %s(%s) changed, %d matching row(s)",
+                    get_store_book_uri(store), store,
+                    osso_abook_contact_get_display_name(contact), uid,
+                    contacts ? g_strv_length((gchar **)contacts) : 0);
+
+    if (contacts)
+      klass->contact_changed(store, contacts);
+
+    g_hash_table_iter_remove(&iter);
+  }
+
+  osso_abook_list_store_idle_sort(store);
+
+  return FALSE;
+}
+
+void
+osso_abook_list_store_contact_changed(OssoABookListStore *store,
+                                      OssoABookContact *contact)
+{
+  OssoABookListStorePrivate *priv;
+  const gchar *uid;
+
+  g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE(store));
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+
+  priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
+  uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+
+  OSSO_ABOOK_NOTE(LIST_STORE, "%s@%p: contact changed: %s@%p",
+                  get_store_book_uri(store), store, uid, contact);
+
+  g_hash_table_insert(priv->pending, g_strdup(uid), g_object_ref(contact));
+
+  if (!priv->update_contacts_id)
+    priv->update_contacts_id = gdk_threads_add_idle(update_contacts_cb, store);
 }
