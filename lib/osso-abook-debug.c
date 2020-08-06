@@ -2,6 +2,8 @@
 
 #include "osso-abook-debug.h"
 
+#define PHOTO_ID "PHOTO"
+
 guint _osso_abook_debug_flags = 0;
 
 static GDebugKey debug_keys[] =
@@ -94,5 +96,58 @@ _osso_abook_log(const char *domain, const char *strloc, const char *strfunc,
   g_log(log_domain, G_LOG_LEVEL_DEBUG, "%.3f s:\n---- %s(%s):\n---- %s",
         ts, strfunc, strloc, msg);
   g_free(log_domain);
+  g_free(msg);
+}
+
+void
+_osso_abook_dump_vcard_string(const char *domain, const char *strloc,
+                              const char *strfunc, const char *strtype,
+                              OssoABookDebugFlags type, const char *note,
+                              const char *vcard)
+{
+  gchar *msg;
+
+  if (vcard)
+  {
+    gchar *chunk = msg = g_strescape(vcard, NULL);
+    gchar *p;
+
+    while ((p = strstr(chunk, PHOTO_ID)))
+    {
+      p += sizeof(PHOTO_ID) - 1;
+
+      chunk = strstr(p, "\\n");
+
+      if (!chunk)
+        chunk = p + strlen(p);
+
+      if (strchr(":;,", *p))
+      {
+        while (*p && *p != ':')
+          p++;
+
+        if (chunk > p && *p == ':')
+        {
+          do
+            p++;
+          while (*p == '\t' || *p == ' ');
+
+          if (chunk - p > 30)
+          {
+            memcpy(p + 10, "[...]", 5);
+            memmove(p + 15, chunk - 10, strlen(chunk) + 11);
+          }
+        }
+      }
+    }
+  }
+  else
+    msg = g_strdup("<none>");
+
+  if (!note)
+    note = "vcard";
+
+  _osso_abook_log(domain, strloc, strfunc, strtype, type, "%s: %s", note, msg);
+
   g_free(msg);
 }
