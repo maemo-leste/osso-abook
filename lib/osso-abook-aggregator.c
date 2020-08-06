@@ -25,7 +25,7 @@ struct _OssoABookAggregatorPrivate
   int field_2C;
   int field_30;
   int field_34;
-  int field_38;
+  int flags;
 };
 
 typedef struct _OssoABookAggregatorPrivate OssoABookAggregatorPrivate;
@@ -218,4 +218,26 @@ osso_abook_aggregator_find_contacts_full(OssoABookAggregator *aggregator,
   }
 
   return contacts;
+}
+
+OssoABookAggregatorState
+osso_abook_aggregator_get_state(OssoABookAggregator *aggregator)
+{
+  OssoABookAggregatorPrivate *priv;
+  OssoABookAggregatorState state = OSSO_ABOOK_AGGREGATOR_PENDING;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AGGREGATOR(aggregator), state);
+
+  priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+
+  if (osso_abook_roster_is_running(OSSO_ABOOK_ROSTER(aggregator)))
+    state = OSSO_ABOOK_AGGREGATOR_RUNNING;
+
+  if (priv->flags & 1)
+    state |= OSSO_ABOOK_AGGREGATOR_MASTERS_READY;
+
+  if (priv->flags & 2 && !priv->field_30)
+    state |= OSSO_ABOOK_AGGREGATOR_ROSTERS_READY;
+
+  return state;
 }
