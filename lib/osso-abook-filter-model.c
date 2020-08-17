@@ -856,3 +856,61 @@ osso_abook_filter_model_set_group(OssoABookFilterModel *model,
   osso_abook_filter_model_refilter(model, priv);
   g_object_notify(G_OBJECT(model), "group");
 }
+
+PangoAttrList *
+osso_abook_filter_model_get_markup(OssoABookFilterModel *model,
+                                   const char *text)
+{
+  PangoAttribute *attr;
+  OssoABookFilterModelPrivate *priv;
+  PangoAttrList *attr_list;
+  GList *bit;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model), NULL);
+
+  priv = model->priv;
+
+  if (!priv->text || !*priv->text || !text)
+    return NULL;
+
+  attr_list = pango_attr_list_new();
+
+  for (bit = priv->bits; bit; bit = bit->next)
+  {
+    const char *p;
+    gsize bytes_read;
+
+    if (priv->prefix)
+    {
+      for (p = text; p; p = strchr(p, ' '))
+      {
+        if (_osso_abook_utf8_strstartswithcasestrip(p, bit->data, &bytes_read))
+        {
+          attr = pango_attr_weight_new(PANGO_WEIGHT_BOLD);
+          attr->start_index = p - text;
+          attr->end_index = bytes_read + p - text;
+          pango_attr_list_insert(attr_list, attr);
+        }
+      }
+    }
+    else
+    {
+      const char *q;
+
+      for (p = text; ; p = q + 1)
+      {
+        q = _osso_abook_utf8_strstrcasestrip(p, bit->data, &bytes_read);
+
+        if (!q)
+          break;
+
+        attr = pango_attr_weight_new(PANGO_WEIGHT_BOLD);
+        attr->start_index = q - text;
+        attr->end_index = bytes_read + p - text;
+        pango_attr_list_insert(attr_list, attr);
+      }
+    }
+  }
+
+  return attr_list;
+}
