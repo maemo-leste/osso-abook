@@ -878,3 +878,49 @@ out:
   else
     g_free(secondary);
 }
+
+int
+osso_abook_contact_collate(OssoABookContact *a, OssoABookContact *b,
+                           OssoABookNameOrder order)
+{
+  const char **keys_a = osso_abook_contact_get_collate_keys(a, order);
+  const char **keys_b = osso_abook_contact_get_collate_keys(b, order);
+
+  if (!keys_a)
+  {
+    if (keys_b)
+      return -1;
+
+    return 0;
+  }
+
+  if (!keys_b)
+    return 1;
+
+
+  while(1)
+  {
+    int cmpres;
+    const char *key_a = *keys_a;
+    const char *key_b = *keys_b;
+
+    if (!key_a)
+    {
+      if (key_b)
+        return -1;
+
+      return 0;
+    }
+
+    if (!key_b)
+      return 1;
+
+    cmpres = strcmp(key_a, key_b);
+
+    if (cmpres)
+      return cmpres;
+
+    keys_a++;
+    keys_b++;
+  }
+}
