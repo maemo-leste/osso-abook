@@ -1376,3 +1376,40 @@ osso_abook_list_store_contact_changed(OssoABookListStore *store,
   if (!priv->update_contacts_id)
     priv->update_contacts_id = gdk_threads_add_idle(update_contacts_cb, store);
 }
+
+void
+osso_abook_list_store_cancel_loading(OssoABookListStore *store)
+{
+  OssoABookListStorePrivate *priv;
+
+  g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE(store));
+
+  priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
+
+  if (priv->contacts_added_id)
+  {
+    g_signal_handler_disconnect(priv->roster, priv->contacts_added_id);
+    priv->contacts_added_id = 0;
+  }
+
+  if (priv->contacts_changed_master_id)
+  {
+    g_signal_handler_disconnect(priv->roster, priv->contacts_changed_master_id);
+    priv->contacts_changed_master_id = 0;
+  }
+
+  if (priv->contacts_removed_id)
+  {
+    g_signal_handler_disconnect(priv->roster, priv->contacts_removed_id);
+    priv->contacts_removed_id = 0;
+  }
+
+  if (priv->sequence_complete_id)
+  {
+    g_signal_handler_disconnect(priv->roster, priv->sequence_complete_id);
+    priv->sequence_complete_id = 0;
+  }
+
+  priv->roster_is_running = FALSE;
+
+}
