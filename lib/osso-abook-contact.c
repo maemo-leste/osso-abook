@@ -7,6 +7,8 @@
 #include "osso-abook-presence.h"
 #include "osso-abook-enums.h"
 #include "osso-abook-roster.h"
+#include "osso-abook-string-list.h"
+#include "osso-abook-account-manager.h"
 
 #include "config.h"
 
@@ -654,4 +656,225 @@ osso_abook_contact_get_display_name(OssoABookContact *contact)
     name = g_dgettext("osso-addressbook", "addr_li_unnamed_contact");
 
   return name;
+}
+
+void
+osso_abook_contact_get_name_components(EContact *contact,
+                                       OssoABookNameOrder order,
+                                       gboolean strict,
+                                       char **primary_out,
+                                       char **secondary_out)
+{
+  gchar *primary = NULL;
+  gchar *secondary = NULL;
+  gint primary_match_num = 1;
+  gint secondary_match_num = 2;
+
+  switch (order)
+  {
+    case OSSO_ABOOK_NAME_ORDER_LAST:
+    case OSSO_ABOOK_NAME_ORDER_LAST_SPACE:
+    {
+      gchar *given_name = e_contact_get(contact, E_CONTACT_GIVEN_NAME);
+      gchar *family_name = e_contact_get(contact, E_CONTACT_FAMILY_NAME);
+
+      if (strict || (family_name && *family_name))
+      {
+        primary = family_name;
+        secondary = given_name;
+      }
+      else
+      {
+        primary = given_name;
+        g_free(family_name);
+      }
+
+      primary_match_num = 2;
+      secondary_match_num = 1;
+
+      break;
+    }
+    case OSSO_ABOOK_NAME_ORDER_NICK:
+    {
+      gchar *nickname = e_contact_get(contact, E_CONTACT_NICKNAME);
+
+      if (strict || (nickname && *nickname))
+        primary = nickname;
+      else
+      {
+        osso_abook_contact_get_name_components(contact,
+                                               OSSO_ABOOK_NAME_ORDER_FIRST,
+                                               FALSE, &primary, &secondary);
+        g_free(nickname);
+      }
+
+      break;
+    }
+    case OSSO_ABOOK_NAME_ORDER_FIRST:
+    {
+      gchar *given_name = e_contact_get(contact, E_CONTACT_GIVEN_NAME);
+      gchar *family_name = e_contact_get(contact, E_CONTACT_FAMILY_NAME);
+
+      if (strict || (given_name && *given_name))
+      {
+        primary = given_name;
+        secondary = family_name;
+      }
+      else
+      {
+        primary = family_name;
+        g_free(given_name);
+      }
+
+      break;
+    }
+    default:
+      break;
+  }
+
+  if ((!primary || !*primary) && (!secondary || !*secondary))
+  {
+    const gchar *full_name;
+    GMatchInfo *match_info;
+
+    g_free(primary);
+    primary = NULL;
+    g_free(secondary);
+    secondary = NULL;
+    full_name = e_contact_get_const(contact, E_CONTACT_FULL_NAME);
+
+    if (full_name && *full_name)
+    {
+      GRegex *regex = g_regex_new("^\\s*(.*)\\s+(\\S+)\\s*$", 0, 0, NULL);
+
+      if (g_regex_match(regex, full_name, 0, &match_info))
+      {
+        primary = g_match_info_fetch(match_info, primary_match_num);
+        secondary = g_match_info_fetch(match_info, secondary_match_num);
+      }
+      else
+        primary = g_strdup(full_name);
+
+      g_match_info_free(match_info);
+      g_regex_unref(regex);
+    }
+
+    if (!strict)
+    {
+      if (!primary || !*primary)
+      {
+        g_free(primary);
+        primary = e_contact_get(contact, E_CONTACT_NICKNAME);
+      }
+
+      if (!primary || !*primary)
+      {
+        g_free(primary);
+        primary = e_contact_get(contact, E_CONTACT_ORG);
+      }
+    }
+  }
+
+  if (!primary || !*primary)
+  {
+    g_free(primary);
+    primary = NULL;
+  }
+
+  if (!secondary || !*secondary)
+  {
+    g_free(secondary);
+    secondary = NULL;
+  }
+
+  if (!primary)
+  {
+    if (OSSO_ABOOK_IS_CONTACT(contact))
+    {
+      OssoABookContactClass *klass = OSSO_ABOOK_CONTACT_GET_CLASS(contact);
+
+      if (klass->get_default_name)
+        primary = klass->get_default_name((OssoABookContact *)contact);
+    }
+  }
+
+  if (strict || primary)
+    goto out;
+
+  if (OSSO_ABOOK_IS_CONTACT(contact))
+  {
+    GHashTable *contacts =
+        OSSO_ABOOK_CONTACT_PRIVATE(OSSO_ABOOK_CONTACT(contact))->contacts;
+
+    if (contacts)
+    {
+      GHashTableIter iter;
+      struct roster_contact *c;
+
+      g_hash_table_iter_init(&iter, contacts);
+
+      while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&c))
+      {
+        osso_abook_contact_get_name_components(E_CONTACT(c->contact), order,
+                                               FALSE, &primary, &secondary);
+
+        if (primary && *primary)
+            break;
+
+        g_free(secondary);
+      }
+    }
+  }
+
+  if (!primary)
+  {
+    GList *emails = e_contact_get(E_CONTACT(contact), E_CONTACT_EMAIL);
+
+    for (GList *l = emails; l; l = l->next)
+    {
+      gchar *email = l->data;
+
+      if (email && *email)
+      {
+        primary = g_strdup(email);
+        break;
+      }
+    }
+
+    osso_abook_string_list_free(emails);
+  }
+
+  if (!primary)
+  {
+    GList *attr = e_vcard_get_attributes(E_VCARD(contact));
+
+    while(attr)
+    {
+      if (osso_abook_account_manager_has_primary_vcard_field(
+            NULL, e_vcard_attribute_get_name(attr->data)))
+      {
+        GList *val = e_vcard_attribute_get_values(attr->data);
+
+        if (val && val->data && *(const char *)(val->data))
+        {
+          primary = g_strdup(val->data);
+          break;
+        }
+      }
+
+      attr = attr->next;
+    }
+  }
+
+out:
+
+  if (primary_out)
+    *primary_out = primary;
+  else
+    g_free(primary);
+
+  if (secondary_out)
+    *secondary_out = secondary;
+  else
+    g_free(secondary);
 }

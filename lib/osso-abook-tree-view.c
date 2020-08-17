@@ -651,7 +651,7 @@ style_set(GtkWidget *widget, GtkStyle *previous_style, gpointer user_data)
     if (memcmp(priv->border_color, border_color, sizeof(border_color)))
     {
       gint size = hildon_get_icon_pixel_size(HILDON_ICON_SIZE_FINGER);
-      gchar *avatar_name = create_avatar_name(size, size, TRUE,
+      gchar *avatar_name = _osso_abook_avatar_get_cache_name(size, size, TRUE,
                                               priv->avatar_radius,
                                               get_avatar_border_color(priv));
 

@@ -12,7 +12,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_CFLAGS = \
 libosso_abook_@API_VERSION_MAJOR@_la_LDFLAGS = -Wl,--no-undefined
 libosso_abook_@API_VERSION_MAJOR@_la_LIBADD = \
 		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) \
-		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS)
+		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) -lm
 
 libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-enums.c \

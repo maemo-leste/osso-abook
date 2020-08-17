@@ -204,7 +204,7 @@ OssoABookAvatarCache *osso_abook_avatar_cache_get_default()
 OssoABookAvatarCache *
 osso_abook_avatar_cache_get_for_scale(int width, int height, gboolean crop)
 {
-  gchar *name = create_avatar_name(width, height, crop, 0, NULL);
+  gchar *name = _osso_abook_avatar_get_cache_name(width, height, crop, 0, NULL);
   OssoABookAvatarCache *cache = osso_abook_avatar_cache_get_for_name(name);
 
   g_free(name);

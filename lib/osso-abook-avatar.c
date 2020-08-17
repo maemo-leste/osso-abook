@@ -2,6 +2,7 @@
 
 #include "osso-abook-avatar.h"
 #include "osso-abook-avatar-cache.h"
+#include "osso-abook-utils-private.h"
 
 #include "config.h"
 
@@ -125,4 +126,45 @@ osso_abook_avatar_get_fallback_icon_name(OssoABookAvatar *avatar)
     icon_name = "general_default_avatar";
 
   return icon_name;
+}
+
+GdkPixbuf *
+osso_abook_avatar_get_image_rounded(OssoABookAvatar *avatar, int width,
+                                    int height, gboolean crop, int radius,
+                                    const guint8 border_color[4])
+{
+  gchar *name;
+  GdkPixbuf *image;
+  OssoABookAvatarCache *cache;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR(avatar), NULL);
+
+  name = _osso_abook_avatar_get_cache_name(width, height, crop, radius, border_color);
+  cache = osso_abook_avatar_cache_get_for_name(name);
+  image = osso_abook_avatar_cache_lookup(cache, avatar);
+  g_free(name);
+
+  if (image)
+    image = g_object_ref(image);
+  else
+  {
+    OssoABookAvatarIface *iface = OSSO_ABOOK_AVATAR_GET_IFACE(avatar);
+
+    if (iface->get_image_scaled)
+      image = iface->get_image_scaled(avatar, width, height, crop);
+    else
+    {
+      image = osso_abook_avatar_get_image(avatar);
+
+      if (image)
+      {
+        image = _osso_abook_scale_pixbuf_and_crop(image, width, height, crop,
+                                                  border_color ? 1 : 0);
+        _osso_abook_pixbuf_cut_corners(image, radius, border_color);
+        osso_abook_avatar_cache_add(cache, avatar, image);
+      }
+    }
+  }
+
+  return image;
 }
