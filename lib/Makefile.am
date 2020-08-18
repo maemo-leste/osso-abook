@@ -42,7 +42,8 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-roster.c \
 		osso-abook-aggregator.c \
 		osso-abook-contact.c \
-		osso-abook-utils-private.c
+		osso-abook-utils-private.c \
+		osso-abook-roster-manager.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-aggregator.h \
