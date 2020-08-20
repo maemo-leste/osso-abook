@@ -2,6 +2,7 @@
 #define __OSSO_ABOOK_UTILS_PRIVATE_H_INCLUDED__
 
 #include <glib-object.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
