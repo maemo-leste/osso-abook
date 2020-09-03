@@ -19,11 +19,8 @@ osso_abook_string_list_free(OssoABookStringList list)
 {
   GList *l;
 
-  for (l = list; l; l = l->next)
-  {
+  for (l = list; l; l = g_list_delete_link(l, l))
     g_free(l->data);
-    l = g_list_delete_link(l, l);
-  }
 }
 
 static void

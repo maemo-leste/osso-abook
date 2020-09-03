@@ -257,7 +257,8 @@ osso_abook_roster_contacts_added(OssoABookRoster *roster,
 }
 
 static void
-osso_abook_roster_contacts_changed(OssoABookRoster *roster, OssoABookContact **contacts)
+osso_abook_roster_contacts_changed(OssoABookRoster *roster,
+                                   OssoABookContact **contacts)
 {
   GSignalInvocationHint *signal_hint = g_signal_get_invocation_hint(roster);
 
@@ -482,7 +483,7 @@ contacts_added_or_changed(OssoABookRoster *roster, guint sig, GQuark detail,
     g_signal_emit(roster, sig, detail, contacts->pdata);
   }
 
-  g_ptr_array_free(contacts, TRUE);
+  g_ptr_array_free(contacts, FALSE);
 }
 
 static void
@@ -493,12 +494,12 @@ contacts_added_cb(EBookView *view, GList *vcards, OssoABookRoster *roster)
 
   for (l = vcards; l; l = l->next)
   {
-    gchar *vcard = e_vcard_to_string(E_VCARD(l->data), EVC_FORMAT_VCARD_30);
+    gchar *vcs = e_vcard_to_string(E_VCARD(l->data), EVC_FORMAT_VCARD_30);
     OssoABookContact *contact = osso_abook_contact_new_from_vcard(
-          e_contact_get_const(l->data, E_CONTACT_UID), vcard);
+          e_contact_get_const(l->data, E_CONTACT_UID), vcs);
 
-    OSSO_ABOOK_DUMP_VCARD_STRING(EDS, "adding", vcard);
-    g_free(vcard);
+    OSSO_ABOOK_DUMP_VCARD_STRING(EDS, vcs, "adding");
+    g_free(vcs);
 
     if (contact)
     {
@@ -718,7 +719,6 @@ osso_abook_roster_get_book_uri(OssoABookRoster *roster)
   {
     ESource *source = e_book_get_source (book);
 
-    g_assert(0); /* FIXME - verify uid can replace uri */
     if (source)
       return e_source_get_uid(source);
   }
@@ -798,4 +798,19 @@ osso_abook_roster_get_account(OssoABookRoster *roster)
     account = osso_abook_account_manager_lookup_by_name(NULL, name);
 
   return account;
+}
+
+OssoABookRoster *
+osso_abook_roster_new(const char *name, EBookView *book_view,
+                      const char *vcard_field)
+{
+  g_return_val_if_fail(NULL != name, NULL);
+  g_return_val_if_fail(NULL != vcard_field, NULL);
+  g_return_val_if_fail(!book_view || E_IS_BOOK_VIEW(book_view), NULL);
+
+  return g_object_new(OSSO_ABOOK_TYPE_ROSTER,
+                      "name", name,
+                      "book-view", book_view,
+                      "vcard-field", vcard_field,
+                      NULL);
 }

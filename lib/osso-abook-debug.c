@@ -16,7 +16,7 @@ static GDebugKey debug_keys[] =
   {"contact-update", OSSO_ABOOK_DEBUG_CONTACT_UPDATE},
   {"vcard", OSSO_ABOOK_DEBUG_VCARD},
   {"avatar", OSSO_ABOOK_DEBUG_AVATAR},
-  {"mc", OSSO_ABOOK_DEBUG_MC},
+  {"tp", OSSO_ABOOK_DEBUG_TP},
   {"caps", OSSO_ABOOK_DEBUG_CAPS},
   {"list-store", OSSO_ABOOK_DEBUG_LIST_STORE},
   {"startup", OSSO_ABOOK_DEBUG_STARTUP},

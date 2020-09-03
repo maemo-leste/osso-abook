@@ -53,3 +53,47 @@ _osso_abook_handle_gerror(GtkWindow *parent, const char *strloc, GError *error)
   hildon_banner_show_information(widget, NULL, banner_text);
   g_error_free(error);
 }
+
+const char *
+estatus_to_string(const EBookStatus status)
+{
+  if (status == E_BOOK_ERROR_PERMISSION_DENIED)
+    return _("addr_ib_permission_denied");
+
+  if (status == E_BOOK_ERROR_NO_SPACE)
+    return _("addr_ib_disc_full");
+
+  return _("addr_ib_system_error");
+}
+
+void
+_osso_abook_handle_estatus(GtkWindow *parent, const char *strloc,
+                           EBookStatus status, EBook *book)
+{
+  gchar *uid;
+  const char *on;
+  const char *msg;
+
+  if (!status)
+    return;
+
+  if (E_IS_BOOK(book))
+  {
+    ESource *source = e_book_get_source(book);
+
+    uid = e_source_dup_uid(source);
+    on = " on ";
+
+  }
+  else
+  {
+    uid = g_strdup("");
+    on = "";
+  }
+
+  g_message("%s: EBook error %d%s%s", strloc, status, on, uid);
+  g_free(uid);
+
+  msg = estatus_to_string(status);
+  hildon_banner_show_information(parent ? GTK_WIDGET(parent) : NULL, 0, msg);
+}

@@ -54,3 +54,47 @@ osso_abook_caps_get_static_capabilities(OssoABookCaps *caps)
 
   return iface->get_static_capabilities(caps);
 }
+
+OssoABookCapsFlags
+osso_abook_caps_from_tp_capabilities(TpCapabilities *caps)
+{
+  OssoABookCapsFlags rv = OSSO_ABOOK_CAPS_NONE;
+
+  g_return_val_if_fail(TP_IS_CAPABILITIES(caps), rv);
+
+  if (tp_capabilities_supports_text_chats(caps))
+    rv |= OSSO_ABOOK_CAPS_CHAT;
+
+  if (tp_capabilities_supports_sms(caps))
+    rv |= OSSO_ABOOK_CAPS_SMS;
+
+  if (tp_capabilities_supports_audio_call(caps, TP_HANDLE_TYPE_CONTACT))
+    rv |= OSSO_ABOOK_CAPS_VOICE;
+
+  if (tp_capabilities_supports_audio_video_call(caps, TP_HANDLE_TYPE_CONTACT))
+    rv |= (OSSO_ABOOK_CAPS_VOICE | OSSO_ABOOK_CAPS_VIDEO);
+
+  return rv;
+}
+
+OssoABookCapsFlags
+osso_abook_caps_from_tp_connection(TpConnection *connection)
+{
+  OssoABookCapsFlags rv = OSSO_ABOOK_CAPS_NONE;
+  TpCapabilities *caps;
+
+  g_return_val_if_fail(TP_IS_CONNECTION(connection), rv);
+  g_return_val_if_fail(
+        tp_proxy_is_prepared(connection, TP_CONNECTION_FEATURE_CAPABILITIES),
+        rv);
+
+  caps = tp_connection_get_capabilities(connection);
+
+  rv = osso_abook_caps_from_tp_capabilities(caps);
+
+  if (tp_proxy_is_prepared(connection, TP_CONNECTION_FEATURE_CONTACT_LIST))
+    rv |= OSSO_ABOOK_CAPS_ADDRESSBOOK;
+
+  return rv;
+}
+

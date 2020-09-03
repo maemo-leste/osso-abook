@@ -100,3 +100,13 @@ osso_abook_concat_names(OssoABookNameOrder order, const gchar *primary,
 
   return g_strchomp(g_strchug(g_strconcat(primary, sep, secondary, NULL)));
 }
+
+const char *
+osso_abook_get_work_dir()
+{
+  static gchar *work_dir = NULL;
+  if ( !work_dir )
+    work_dir = g_build_filename(g_get_home_dir(), ".osso-abook", NULL);
+
+  return work_dir;
+}

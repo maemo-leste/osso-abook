@@ -1,8 +1,11 @@
 #include <gtk/gtkprivate.h>
 
+#include "config.h"
+
 #include "osso-abook-roster-manager.h"
 #include "osso-abook-waitable.h"
 #include "osso-abook-roster.h"
+#include "osso-abook-account-manager.h"
 
 typedef OssoABookRosterManagerIface OssoABookRosterManagerInterface;
 
@@ -49,4 +52,84 @@ osso_abook_roster_manager_default_init(OssoABookRosterManagerIface *iface)
         0, NULL, g_cclosure_marshal_VOID__OBJECT,
         G_TYPE_NONE,
         1, OSSO_ABOOK_TYPE_ROSTER);
+}
+
+OssoABookRosterManager *
+osso_abook_roster_manager_get_default()
+{
+  return OSSO_ABOOK_ROSTER_MANAGER(osso_abook_account_manager_get_default());
+}
+
+void
+osso_abook_roster_manager_start(OssoABookRosterManager *manager)
+{
+  OssoABookRosterManagerIface *iface;
+
+  g_return_if_fail(OSSO_ABOOK_IS_ROSTER_MANAGER(manager));
+
+  iface = OSSO_ABOOK_ROSTER_MANAGER_GET_IFACE(manager);
+
+  if (iface->start)
+    iface->start(manager);
+}
+
+void
+osso_abook_roster_manager_stop(OssoABookRosterManager *manager)
+{
+  OssoABookRosterManagerIface *iface;
+
+  g_return_if_fail(OSSO_ABOOK_IS_ROSTER_MANAGER(manager));
+
+  iface = OSSO_ABOOK_ROSTER_MANAGER_GET_IFACE(manager);
+
+  if (iface->stop)
+    iface->stop(manager);
+}
+
+gboolean
+osso_abook_roster_manager_is_running(OssoABookRosterManager *manager)
+{
+  gboolean running;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER_MANAGER(manager), FALSE);
+
+  g_object_get(manager, "running", &running, NULL);
+
+  return running;
+}
+
+GList *
+osso_abook_roster_manager_list_rosters(OssoABookRosterManager *manager)
+{
+  OssoABookRosterManagerIface *iface;
+
+  if (!manager)
+    manager = osso_abook_roster_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER_MANAGER(manager), NULL);
+
+  iface = OSSO_ABOOK_ROSTER_MANAGER_GET_IFACE(manager);
+
+  g_return_val_if_fail(NULL != iface->list_rosters, NULL);
+
+  return iface->list_rosters(manager);
+}
+
+OssoABookRoster *
+osso_abook_roster_manager_get_roster(OssoABookRosterManager *manager,
+                                     const char *account_name)
+{
+  OssoABookRosterManagerIface *iface;
+
+  if (!manager)
+    manager = osso_abook_roster_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER_MANAGER(manager), NULL);
+  g_return_val_if_fail(NULL != account_name, NULL);
+
+  iface = OSSO_ABOOK_ROSTER_MANAGER_GET_IFACE(manager);
+
+  g_return_val_if_fail(NULL != iface->get_roster, NULL);
+
+  return iface->get_roster(manager, account_name);
 }

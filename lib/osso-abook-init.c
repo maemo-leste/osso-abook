@@ -4,6 +4,7 @@
 
 #include "osso-abook-init.h"
 #include "osso-abook-debug.h"
+#include "eds.h"
 
 #include "config.h"
 
@@ -98,7 +99,5 @@ void
 osso_abook_set_backend_died_func(OssoABookBackendDiedFunc func,
                                  gpointer user_data)
 {
-#pragma message("FIXME!!! - uncomment when we have that function in place")
-
-  /* osso_ebook_set_backend_died_func(func, user_data); */
+  osso_ebook_set_backend_died_func(func, user_data);
 }
