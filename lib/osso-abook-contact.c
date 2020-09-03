@@ -20,11 +20,11 @@
 struct _OssoABookContactPrivate
 {
   gchar *name[OSSO_ABOOK_NAME_ORDER_COUNT];
-  const char **collate_keys[OSSO_ABOOK_NAME_ORDER_COUNT];
+  char **collate_keys[OSSO_ABOOK_NAME_ORDER_COUNT];
   OssoABookRoster *roster;
   GHashTable *contacts;
-  int field_28;
-  int field_2C;
+  OssoABookStringList field_28;
+  GdkPixbuf *avatar;
   int field_30;
   int field_34;
   int field_38;
@@ -32,7 +32,7 @@ struct _OssoABookContactPrivate
   gchar *presence_status;
   gchar *presence_status_message;
   gchar *presence_location_string;
-  int field_4C;
+  OssoABookPresence *presence;
   int flags;
 };
 
@@ -231,6 +231,157 @@ osso_abook_contact_remove_attribute(EVCard *evc, EVCardAttribute *attr)
 }
 
 static void
+presence_type_cb(OssoABookPresence *presence, GParamSpec *pspec,
+                 OssoABookContact *contact)
+{
+  if (pspec)
+    g_object_notify(G_OBJECT(contact), g_param_spec_get_name(pspec));
+}
+
+static void
+avatar_image_cb(OssoABookPresence *presence, GParamSpec *pspec,
+                OssoABookContact *contact)
+{
+  OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  if (!osso_abook_contact_photo_is_user_selected(contact))
+  {
+    if (priv->avatar)
+    {
+      g_object_unref(priv->avatar);
+      priv->avatar = 0;
+    }
+  }
+
+  presence_type_cb(presence, pspec, contact);
+}
+
+static void
+osso_abook_contact_notify(OssoABookContact *contact, const gchar *property_name)
+{
+  OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  if (!(priv->flags & 0x40))
+  {
+    /* if (!e_vcard_is_parsing(E_VCARD(contact))) - not in upstream eds*/
+      g_object_notify(G_OBJECT(contact), property_name);
+  }
+}
+
+static void
+connect_signals(OssoABookContact *contact, OssoABookPresence *presence)
+{
+  OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  if (priv->presence == presence)
+    return;
+
+  if ( priv->presence )
+  {
+    g_signal_handlers_disconnect_matched(
+          priv->presence, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+          presence_type_cb, contact);
+    g_signal_handlers_disconnect_matched(
+          priv->presence, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+          avatar_image_cb, contact);
+  }
+
+  priv->presence = presence;
+  priv->presence_type = TP_CONNECTION_PRESENCE_TYPE_UNSET;
+
+  if (presence)
+  {
+    priv->presence_type = osso_abook_presence_get_presence_type(presence);
+    g_signal_connect(priv->presence, "notify::avatar-image",
+                     G_CALLBACK(avatar_image_cb), contact);
+    g_signal_connect(priv->presence, "notify::presence-type",
+                     G_CALLBACK(presence_type_cb), contact);
+    g_signal_connect(priv->presence, "notify::presence-status",
+                     G_CALLBACK(presence_type_cb), contact);
+    g_signal_connect(priv->presence, "notify::presence-status-message",
+                     G_CALLBACK(presence_type_cb), contact);
+    g_signal_connect(priv->presence, "notify::presence-location-string",
+                     G_CALLBACK(presence_type_cb), contact);
+    avatar_image_cb(priv->presence, NULL, contact);
+  }
+
+  if (!(priv->flags & 0x40))
+  {
+    g_object_freeze_notify(G_OBJECT(contact));
+    osso_abook_contact_notify(contact, "avatar-image");
+    osso_abook_contact_notify(contact, "server-image");
+    osso_abook_contact_notify(contact, "presence-type");
+    osso_abook_contact_notify(contact, "presence-status");
+    osso_abook_contact_notify(contact, "presence-status-message");
+    osso_abook_contact_notify(contact, "presence-location-string");
+    g_object_thaw_notify(G_OBJECT(contact));
+  }
+}
+
+static void
+osso_abook_contact_dispose(GObject *object)
+{
+  OssoABookContact *contact = OSSO_ABOOK_CONTACT(object);
+  OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  priv->flags |= 0x41u;
+  connect_signals(contact, NULL);
+
+  if (priv->avatar)
+  {
+    g_object_unref(priv->avatar);
+    priv->avatar = NULL;
+  }
+
+  if (priv->roster)
+  {
+    g_object_remove_weak_pointer((GObject *)priv->roster,
+                                 (gpointer *)&priv->roster);
+    priv->roster = NULL;
+  }
+
+  if (priv->contacts)
+    g_hash_table_remove_all(priv->contacts);
+
+  G_OBJECT_CLASS(osso_abook_contact_parent_class)->dispose(object);
+}
+
+static void
+free_names_and_collate_keys(OssoABookContactPrivate *priv)
+{
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS(priv->collate_keys); i++)
+  {
+    g_strfreev(priv->collate_keys[i]);
+    priv->collate_keys[i] = NULL;
+  }
+
+  for (i = 0; i < G_N_ELEMENTS(priv->name); i++)
+  {
+    g_free(priv->name[i]);
+    priv->name[i] = NULL;
+  }
+}
+
+static void
+osso_abook_contact_finalize(GObject *object)
+{
+  OssoABookContact *contact = OSSO_ABOOK_CONTACT(object);
+  OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  if (priv->contacts)
+    g_hash_table_destroy(priv->contacts);
+
+  osso_abook_string_list_free(priv->field_28);
+  g_free(priv->presence_status_message);
+  g_free(priv->presence_status);
+  g_free(priv->presence_location_string);
+  free_names_and_collate_keys(priv);
+
+  G_OBJECT_CLASS(osso_abook_contact_parent_class)->finalize(object);
+}
+static void
 osso_abook_contact_class_init(OssoABookContactClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -239,10 +390,10 @@ osso_abook_contact_class_init(OssoABookContactClass *klass)
 
   g_assert_cmpint(OSSO_ABOOK_NAME_ORDER_COUNT, ==, name_order_class->n_values);
   g_type_class_unref(name_order_class);
-/*
+
   object_class->dispose = osso_abook_contact_dispose;
   object_class->finalize = osso_abook_contact_finalize;
-  object_class->get_property = osso_abook_contact_get_property;
+/*  object_class->get_property = osso_abook_contact_get_property;
 */
   e_vcard_class->remove_attribute = osso_abook_contact_remove_attribute;
   e_vcard_class->add_attribute = osso_abook_contact_add_attribute;
@@ -545,7 +696,7 @@ osso_abook_contact_get_collate_keys(OssoABookContact *contact,
   OssoABookContactPrivate *priv;
   gchar *secondary_out;
   gchar *primary_out;
-  const char **collate_key;
+  char **collate_key;
 
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), no_collate_keys);
   g_return_val_if_fail(order < OSSO_ABOOK_NAME_ORDER_COUNT, no_collate_keys);
@@ -553,12 +704,12 @@ osso_abook_contact_get_collate_keys(OssoABookContact *contact,
   priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
 
   if (priv->collate_keys[order])
-    return priv->collate_keys[order];
+    return (const char **)priv->collate_keys[order];
 
 
   osso_abook_contact_get_name_components(E_CONTACT(contact), order, FALSE,
                                          &primary_out, &secondary_out);
-  collate_key = g_new0(const char *, 3);
+  collate_key = g_new0(char *, 3);
   priv->collate_keys[order] = collate_key;
 
   if (primary_out)
@@ -573,7 +724,7 @@ osso_abook_contact_get_collate_keys(OssoABookContact *contact,
     g_free(secondary_out);
   }
 
-  return collate_key;
+  return (const char **)collate_key;
 }
 
 gboolean
