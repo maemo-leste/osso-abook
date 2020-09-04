@@ -14,8 +14,11 @@
 
 #include "osso-abook-util.h"
 
-/* FIXME */
+/* FIXME - generate during compile time, somehow*/
 #define OSSO_ABOOK_NAME_ORDER_COUNT 4
+
+#define FILE_SCHEME "file://"
+#define MAX_AVATAR_SIZE 512000
 
 struct _OssoABookContactPrivate
 {
@@ -24,7 +27,7 @@ struct _OssoABookContactPrivate
   OssoABookRoster *roster;
   GHashTable *contacts;
   OssoABookStringList field_28;
-  GdkPixbuf *avatar;
+  GdkPixbuf *avatar_image;
   int field_30;
   int field_34;
   int field_38;
@@ -67,6 +70,13 @@ struct roster_contact
 {
   gpointer uid;
   gpointer contact;
+};
+
+struct roster_uid
+{
+  gpointer a;
+  gpointer b;
+  unsigned short priority;
 };
 
 static guint signals[LAST_SIGNAL];
@@ -246,10 +256,10 @@ avatar_image_cb(OssoABookPresence *presence, GParamSpec *pspec,
 
   if (!osso_abook_contact_photo_is_user_selected(contact))
   {
-    if (priv->avatar)
+    if (priv->avatar_image)
     {
-      g_object_unref(priv->avatar);
-      priv->avatar = 0;
+      g_object_unref(priv->avatar_image);
+      priv->avatar_image = 0;
     }
   }
 
@@ -327,10 +337,10 @@ osso_abook_contact_dispose(GObject *object)
   priv->flags |= 0x41u;
   connect_signals(contact, NULL);
 
-  if (priv->avatar)
+  if (priv->avatar_image)
   {
-    g_object_unref(priv->avatar);
-    priv->avatar = NULL;
+    g_object_unref(priv->avatar_image);
+    priv->avatar_image = NULL;
   }
 
   if (priv->roster)
@@ -364,6 +374,289 @@ free_names_and_collate_keys(OssoABookContactPrivate *priv)
   }
 }
 
+static int
+compare_roster_contacts(gconstpointer a, gconstpointer b)
+{
+  struct roster_contact const *_a = a;
+  struct roster_contact const *_b = b;
+  struct roster_uid const *uid_a = _a->uid;
+  struct roster_uid const *uid_b = _b->uid;
+
+  return uid_b->priority - uid_a->priority;
+}
+
+static GdkPixbuf *
+get_server_image(OssoABookContact *contact)
+{
+  OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+  GdkPixbuf *pixbuf = NULL;
+  GPtrArray *arr;
+  struct roster_contact *c;
+  GHashTableIter iter;
+
+  if (!priv->contacts)
+    return NULL;
+
+  arr = g_ptr_array_new();
+  g_hash_table_iter_init(&iter, priv->contacts);
+
+  while (g_hash_table_iter_next(&iter, 0, (gpointer *)&c))
+    g_ptr_array_add(arr, c);
+
+  if (arr->len)
+  {
+    int i;
+
+    g_ptr_array_sort(arr, compare_roster_contacts);
+
+    for (i = 0; i < arr->len; i++)
+    {
+      c = arr->pdata[i];
+
+      if ((pixbuf = osso_abook_avatar_get_image(OSSO_ABOOK_AVATAR(c->contact))))
+        break;
+    }
+  }
+
+  g_ptr_array_free(arr, TRUE);
+
+  return pixbuf;
+}
+
+static void
+size_prepared_cb(GdkPixbufLoader *loader, gint width, gint height,
+                 gpointer user_data)
+{
+  double cw = 144.0f / (double)width;
+  double ch = 144.0f / (double)height;
+  double c = cw >= ch ? ch : cw;
+
+  if (c > 1.0f)
+    c = 1.0f;
+
+  gdk_pixbuf_loader_set_size(loader, (c * (double)width), (c * (double)height));
+}
+
+static gboolean
+_is_regular_file(const gchar *fname)
+{
+  if (!fname)
+    return FALSE;
+
+  return g_file_test(fname, G_FILE_TEST_IS_REGULAR);
+
+}
+
+static gboolean
+_is_local_file(const gchar *uri)
+{
+  const gchar *fname;
+
+  if ( !uri || !*uri )
+    return FALSE;
+
+  if (g_str_has_prefix(uri, FILE_SCHEME))
+    fname = uri + strlen(FILE_SCHEME);
+  else if (*uri == '/')
+    fname = uri;
+  else
+    return FALSE;
+
+  return _is_regular_file(fname);
+}
+
+static gboolean
+_osso_abook_avatar_read_file(GFile *file, char **contents, gsize *length,
+                             GError **error)
+{
+  gchar *uri;
+
+  g_return_val_if_fail(file, FALSE);
+  g_return_val_if_fail(contents, FALSE);
+
+  uri = g_file_get_uri(file);
+
+  if (_is_local_file(uri))
+  {
+    GFileInfo *info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_SIZE,
+                                        G_FILE_QUERY_INFO_NONE, NULL, error);
+    if (info)
+    {
+      if (g_file_info_get_size(info) <= MAX_AVATAR_SIZE)
+      {
+        if (g_file_load_contents(file, NULL, contents, length, NULL, error))
+        {
+          g_object_unref(info);
+          g_free(uri);
+          return TRUE;
+        }
+      }
+      else
+      {
+        g_set_error(error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+                    "File '%s' is too big for an avatar", uri);
+      }
+    }
+
+    g_object_unref(info);
+  }
+
+  g_free(uri);
+
+  *contents = NULL;
+
+  if (length)
+    *length = 0;
+
+  return FALSE;
+}
+static GdkPixbuf *
+get_avatar_image(OssoABookContact *contact)
+{
+  OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+  EContactPhoto *photo;
+
+  if (priv->avatar_image)
+    return priv->avatar_image;
+
+  photo = osso_abook_contact_get_contact_photo(E_CONTACT(contact));
+
+  if (photo)
+  {
+    GdkPixbufLoader *pixbuf_loader = gdk_pixbuf_loader_new();
+
+    g_signal_connect(pixbuf_loader, "size-prepared",
+                     G_CALLBACK(size_prepared_cb), NULL);
+
+    if (photo->type)
+    {
+      if (photo->type == E_CONTACT_PHOTO_TYPE_URI)
+      {
+        GFile *file = g_file_new_for_uri(photo->data.uri);
+        char *buf;
+        gsize count;
+
+        if (_osso_abook_avatar_read_file(file, &buf, &count, NULL))
+        {
+          gdk_pixbuf_loader_write(pixbuf_loader, (guchar *)buf, count, NULL);
+          g_free(buf);
+        }
+        g_object_unref((gpointer)file);
+      }
+    }
+    else
+    {
+      gdk_pixbuf_loader_write(pixbuf_loader, photo->data.inlined.data,
+                              photo->data.inlined.length, NULL);
+    }
+
+    if (gdk_pixbuf_loader_close(pixbuf_loader, NULL))
+    {
+      priv->avatar_image =
+          g_object_ref(gdk_pixbuf_loader_get_pixbuf(pixbuf_loader));
+    }
+
+    e_contact_photo_free(photo);
+    g_object_unref(pixbuf_loader);
+  }
+
+  return priv->avatar_image;
+}
+
+static void
+osso_abook_contact_get_property(GObject *object, guint property_id,
+                                GValue *value, GParamSpec *pspec)
+{
+  switch (property_id)
+  {
+    case PROP_AVATAR_IMAGE:
+    {
+      OssoABookContact *contact = OSSO_ABOOK_CONTACT(object);
+      GdkPixbuf *image = get_avatar_image(contact);
+
+      if (!image && !osso_abook_contact_is_roster_contact(contact))
+        image = get_server_image(contact);
+
+      g_value_set_object(value, image);
+      break;
+    }
+    case PROP_SERVER_IMAGE:
+    {
+      g_value_set_object(value, get_server_image(OSSO_ABOOK_CONTACT(object)));
+      break;
+    }
+    case PROP_CAPABILITIES:
+    {
+      OssoABookCapsFlags caps_flags =
+          osso_abook_caps_get_capabilities(OSSO_ABOOK_CAPS(object));
+
+      g_value_set_flags(value, caps_flags);
+      break;
+    }
+    case PROP_DISPLAY_NAME:
+    {
+      const char *display_name =
+          osso_abook_contact_get_display_name(OSSO_ABOOK_CONTACT(object));
+
+      g_value_set_string(value, display_name);
+      break;
+    }
+    case PROP_PRESENCE_TYPE:
+    {
+      TpConnectionPresenceType presence_type =
+          osso_abook_presence_get_presence_type(OSSO_ABOOK_PRESENCE(object));
+
+      g_value_set_uint(value, presence_type);
+      break;
+    }
+    case PROP_PRESENCE_STATUS:
+    {
+      const char *presence_status =
+          osso_abook_presence_get_presence_status(OSSO_ABOOK_PRESENCE(object));
+
+      g_value_set_string(value, presence_status);
+      break;
+    }
+    case PROP_PRESENCE_STATUS_MESSAGE:
+    {
+      const char *status_message =
+          osso_abook_presence_get_presence_status_message(
+            OSSO_ABOOK_PRESENCE(object));
+
+      g_value_set_string(value, status_message);
+      break;
+    }
+    case PROP_PRESENCE_LOCATION_STRING:
+    {
+      G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+      const char *location_string =
+          osso_abook_presence_get_location_string(OSSO_ABOOK_PRESENCE(object));
+      G_GNUC_END_IGNORE_DEPRECATIONS
+
+      g_value_set_string(value, location_string);
+      break;
+    }
+    case PROP_AVATAR_USER_SELECTED:
+    {
+      gboolean is_user_selected = osso_abook_contact_photo_is_user_selected(
+            OSSO_ABOOK_CONTACT(object));
+
+      g_value_set_boolean(value, is_user_selected);
+      break;
+    }
+    case PROP_DONE_LOADING:
+    {
+      g_value_set_boolean(value, TRUE);
+      break;
+    }
+    default:
+    {
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+    }
+  }
+}
+
 static void
 osso_abook_contact_finalize(GObject *object)
 {
@@ -393,8 +686,8 @@ osso_abook_contact_class_init(OssoABookContactClass *klass)
 
   object_class->dispose = osso_abook_contact_dispose;
   object_class->finalize = osso_abook_contact_finalize;
-/*  object_class->get_property = osso_abook_contact_get_property;
-*/
+  object_class->get_property = osso_abook_contact_get_property;
+
   e_vcard_class->remove_attribute = osso_abook_contact_remove_attribute;
   e_vcard_class->add_attribute = osso_abook_contact_add_attribute;
 
@@ -1074,4 +1367,42 @@ osso_abook_contact_collate(OssoABookContact *a, OssoABookContact *b,
     keys_a++;
     keys_b++;
   }
+}
+
+gboolean
+osso_abook_contact_photo_is_user_selected(OssoABookContact *contact)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
+
+  if (osso_abook_contact_is_roster_contact(contact) ||
+      osso_abook_is_temporary_uid(
+        e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID)))
+  {
+    return FALSE;
+  }
+
+  return e_vcard_get_attribute(E_VCARD(contact), "PHOTO") != NULL;
+}
+
+EContactPhoto *
+osso_abook_contact_get_contact_photo(EContact *contact)
+{
+  EContactPhoto *photo;
+
+  g_return_val_if_fail(contact != NULL, NULL);
+  g_return_val_if_fail(E_IS_CONTACT(contact), NULL);
+
+  photo = e_contact_get(E_CONTACT(contact), E_CONTACT_PHOTO);
+
+  if (photo)
+  {
+    if (photo->type == E_CONTACT_PHOTO_TYPE_URI &&
+        !_is_local_file(photo->data.uri))
+    {
+      e_contact_photo_free(photo);
+      photo = NULL;
+    }
+  }
+
+  return photo;
 }
