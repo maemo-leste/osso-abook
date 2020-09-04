@@ -62,12 +62,6 @@ struct account_info
   volatile gint refcount;
 };
 
-struct async_data
-{
-  GMainLoop *main_loop;
-  gpointer user_data;
-};
-
 typedef struct _OssoABookAccountManagerPrivate OssoABookAccountManagerPrivate;
 
 static void osso_abook_account_manager_waitable_iface_init(
@@ -1091,66 +1085,6 @@ get_roster_overrides(OssoABookAccountManagerPrivate *priv)
 }
 
 static void
-cms_ready_cb(GObject *object, GAsyncResult *res, gpointer user_data)
-{
-  struct async_data *data = user_data;
-  GError *error = NULL;
-  GList *cms = tp_list_connection_managers_finish (res, &error);
-
-  if (error != NULL)
-  {
-    OSSO_ABOOK_WARN("Error getting list of CMs: %s", error->message);
-    g_error_free (error);
-  }
-  else if (cms == NULL)
-    OSSO_ABOOK_WARN("No Telepathy connection managers found");
-  else
-  {
-    GList *cm;
-    GHashTable *vcard_fields = data->user_data;
-
-    for (cm = cms; cm; cm = cm->next)
-    {
-      GList *protocols = tp_connection_manager_dup_protocols(cm->data);
-      GList *p;
-
-      for (p = protocols; p; p = p->next)
-      {
-        const gchar *vcard_field = tp_protocol_get_vcard_field(p->data);
-
-        if (vcard_field)
-        {
-          const gchar *protocol_name = tp_protocol_get_name(p->data);
-
-          OSSO_ABOOK_NOTE(TP, "adding %s primary vcard field: %s",
-                          protocol_name, vcard_field);
-          g_hash_table_insert(vcard_fields, g_strdup(protocol_name),
-                              g_strdup(vcard_field));
-        }
-      }
-
-      g_list_free_full(protocols, g_object_unref);
-    }
-  }
-
-  g_list_free_full(cms, g_object_unref);
-
-  g_main_loop_quit(data->main_loop);
-}
-
-static void
-get_vcard_fields(OssoABookAccountManagerPrivate *priv)
-{
-  GMainLoop *main_loop = g_main_loop_new(NULL, FALSE);
-  struct async_data data = {main_loop, priv->vcard_fields};
-
-  tp_list_connection_managers_async(priv->tp_dbus, cms_ready_cb, &data);
-
-  g_main_loop_run(main_loop);
-  g_main_loop_unref(main_loop);
-}
-
-static void
 account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
                             gboolean valid, gpointer user_data)
 {
@@ -1347,6 +1281,55 @@ get_accounts(OssoABookAccountManager *manager)
 }
 
 static void
+cms_ready_cb(GObject *object, GAsyncResult *res, gpointer user_data)
+{
+  OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(user_data);
+  OssoABookAccountManagerPrivate *priv =
+      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+  GError *error = NULL;
+  GList *cms = tp_list_connection_managers_finish (res, &error);
+
+  if (error != NULL)
+  {
+    OSSO_ABOOK_WARN("Error getting list of CMs: %s", error->message);
+    g_error_free (error);
+  }
+  else if (cms == NULL)
+    OSSO_ABOOK_WARN("No Telepathy connection managers found");
+  else
+  {
+    GList *cm;
+
+    for (cm = cms; cm; cm = cm->next)
+    {
+      GList *protocols = tp_connection_manager_dup_protocols(cm->data);
+      GList *p;
+
+      for (p = protocols; p; p = p->next)
+      {
+        const gchar *vcard_field = tp_protocol_get_vcard_field(p->data);
+
+        if (vcard_field)
+        {
+          const gchar *protocol_name = tp_protocol_get_name(p->data);
+
+          OSSO_ABOOK_NOTE(TP, "adding %s primary vcard field: %s",
+                          protocol_name, vcard_field);
+          g_hash_table_insert(priv->vcard_fields, g_strdup(protocol_name),
+                              g_strdup(vcard_field));
+        }
+      }
+
+      g_list_free_full(protocols, g_object_unref);
+    }
+  }
+
+  g_list_free_full(cms, g_object_unref);
+
+  get_accounts(manager);
+}
+
+static void
 osso_abook_account_manager_init(OssoABookAccountManager *manager)
 {
   OssoABookAccountManagerPrivate *priv =
@@ -1363,10 +1346,8 @@ osso_abook_account_manager_init(OssoABookAccountManager *manager)
       g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
   priv->flags |= ACCOUNT_MANAGER_ACTIVE_ACCOUNTS_ONLY;
 
-  get_vcard_fields(priv);
-
   get_roster_overrides(priv);
-  get_accounts(manager);
+  tp_list_connection_managers_async(priv->tp_dbus, cms_ready_cb, manager);
 }
 
 TpConnectionPresenceType
