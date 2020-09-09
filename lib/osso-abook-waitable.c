@@ -181,3 +181,43 @@ osso_abook_waitable_notify(OssoABookWaitable *waitable, const GError *error)
     gdk_threads_add_idle(waitable_notify_cb, data);
   }
 }
+
+typedef struct
+{
+  GMainLoop *loop;
+  GError **error;
+} WaitableRunClosure;
+
+static void
+ready_cb(OssoABookWaitable *waitable, const GError *error, gpointer data)
+{
+  WaitableRunClosure *closure = data;
+
+  if (error && closure->error)
+    *closure->error = g_error_copy(error);
+
+  g_main_loop_quit(closure->loop);
+}
+
+void
+osso_abook_waitable_run(OssoABookWaitable *waitable, GMainContext *context,
+                        GError **error)
+{
+  WaitableRunClosure closure;
+
+  g_return_if_fail(OSSO_ABOOK_IS_WAITABLE (waitable));
+
+  closure.error = error;
+  closure.loop = g_main_loop_new(context, TRUE);
+
+  osso_abook_waitable_call_when_ready(waitable, ready_cb, &closure, NULL);
+
+  if (g_main_loop_is_running(closure.loop))
+  {
+    GDK_THREADS_LEAVE();
+    g_main_loop_run(closure.loop);
+    GDK_THREADS_ENTER();
+  }
+
+  g_main_loop_unref(closure.loop);
+}
