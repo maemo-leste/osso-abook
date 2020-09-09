@@ -40,6 +40,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-avatar-cache.c \
 		eds.c \
 		osso-abook-roster.c \
+		osso-abook-gconf-contact.c \
 		osso-abook-aggregator.c \
 		osso-abook-contact.c \
 		osso-abook-utils-private.c \

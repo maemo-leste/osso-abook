@@ -1406,3 +1406,21 @@ osso_abook_contact_get_contact_photo(EContact *contact)
 
   return photo;
 }
+
+gboolean
+osso_abook_contact_attribute_is_readonly(EVCardAttribute *attribute)
+{
+  GList *l;
+
+  g_return_val_if_fail(NULL != attribute, FALSE);
+
+  for (l = e_vcard_attribute_get_params(attribute); l; l = l->next)
+  {
+    const char *name= e_vcard_attribute_param_get_name(l->data);
+
+    if (name && !g_ascii_strcasecmp(name, OSSO_ABOOK_VCP_OSSO_READONLY))
+      return TRUE;
+  }
+
+  return FALSE;
+}
