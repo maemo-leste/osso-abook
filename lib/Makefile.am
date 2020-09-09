@@ -41,6 +41,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		eds.c \
 		osso-abook-roster.c \
 		osso-abook-gconf-contact.c \
+		osso-abook-voicemail-contact.c \
 		osso-abook-aggregator.c \
 		osso-abook-contact.c \
 		osso-abook-utils-private.c \
