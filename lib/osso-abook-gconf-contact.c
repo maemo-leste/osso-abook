@@ -11,6 +11,8 @@ struct _OssoABookGconfContactPrivate
   gchar *key;
   guint cnxn;
   GConfClient *gconf;
+  gboolean vcard_empty : 1;
+  gboolean deleted : 1;
 };
 
 typedef struct _OssoABookGconfContactPrivate OssoABookGconfContactPrivate;
@@ -249,10 +251,103 @@ osso_abook_gconf_contact_class_init(OssoABookGconfContactClass *klass)
           GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
-static void osso_abook_gconf_contact_init(OssoABookGconfContact *contact)
+static void
+osso_abook_gconf_contact_init(OssoABookGconfContact *contact)
 {
   OssoABookGconfContactPrivate *priv =
       OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(contact);
 
   priv->gconf = osso_abook_get_gconf_client();
+}
+
+gboolean
+osso_abook_gconf_contact_is_vcard_empty(OssoABookGconfContact *self)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_GCONF_CONTACT(self), TRUE);
+
+  return OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(self)->vcard_empty;
+}
+
+gboolean
+osso_abook_gconf_contact_is_deleted(OssoABookGconfContact *self)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_GCONF_CONTACT(self), FALSE);
+
+  return OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(self)->deleted;
+}
+
+static void
+load_from_vcs(OssoABookGconfContact *self, const char *vcs)
+{
+  OssoABookGconfContactPrivate *priv =
+      OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(self);
+  const char *uid;
+  OssoABookContact *contact;
+
+  priv->vcard_empty = !vcs || *vcs == '\0';
+
+  if (!priv->vcard_empty)
+    priv->deleted = !g_strcmp0(vcs, "user-deleted");
+  else
+    priv->deleted = FALSE;
+
+  uid = e_contact_get_const(E_CONTACT(self), E_CONTACT_UID);
+
+  if (priv->vcard_empty || priv->deleted)
+    contact = osso_abook_contact_new();
+  else
+    contact = osso_abook_contact_new_from_vcard(uid, vcs);
+
+  if (contact)
+  {
+    e_contact_set(E_CONTACT(contact), E_CONTACT_UID, uid);
+    osso_abook_contact_reset(OSSO_ABOOK_CONTACT(self), contact);
+    g_object_unref(contact);
+  }
+}
+
+static void
+gconf_notiy_cb(GConfClient *client, guint cnxn_id, GConfEntry *entry,
+               gpointer user_data)
+{
+  OssoABookGconfContact *contact = (OssoABookGconfContact *)user_data;
+
+  if (entry && entry->value)
+    load_from_vcs(contact, gconf_value_get_string(entry->value));
+  else
+    load_from_vcs(contact, NULL);
+}
+
+void
+osso_abook_gconf_contact_load(OssoABookGconfContact *self)
+{
+  OssoABookGconfContactPrivate *priv;
+  gchar *vcs;
+
+  g_return_if_fail(OSSO_ABOOK_IS_GCONF_CONTACT(self));
+
+  priv = OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(self);
+
+  if (!priv->cnxn)
+  {
+    priv->cnxn = gconf_client_notify_add(priv->gconf, priv->key, gconf_notiy_cb,
+                                         self, NULL, NULL);
+  }
+
+  vcs = gconf_client_get_string(priv->gconf, priv->key, NULL);
+  load_from_vcs(self, vcs);
+  g_free(vcs);
+}
+
+EVCardAttribute *
+osso_abook_gconf_contact_add_ro_attribute(OssoABookGconfContact *self,
+                                          const gchar *attr_name,
+                                          const gchar *value)
+{
+  EVCardAttribute *attr = e_vcard_attribute_new(NULL, attr_name);
+
+  e_vcard_add_attribute_with_value(E_VCARD(self), attr, value);
+  osso_abook_contact_attribute_set_readonly(attr, TRUE);
+
+  return attr;
 }
