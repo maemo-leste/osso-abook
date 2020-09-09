@@ -14,6 +14,7 @@
 #include "osso-abook-roster.h"
 #include "osso-abook-enums.h"
 #include "osso-abook-waitable.h"
+#include "osso-abook-utils-private.h"
 
 //#define MC_ACCOUNT
 
@@ -97,40 +98,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(
 
 #define OSSO_ABOOK_TREE_VIEW_PRIVATE(view) \
                 osso_abook_tree_view_get_instance_private(view)
-
-static gchar *
-_osso_abook_flags_to_string(GType flags_type, guint value)
-{
-  GFlagsClass *flags_class;
-  GString *s;
-
-  g_return_val_if_fail(G_TYPE_IS_FLAGS(flags_type), NULL);
-
-  flags_class = g_type_class_ref(flags_type);
-
-  g_return_val_if_fail(G_IS_FLAGS_CLASS(flags_class), NULL);
-
-
-  s = g_string_new(0);
-  g_string_append_c(s, '(');
-
-  for (int i = 0; i < flags_class->n_values; i++)
-  {
-    GFlagsValue *v = &flags_class->values[i];
-
-    if (value && v->value)
-    {
-      if (i > 1)
-        g_string_append_c(s, '|');
-    }
-
-    g_string_append(s, v->value_nick);
-  }
-
-  g_string_append_c(s, ')');
-
-  return g_string_free(s, FALSE);
-}
 
 static void
 notify_avatar_image_cb(OssoABookContact *contact, GdkPixbuf *image,

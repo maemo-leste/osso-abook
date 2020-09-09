@@ -110,3 +110,46 @@ osso_abook_get_work_dir()
 
   return work_dir;
 }
+
+EBook *
+osso_abook_system_book_dup_singleton(gboolean open, GError **error)
+{
+  static EBook *book;
+  static gboolean is_opened;
+
+  if (!book )
+  {
+    ESourceRegistry *registry = e_source_registry_new_sync(NULL, error);
+    ESource *source;
+
+    if (!registry)
+      return NULL;
+
+    source = e_source_registry_ref_builtin_address_book(registry);
+    book = e_book_new(source, error);
+
+    g_object_unref(source);
+    g_object_unref(registry);
+
+    if (!book)
+      return NULL;
+
+    g_object_add_weak_pointer(G_OBJECT(book), (gpointer *)&book);
+    is_opened = FALSE;
+  }
+  else
+    g_object_ref(book);
+
+  if (!open || is_opened)
+    return book;
+
+  if (e_book_open(book, FALSE, error))
+  {
+    is_opened = TRUE;
+    return book;
+  }
+
+  g_object_unref(book);
+
+  return NULL;
+}

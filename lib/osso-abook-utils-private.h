@@ -24,6 +24,10 @@ _osso_abook_scale_pixbuf_and_crop(const GdkPixbuf *image, int width, int height,
 void
 _osso_abook_pixbuf_cut_corners(GdkPixbuf *pixbuf, const int radius,
                                const guint8 border_color[4]);
+
+gchar *
+_osso_abook_flags_to_string(GType flags_type, guint value);
+
 G_END_DECLS
 
 #endif /* __OSSO_ABOOK_UTILS_PRIVATE_H_INCLUDED__ */
