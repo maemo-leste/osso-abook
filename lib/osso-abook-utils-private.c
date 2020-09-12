@@ -1,4 +1,6 @@
 #include <gdk/gdk.h>
+#include <dbus/dbus.h>
+#include <dbus/dbus-glib-bindings.h>
 
 #include <math.h>
 
@@ -351,4 +353,31 @@ _osso_abook_flags_to_string(GType flags_type, guint value)
   g_string_append_c(s, ')');
 
   return g_string_free(s, FALSE);
+}
+
+gboolean
+_osso_abook_is_addressbook()
+{
+  static pid_t pid;
+
+  G_STATIC_ASSERT(sizeof(pid_t) == sizeof(dbus_uint32_t));
+
+  if (!pid)
+  {
+    DBusGConnection *bus = dbus_g_bus_get(DBUS_BUS_SESSION, NULL);
+    DBusGProxy *proxy;
+
+    if (bus && (proxy = dbus_g_proxy_new_for_name(bus, DBUS_SERVICE_DBUS, "/",
+                                                  DBUS_INTERFACE_DBUS)))
+    {
+      dbus_uint32_t _pid = 0;
+
+      org_freedesktop_DBus_get_connection_unix_process_id(
+            proxy, "com.nokia.osso_addressbook", &_pid, NULL);
+      g_object_unref(proxy);
+      pid = _pid;
+    }
+  }
+
+  return getpid() == pid;
 }

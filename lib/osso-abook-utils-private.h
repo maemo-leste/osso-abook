@@ -6,6 +6,8 @@
 
 G_BEGIN_DECLS
 
+#define IS_EMPTY(s) ((s) && (s)[0])
+
 void
 disconnect_signal_if_connected(gpointer instance, gulong handler);
 
@@ -27,6 +29,9 @@ _osso_abook_pixbuf_cut_corners(GdkPixbuf *pixbuf, const int radius,
 
 gchar *
 _osso_abook_flags_to_string(GType flags_type, guint value);
+
+gboolean
+_osso_abook_is_addressbook(void);
 
 G_END_DECLS
 

@@ -9,6 +9,7 @@
 #include "osso-abook-roster.h"
 #include "osso-abook-string-list.h"
 #include "osso-abook-account-manager.h"
+#include "osso-abook-contact-private.h"
 
 #include "config.h"
 
@@ -29,7 +30,7 @@ struct _OssoABookContactPrivate
   OssoABookStringList field_28;
   GdkPixbuf *avatar_image;
   int field_30;
-  int field_34;
+  OssoABookCapsFlags caps;
   int field_38;
   TpConnectionPresenceType presence_type;
   gchar *presence_status;
@@ -271,7 +272,7 @@ osso_abook_contact_notify(OssoABookContact *contact, const gchar *property_name)
 {
   OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
 
-  if (!(priv->flags & 0x40))
+  if (!(priv->flags & 0x40)) //!priv->disposed
   {
     /* if (!e_vcard_is_parsing(E_VCARD(contact))) - not in upstream eds*/
       g_object_notify(G_OBJECT(contact), property_name);
@@ -1423,4 +1424,132 @@ osso_abook_contact_attribute_is_readonly(EVCardAttribute *attribute)
   }
 
   return FALSE;
+}
+
+void
+osso_abook_contact_reset(OssoABookContact *contact,
+                         OssoABookContact *replacement)
+{
+  OssoABookContactPrivate *priv;
+  GList *l;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(replacement));
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  g_return_if_fail(/* !priv->disposed */!(priv->flags & 0x40));
+
+  g_object_freeze_notify(G_OBJECT(contact));
+  priv->flags |= 1u;
+
+  for (l = e_vcard_get_attributes(E_VCARD(contact)); l; l = l->next)
+  {
+    if (!osso_abook_contact_attribute_is_readonly(l->data))
+      e_vcard_remove_attribute(E_VCARD(contact), l->data);
+  }
+
+  for (l = e_vcard_get_attributes(E_VCARD(replacement)); l; l = l->next)
+    e_vcard_add_attribute(E_VCARD(contact), e_vcard_attribute_copy(l->data));
+
+  priv->flags &= 0xFEu;
+  g_assert(0);
+  /*parse_capabilities(contact, priv);
+  parse_presence(contact, priv);*/
+  g_object_thaw_notify(G_OBJECT(contact));
+  g_signal_emit(contact, signals[RESET], 0);
+}
+
+/* readonly seems to be ignored, see osso_abook_contact_attribute_is_readonly */
+void
+osso_abook_contact_attribute_set_readonly(EVCardAttribute *attribute,
+                                          gboolean readonly)
+{
+  EVCardAttributeParam *param;
+
+  g_return_if_fail(NULL != attribute);
+
+  param = e_vcard_attribute_param_new(OSSO_ABOOK_VCP_OSSO_READONLY);
+  e_vcard_attribute_add_param(attribute, param);
+}
+
+char *
+osso_abook_create_temporary_uid()
+{
+  static guint temp_uid;
+
+  return g_strdup_printf("osso-abook-tmc%d", ++temp_uid);
+}
+
+TpAccount *
+osso_abook_contact_get_account(OssoABookContact *contact)
+{
+  OssoABookRoster *roster;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  roster = OSSO_ABOOK_CONTACT_PRIVATE(contact)->roster;
+
+  if (roster)
+    return osso_abook_roster_get_account(roster);
+
+  return NULL;
+}
+
+static EBook *
+get_contact_book(OssoABookContact *contact)
+{
+  OssoABookRoster *roster = osso_abook_contact_get_roster(contact);
+  EBook *book;
+
+  if (!roster)
+    return osso_abook_system_book_dup_singleton(TRUE, NULL);
+
+  book = osso_abook_roster_get_book(roster);
+
+  if (!book)
+    return osso_abook_system_book_dup_singleton(TRUE, NULL);
+
+  g_object_ref(book);
+
+  return book;
+}
+
+void
+_osso_abook_contact_reject_for_uid_full(OssoABookContact *contact,
+                                        const gchar *master_uid,
+                                        gboolean always_keep_roster_contact,
+                                        GError **error)
+{
+  const gchar *contact_uid;
+  EBook *book;
+  GString *id;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+  g_return_if_fail(master_uid || !always_keep_roster_contact);
+
+  contact_uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+  g_return_if_fail(NULL != contact_uid);
+
+  book = get_contact_book(contact);
+  g_return_if_fail(NULL != book);
+
+  id = g_string_new(contact_uid);
+
+  g_string_append_c(id, ';');
+
+  if (master_uid)
+    g_string_append(id, master_uid);
+  else
+    g_string_append(id, "if-unused");
+
+  if (always_keep_roster_contact)
+  {
+    g_string_append_c(id, ';');
+    g_string_append(id, "preserve");
+  }
+
+  e_book_remove_contact(book, id->str, error);
+  g_object_unref(book);
+  g_string_free(id, TRUE);
 }
