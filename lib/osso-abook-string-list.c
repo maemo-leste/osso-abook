@@ -2,16 +2,22 @@
 
 #include "osso-abook-string-list.h"
 
-static gpointer
-osso_abook_string_list_copy(gpointer boxed)
+GList *
+osso_abook_string_list_copy(GList *list)
 {
   GList *l;
   GList *copy = NULL;
 
-  for(l = boxed; l; l = l->next)
+  for(l = list; l; l = l->next)
       copy = g_list_prepend(copy, g_strdup(l->data));
 
   return g_list_reverse(copy);
+}
+
+static gpointer
+_osso_abook_string_list_copy(gpointer boxed)
+{
+  return osso_abook_string_list_copy(boxed);
 }
 
 void
@@ -31,5 +37,5 @@ _osso_abook_string_list_free(gpointer boxed)
 
 G_DEFINE_BOXED_TYPE(OssoABookStringList,
                     osso_abook_string_list,
-                    osso_abook_string_list_copy,
+                    _osso_abook_string_list_copy,
                     _osso_abook_string_list_free);

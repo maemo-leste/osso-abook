@@ -22,6 +22,7 @@
 #include "osso-abook-log.h"
 #include "osso-abook-eventlogger.h"
 #include "osso-abook-contact-private.h"
+#include "osso-abook-string-list.h"
 
 enum OSSO_ABOOK_AGGREGATOR_FLAGS
 {
@@ -1499,6 +1500,79 @@ roster_contacts_added_cb(OssoABookRoster *roster, OssoABookContact **contacts,
   osso_abook_aggregator_emit_all(aggregator, __FUNCTION__);
 }
 
+static gboolean
+detach_roster_contact(OssoABookAggregatorPrivate *priv, const char *master_uid,
+                      OssoABookContact *roster_contact)
+{
+  OssoABookContact *master_contact; // r5
+  GHashTable *ppned;
+
+  g_return_val_if_fail(!IS_EMPTY(master_uid), FALSE);
+
+  master_contact = g_hash_table_lookup(priv->master_contacts, master_uid);
+
+  if (master_contact)
+  {
+    if (g_hash_table_remove(priv->temp_master_contacts, master_uid))
+      g_ptr_array_add(priv->contacts_removed, g_object_ref(master_contact));
+
+    osso_abook_contact_detach(master_contact, roster_contact);
+    g_ptr_array_add(priv->contacts_changed, g_object_ref(master_contact));
+    return TRUE;
+  }
+
+  ppned = g_hash_table_lookup(priv->postponed_contacts, master_uid);
+
+  if (ppned && g_hash_table_remove(
+        ppned, e_contact_get_const(E_CONTACT(roster_contact), E_CONTACT_UID)))
+  {
+    if (!g_hash_table_size(ppned))
+      g_hash_table_remove(priv->postponed_contacts, master_uid);
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static void
+roster_contacts_removed_cb(OssoABookRoster *roster, const char **uids,
+                           gpointer user_data)
+{
+  OssoABookAggregator *aggregator = (OssoABookAggregator *)user_data;
+  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+
+  while (*uids)
+  {
+    const char *uid = *uids;
+    OssoABookContact *roster_contact;
+    GList *master_uids, *l;
+
+    roster_contact = g_hash_table_lookup(priv->roster_contacts, uid);
+
+    if (roster_contact)
+    {
+      _osso_abook_eventlogger_update_roster(
+            osso_abook_contact_get_account(roster_contact),
+            osso_abook_contact_get_bound_name(roster_contact),
+            NULL);
+      master_uids = osso_abook_string_list_copy(
+            osso_abook_contact_get_master_uids(roster_contact));
+
+      for (l = master_uids; l; l = l->next)
+        detach_roster_contact(priv, l->data, roster_contact);
+
+      osso_abook_string_list_free(master_uids);
+      remove_temporary_master(aggregator, uid, NULL, __FUNCTION__);
+      g_hash_table_remove(priv->roster_contacts, uid);
+    }
+    else
+      OSSO_ABOOK_WARN("roster contact %s not found", uid);
+  }
+
+  osso_abook_aggregator_emit_all(aggregator, __FUNCTION__);
+}
+
 static void
 roster_created_cb(OssoABookRosterManager *manager, OssoABookRoster *roster,
                   gpointer user_data)
@@ -1522,6 +1596,96 @@ roster_created_cb(OssoABookRosterManager *manager, OssoABookRoster *roster,
 
   if (!(priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_READY))
     priv->pending_rosters = g_list_prepend(priv->pending_rosters, roster);
+}
+
+static void
+roster_removed_cb(OssoABookRosterManager *manager, OssoABookRoster *roster,
+                  gpointer user_data)
+{
+  OssoABookAggregator *aggregator = (OssoABookAggregator *)user_data;
+  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+  GPtrArray *removed;
+  GHashTableIter iter;
+  OssoABookContact *roster_contact;
+
+  OSSO_ABOOK_NOTE(AGGREGATOR, "%s@%p: roster %s removed",
+                  osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+                  aggregator, osso_abook_roster_get_book_uri(roster));
+
+  g_signal_handlers_disconnect_matched(
+    roster, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+        roster_contacts_added_cb, aggregator);
+  g_signal_handlers_disconnect_matched(
+    roster, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+    roster_contacts_changed_cb, aggregator);
+  g_signal_handlers_disconnect_matched(
+    roster, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+    roster_contacts_removed_cb, aggregator);
+  g_signal_handlers_disconnect_matched(
+    roster, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+    roster_sequence_complete_cb, aggregator);
+
+  removed = g_ptr_array_new();
+  g_hash_table_iter_init(&iter, priv->roster_contacts);
+
+  while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&roster_contact))
+  {
+    if (roster == osso_abook_contact_get_roster(roster_contact))
+    {
+      const char *uid =
+          e_contact_get_const(E_CONTACT(roster_contact), E_CONTACT_UID);
+
+      g_ptr_array_add(removed, (char *)uid);
+    }
+  }
+
+  if (removed->len)
+  {
+    g_ptr_array_add(removed, NULL);
+    roster_contacts_removed_cb(roster, (const char **)removed->pdata,
+                               aggregator);
+  }
+
+  g_ptr_array_free(removed, TRUE);
+  priv->pending_rosters = g_list_remove_all(priv->pending_rosters, roster);
+  priv->complete_rosters = g_list_remove_all(priv->complete_rosters, roster);
+}
+
+static void
+roster_manager_ready_cb(OssoABookWaitable *waitable, const GError *error,
+                        gpointer user_data)
+{
+  OssoABookAggregator *aggregator = user_data;
+  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+  OssoABookAggregatorState state = osso_abook_aggregator_get_state(aggregator);
+  OssoABookRosterManager *roster_manager;
+  GList *l;
+
+  priv->closure = NULL;
+
+  if (error)
+  {
+    OSSO_ABOOK_WARN("%s: %s", g_quark_to_string(error->domain), error->message);
+    return;
+  }
+
+  priv->flags |= OSSO_ABOOK_AGGREGATOR_FLAGS_READY;
+
+  roster_manager = OSSO_ABOOK_ROSTER_MANAGER(waitable);
+
+  for (l = osso_abook_roster_manager_list_rosters(roster_manager); l;
+       l = g_list_delete_link(l, l))
+  {
+    if (!g_list_find(priv->complete_rosters, l->data))
+      priv->pending_rosters = g_list_prepend(priv->pending_rosters, l->data);
+  }
+
+  OSSO_ABOOK_NOTE(
+        AGGREGATOR, "%s@%p: roster-manager ready, %d pending rosters",
+        osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+        aggregator, g_list_length(priv->pending_rosters));
+
+  osso_abook_aggregator_change_state(aggregator, state);
 }
 
 static void
