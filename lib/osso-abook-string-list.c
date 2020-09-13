@@ -39,3 +39,21 @@ G_DEFINE_BOXED_TYPE(OssoABookStringList,
                     osso_abook_string_list,
                     _osso_abook_string_list_copy,
                     _osso_abook_string_list_free);
+
+GList *
+osso_abook_string_list_sort(GList *list)
+{
+  return g_list_sort(list, (GCompareFunc)strcmp);
+}
+
+GList *
+osso_abook_string_list_chug(GList *list)
+{
+  if (list)
+  {
+    g_free(list->data);
+    list = g_list_delete_link(list, list);
+  }
+
+  return list;
+}

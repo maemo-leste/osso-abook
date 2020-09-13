@@ -12,6 +12,8 @@ GType osso_abook_string_list_get_type(void) G_GNUC_CONST;
 
 GList *osso_abook_string_list_copy(GList *list);
 void osso_abook_string_list_free(OssoABookStringList list);
+GList *osso_abook_string_list_sort(GList *list);
+GList *osso_abook_string_list_chug(GList *list);
 
 G_END_DECLS
 

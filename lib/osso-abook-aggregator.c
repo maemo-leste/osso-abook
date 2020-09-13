@@ -1504,7 +1504,7 @@ static gboolean
 detach_roster_contact(OssoABookAggregatorPrivate *priv, const char *master_uid,
                       OssoABookContact *roster_contact)
 {
-  OssoABookContact *master_contact; // r5
+  OssoABookContact *master_contact;
   GHashTable *ppned;
 
   g_return_val_if_fail(!IS_EMPTY(master_uid), FALSE);
@@ -1533,6 +1533,143 @@ detach_roster_contact(OssoABookAggregatorPrivate *priv, const char *master_uid,
   }
 
   return FALSE;
+}
+
+static void
+roster_contacts_changed_cb(OssoABookRoster *roster, OssoABookContact **contacts,
+                           gpointer user_data)
+{
+  OssoABookAggregator *aggregator = (OssoABookAggregator *)user_data;
+  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+
+  OSSO_ABOOK_NOTE(
+        AGGREGATOR, "%s@%p: roster contacts changed for %s",
+        osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+        aggregator, osso_abook_roster_get_book_uri(roster));
+
+  while (*contacts)
+  {
+    OssoABookContact *contact = *contacts++;
+    RosterAttachStatus final_status = NOT_ATTACHED;
+    gchar *first_uid = NULL;
+    gboolean update = FALSE;
+    const char *uid;
+    OssoABookContact *roster_contact;
+    GList *roster_uids;
+    GList *contact_uids;
+
+    uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+    roster_contact = g_hash_table_lookup(priv->roster_contacts, uid);
+
+    if (!roster_contact)
+    {
+      OSSO_ABOOK_WARN("roster contact %s not found", uid);
+      continue;
+    }
+
+    roster_uids = osso_abook_contact_get_master_uids(roster_contact);
+    roster_uids = osso_abook_string_list_copy(roster_uids);
+    roster_uids = osso_abook_string_list_sort(roster_uids);
+
+    contact_uids = osso_abook_contact_get_master_uids(contact);
+    contact_uids = osso_abook_string_list_copy(contact_uids);
+    contact_uids = osso_abook_string_list_sort(contact_uids);
+
+    osso_abook_contact_reset(roster_contact, contact);
+
+    while (roster_uids || contact_uids )
+    {
+      int uid_cmp_res;
+
+      if (contact_uids)
+      {
+        if (roster_uids)
+        {
+          uid_cmp_res = strcmp(roster_uids->data, contact_uids->data);
+
+          if (!uid_cmp_res)
+          {
+            RosterAttachStatus status;
+
+            OSSO_ABOOK_NOTE(
+                  AGGREGATOR, "%s@%p: updating %s for %s",
+                  osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+                  aggregator, uid, contact_uids->data);
+
+            status = attach_roster_contact(aggregator, contact_uids->data,
+                                           roster_contact);
+
+            if (status == ATTACHED_TO_MASTER && !first_uid)
+              first_uid = g_strdup(contact_uids->data);
+
+            if (final_status < status)
+              final_status = status;
+
+            roster_uids = osso_abook_string_list_chug(roster_uids);
+            contact_uids = osso_abook_string_list_chug(contact_uids);
+          }
+        }
+        else
+          uid_cmp_res = 1;
+      }
+      else
+        uid_cmp_res = -1;
+
+      if (uid_cmp_res > 0)
+      {
+        RosterAttachStatus status;
+
+        OSSO_ABOOK_NOTE(
+              AGGREGATOR, "%s@%p: attaching %s to %s",
+              osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+              aggregator, uid, contact_uids->data);
+
+        status = attach_roster_contact(aggregator, contact_uids->data,
+                                              roster_contact);
+
+        if (status == ATTACHED_TO_MASTER)
+        {
+          update = TRUE;
+
+          if (!first_uid)
+            first_uid = g_strdup(contact_uids->data);
+        }
+
+        if (final_status < status)
+          final_status = status;
+
+        contact_uids = osso_abook_string_list_chug(contact_uids);
+      }
+      else if (uid_cmp_res < 0)
+      {
+        OSSO_ABOOK_NOTE(
+              AGGREGATOR, "%s@%p: detaching %s from %s",
+              osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+              aggregator, uid, roster_uids->data);
+
+        if (detach_roster_contact(priv, roster_uids->data, roster_contact))
+          update = TRUE;
+
+        roster_uids = osso_abook_string_list_chug(roster_uids);
+      }
+    }
+
+    if (final_status == NOT_ATTACHED)
+      create_temporary_master(aggregator, roster_contact, __FUNCTION__);
+
+    if (update)
+    {
+      g_warn_if_fail(first_uid != NULL);
+
+      _osso_abook_eventlogger_update_roster(
+            osso_abook_contact_get_account(roster_contact),
+            osso_abook_contact_get_bound_name(roster_contact), first_uid);
+    }
+
+    g_free(first_uid);
+  }
+
+  osso_abook_aggregator_emit_all(aggregator, __FUNCTION__);
 }
 
 static void

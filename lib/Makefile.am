@@ -7,11 +7,12 @@ libosso_abook_@API_VERSION_MAJOR@_la_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
 		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
 		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
-		-DOSSOLOG_COMPILE=1 -Wno-format-extra-args $(DGETTEXT)
+		$(RTCOM_CFLAGS) -DOSSOLOG_COMPILE=1 -Wno-format-extra-args \
+		$(DGETTEXT)
 
 libosso_abook_@API_VERSION_MAJOR@_la_LDFLAGS = -Wl,--no-undefined
 libosso_abook_@API_VERSION_MAJOR@_la_LIBADD = \
-		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) \
+		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
 		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) -lm
 
 libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
@@ -46,6 +47,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-contact.c \
 		osso-abook-utils-private.c \
 		osso-abook-roster-manager.c \
+		osso-abook-eventlogger.c \
 		osso-abook-account-manager.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
