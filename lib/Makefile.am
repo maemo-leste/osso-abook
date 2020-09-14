@@ -47,6 +47,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-contact.c \
 		osso-abook-utils-private.c \
 		osso-abook-roster-manager.c \
+		osso-abook-contact-filter.c \
 		osso-abook-eventlogger.c \
 		osso-abook-account-manager.c
 
