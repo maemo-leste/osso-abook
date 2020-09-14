@@ -57,3 +57,9 @@ osso_abook_string_list_chug(GList *list)
 
   return list;
 }
+
+GList *
+osso_abook_string_list_find(GList *list, const char *s)
+{
+  return g_list_find_custom(list, s, (GCompareFunc)strcmp);
+}

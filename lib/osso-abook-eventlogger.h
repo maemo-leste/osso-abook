@@ -20,7 +20,7 @@
 #ifndef __OSSO_ABOOK_EVENTLOGGER_H__
 #define __OSSO_ABOOK_EVENTLOGGER_H__
 
-#include <telepathy-glib/telepathy-glib.h>
+#include "osso-abook-contact.h"
 
 G_BEGIN_DECLS
 
@@ -29,6 +29,9 @@ void _osso_abook_eventlogger_apply(void);
 void _osso_abook_eventlogger_update_roster(TpAccount *account,
                                            const char *remote_uid,
                                            const gchar *abook_uid);
+void
+_osso_abook_eventlogger_update(OssoABookContact *new_contact,
+                               OssoABookContact *old_contact);
 
 G_END_DECLS
 

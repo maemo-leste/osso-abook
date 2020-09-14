@@ -27,7 +27,7 @@ struct _OssoABookContactPrivate
   char **collate_keys[OSSO_ABOOK_NAME_ORDER_COUNT];
   OssoABookRoster *roster;
   GHashTable *contacts;
-  OssoABookStringList field_28;
+  OssoABookStringList master_uids;
   GdkPixbuf *avatar_image;
   int field_30;
   OssoABookCapsFlags caps;
@@ -667,7 +667,7 @@ osso_abook_contact_finalize(GObject *object)
   if (priv->contacts)
     g_hash_table_destroy(priv->contacts);
 
-  osso_abook_string_list_free(priv->field_28);
+  osso_abook_string_list_free(priv->master_uids);
   g_free(priv->presence_status_message);
   g_free(priv->presence_status);
   g_free(priv->presence_location_string);
@@ -1552,4 +1552,64 @@ _osso_abook_contact_reject_for_uid_full(OssoABookContact *contact,
   e_book_remove_contact(book, id->str, error);
   g_object_unref(book);
   g_string_free(id, TRUE);
+}
+
+static void
+parse_master_uids(OssoABookContact *contact, OssoABookContactPrivate *priv)
+{
+  GHashTable *uids = g_hash_table_new(g_str_hash, g_str_equal);
+  GList *attr;
+
+  for (attr = e_vcard_get_attributes(E_VCARD(contact)); attr; attr = attr->next)
+  {
+    const char *attr_name = e_vcard_attribute_get_name(attr->data);
+
+    if (!strcmp(attr_name, OSSO_ABOOK_VCA_OSSO_MASTER_UID))
+    {
+      GList *values = e_vcard_attribute_get_values(attr->data);
+
+      if (values)
+      {
+        g_hash_table_insert(uids, g_strdup(values->data), attr->data);
+        g_warn_if_fail(NULL == values->next);
+      }
+      else
+        g_warn_if_fail(NULL != values);
+    }
+  }
+
+  priv->flags |= 8u; // master_uids_parsed
+  priv->master_uids = g_hash_table_get_keys(uids);
+  g_hash_table_destroy(uids);
+}
+
+GList *
+osso_abook_contact_get_master_uids(OssoABookContact *roster_contact)
+{
+  OssoABookContactPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(roster_contact), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(roster_contact);
+
+  if (!(priv->flags & 8))
+    parse_master_uids(roster_contact, priv);
+
+  return priv->master_uids;
+}
+
+const char *
+osso_abook_contact_get_bound_name(OssoABookContact *contact)
+{
+  const char *vcf;
+  GList *l;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  vcf = osso_abook_contact_get_vcard_field(contact);
+
+  if (vcf && (l = osso_abook_contact_get_values(E_CONTACT(contact), vcf)))
+    return l->data;
+
+  return NULL;
 }
