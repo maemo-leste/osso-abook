@@ -234,13 +234,16 @@ add_alpha_shortcuts(OssoABookContactChooser *chooser)
 
   priv = osso_abook_contact_chooser_get_instance_private(chooser);
 
-  if (!priv->alpha_shortcuts)
+  if (priv->alpha_shortcuts)
     return;
 
+  g_assert(0);
+
+  /*
   priv->alpha_shortcuts = osso_abook_alpha_shortcuts_new();
   osso_abook_alpha_shortcuts_widget_hook(
         OSSO_ABOOK_ALPHA_SHORTCUTS(priv->alpha_shortcuts),
-        OSSO_ABOOK_CONTACT_VIEW(priv->contact_view));
+        OSSO_ABOOK_CONTACT_VIEW(priv->contact_view));*/
   gtk_box_pack_start(
         GTK_BOX(priv->hbox), priv->alpha_shortcuts, FALSE, FALSE, 0);
   set_model_order(chooser, priv->contact_model, priv->contact_order);
@@ -970,7 +973,7 @@ osso_abook_contact_chooser_class_init(OssoABookContactChooserClass *klass)
           "capabilities",
           "Capabilities",
           "The set of permitted contact capabilities",
-          OSSO_ABOOK_TYPE_CAPS,
+          OSSO_ABOOK_TYPE_CAPS_FLAGS,
           OSSO_ABOOK_CAPS_ALL,
           GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(

@@ -16,12 +16,6 @@
 #include "osso-abook-waitable.h"
 #include "osso-abook-utils-private.h"
 
-//#define MC_ACCOUNT
-
-#ifndef MC_ACCOUNT
-#pragma message("FIXME!!! - replace McAccout (with TpAccount?)")
-#endif
-
 struct _OssoABookTreeViewPrivate
 {
   OssoABookListStore *base_model;
@@ -31,7 +25,7 @@ struct _OssoABookTreeViewPrivate
   GtkWidget *tree_view;
   GtkWidget *pannable_area;
   HildonUIMode ui_mode;
-  gpointer aggregation_account;
+  TpAccount *aggregation_account;
   GtkWidget *event_box;
   gchar *empty_text;
   GtkTreeViewColumn *column;
@@ -282,13 +276,13 @@ create_avatar_image(OssoABookTreeView *view, OssoABookContact *contact)
   GdkPixbuf *avatar_image;
   OssoABookTreeViewContact *contact_data;
 
-#if MC_ACCOUNT
   if (priv->aggregation_account)
   {
     if (!osso_abook_avatar_is_user_selected(avatar))
     {
       GList *contacts = osso_abook_contact_find_roster_contacts_for_account(
-            contact, 0, priv->aggregation_account->name);
+            contact, NULL,
+            tp_account_get_path_suffix(priv->aggregation_account));
 
       if (contacts)
         avatar = OSSO_ABOOK_AVATAR(contacts->data);
@@ -296,7 +290,6 @@ create_avatar_image(OssoABookTreeView *view, OssoABookContact *contact)
       g_list_free(contacts);
     }
   }
-#endif
 
   if (!avatar)
     return NULL;
@@ -967,11 +960,9 @@ osso_abook_tree_view_set_property(GObject *object, guint property_id,
                                          priv->ui_mode);
       }
       break;
-#if MC_ACCOUNT
     case PARAM_AGGREGATION_ACCOUNT:
       osso_abook_tree_view_set_aggregation_account(view,
                                                    g_value_get_object(value));
-#endif
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1092,10 +1083,9 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
   {
     if (priv->aggregation_account)
     {
-#if MC_ACCOUNT
-      McProfile *profile;
       GList *contacts = osso_abook_contact_find_roster_contacts_for_account(
-            row->contact, 0, priv->aggregation_account->name);
+            row->contact, NULL,
+            tp_account_get_path_suffix(priv->aggregation_account));
       OssoABookPresence *max_presence = NULL;
       GList *l = contacts;
 
@@ -1114,10 +1104,11 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
 
       g_list_free(contacts);
 
-      profile = mc_profile_lookup(
+#if 0
+      protocol = mc_profile_lookup(
             mc_account_compat_get_profile(priv->aggregation_account));
       icon_name =
-          osso_abook_presence_get_branded_icon_name(max_presence, profile);
+          osso_abook_presence_get_branded_icon_name(max_presence, protocol);
 #else
       g_assert(0);
 #endif
@@ -1664,16 +1655,14 @@ osso_abook_tree_view_class_init(OssoABookTreeViewClass *klass)
                   HILDON_TYPE_UI_MODE,
                   HILDON_UI_MODE_NORMAL,
                   GTK_PARAM_READWRITE));
-#if MC_ACCOUNT
   g_object_class_install_property(
         object_class, PARAM_AGGREGATION_ACCOUNT,
         g_param_spec_object(
                   "aggregation-account",
                   "Aggregation Account",
                   "A single MC Account to aggregate presence and avatar from (as opposed to all accounts).",
-                  MC_TYPE_ACCOUNT,
+                  TP_TYPE_ACCOUNT,
                   GTK_PARAM_READWRITE));
-#endif
   gtk_widget_class_install_style_property(
         widget_class,
         g_param_spec_int(
@@ -1850,4 +1839,19 @@ osso_abook_tree_view_set_base_model(OssoABookTreeView *view,
     priv->closure = osso_abook_waitable_call_when_ready(
           OSSO_ABOOK_WAITABLE(priv->waitable), on_roster_ready, view, NULL);
   }
+}
+
+void
+osso_abook_tree_view_set_aggregation_account(OssoABookTreeView *view,
+                                             TpAccount *account)
+{
+  OssoABookTreeViewPrivate *priv;
+
+  g_return_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view));
+  g_return_if_fail(TP_IS_ACCOUNT(account) || !account);
+
+  priv = view->priv;
+  priv->aggregation_account = account;
+  sync_view(view);
+  sync_tree(view);
 }

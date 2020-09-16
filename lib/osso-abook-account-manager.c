@@ -1485,3 +1485,18 @@ osso_abook_account_manager_has_primary_vcard_field(
         OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->vcard_fields,
         match_vcard_field, (gpointer)vcard_field) != NULL;
 }
+
+gboolean
+osso_abook_account_manager_has_secondary_vcard_field(
+    OssoABookAccountManager *manager, const char *vcard_field)
+{
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), FALSE);
+  g_return_val_if_fail(NULL != vcard_field, FALSE);
+
+  return g_list_find_custom(
+        OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->uri_schemes,
+        vcard_field, (GCompareFunc)&strcmp) != NULL;
+}

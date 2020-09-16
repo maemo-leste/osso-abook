@@ -168,3 +168,17 @@ osso_abook_avatar_get_image_rounded(OssoABookAvatar *avatar, int width,
 
   return image;
 }
+
+gboolean
+osso_abook_avatar_is_user_selected(OssoABookAvatar *avatar)
+{
+  gboolean user_selected = FALSE;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR(avatar), FALSE);
+
+  g_object_get(G_OBJECT(avatar),
+               "avatar-user-selected", &user_selected,
+               NULL);
+
+  return user_selected;
+}

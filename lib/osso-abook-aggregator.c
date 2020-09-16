@@ -2023,3 +2023,15 @@ osso_abook_aggregator_get_roster_manager(OssoABookAggregator *aggregator)
 
   return priv->roster_manager;
 }
+
+void
+osso_abook_aggregator_set_roster_manager(OssoABookAggregator *aggregator,
+                                         OssoABookRosterManager *manager)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_AGGREGATOR(aggregator));
+  g_return_if_fail(OSSO_ABOOK_IS_ROSTER_MANAGER(manager) || !manager);
+
+  g_object_set(aggregator,
+               "roster-manager", manager,
+               NULL);
+}
