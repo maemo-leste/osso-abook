@@ -29,9 +29,10 @@ void _osso_abook_eventlogger_apply(void);
 void _osso_abook_eventlogger_update_roster(TpAccount *account,
                                            const char *remote_uid,
                                            const gchar *abook_uid);
-void
-_osso_abook_eventlogger_update(OssoABookContact *new_contact,
-                               OssoABookContact *old_contact);
+void _osso_abook_eventlogger_update(OssoABookContact *new_contact,
+                                    OssoABookContact *old_contact);
+
+void _osso_abook_eventlogger_remove(OssoABookContact *contact);
 
 G_END_DECLS
 

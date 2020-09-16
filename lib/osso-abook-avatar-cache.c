@@ -7,7 +7,7 @@
 
 struct _OssoABookAvatarCachePrivate
 {
-  GQueue *queue;
+  GQueue queue;
   GHashTable *cached_images;
   guint limit;
 };
@@ -44,7 +44,7 @@ static GHashTable *cache_by_name = NULL;
 static void
 prune_n_items(OssoABookAvatarCachePrivate *priv, guint n_items)
 {
-  guint queue_length = g_queue_get_length(priv->queue);
+  guint queue_length = g_queue_get_length(&priv->queue);
   guint i;
 
   g_warn_if_fail(queue_length != g_hash_table_size (priv->cached_images));
@@ -53,7 +53,7 @@ prune_n_items(OssoABookAvatarCachePrivate *priv, guint n_items)
     n_items = queue_length;
 
   for (i = 0; i < n_items; i++)
-    g_hash_table_remove(priv->cached_images, g_queue_pop_head(priv->queue));
+    g_hash_table_remove(priv->cached_images, g_queue_pop_head(&priv->queue));
 }
 
 static void
@@ -116,7 +116,7 @@ osso_abook_avatar_cache_dispose(GObject *object)
     priv->cached_images = NULL;
   }
 
-  g_queue_clear(priv->queue);
+  g_queue_clear(&priv->queue);
   G_OBJECT_CLASS(osso_abook_avatar_cache_parent_class)->dispose(object);
 }
 
@@ -148,7 +148,7 @@ cached_image_free(CachedImage *cached_image, gboolean keep_avatar)
       OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cached_image->cache);
   OssoABookAvatar *avatar = cached_image->avatar;
 
-  g_queue_remove(priv->queue, avatar);
+  g_queue_remove(&priv->queue, avatar);
 
   if (keep_avatar)
     cached_image->avatar = NULL;
@@ -187,7 +187,7 @@ osso_abook_avatar_cache_init(OssoABookAvatarCache *cache)
 
   priv->cached_images = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                               NULL, cached_image_destroy);
-  g_queue_init(priv->queue);
+  g_queue_init(&priv->queue);
 }
 
 OssoABookAvatarCache *
@@ -286,7 +286,7 @@ osso_abook_avatar_cache_add(OssoABookAvatarCache *self, OssoABookAvatar *avatar,
 
   g_object_weak_ref(G_OBJECT(avatar), avatar_finalyzed_cb, cached_image);
   g_hash_table_insert(priv->cached_images, avatar, cached_image);
-  g_queue_push_tail(priv->queue, cached_image->avatar);
+  g_queue_push_tail(&priv->queue, cached_image->avatar);
 }
 
 GdkPixbuf *
@@ -306,8 +306,8 @@ osso_abook_avatar_cache_lookup(OssoABookAvatarCache *self,
   {
     if (cached_image->image_token == osso_abook_avatar_get_image_token(avatar))
     {
-      g_queue_remove(priv->queue, cached_image->avatar);
-      g_queue_push_tail(priv->queue, cached_image->avatar);
+      g_queue_remove(&priv->queue, cached_image->avatar);
+      g_queue_push_tail(&priv->queue, cached_image->avatar);
       return cached_image->pixbuf;
     }
     else

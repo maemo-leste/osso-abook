@@ -688,6 +688,48 @@ process_postponed_contacts(OssoABookAggregator *aggregator,
 }
 
 static void
+remove_master_contact(const char *uid, OssoABookAggregatorPrivate *priv)
+{
+  OssoABookContact *contact = g_hash_table_lookup(priv->master_contacts, uid);
+
+  if (!contact)
+    return;
+
+  OSSO_ABOOK_NOTE(AGGREGATOR, "removing master contact %s (%s)",
+                  osso_abook_contact_get_display_name(contact), uid);
+
+  if (!osso_abook_is_temporary_uid(uid))
+    _osso_abook_eventlogger_remove(contact);
+
+  g_hash_table_remove(priv->postponed_contacts, uid);
+  g_hash_table_remove(priv->master_contacts, uid);
+}
+
+static void
+osso_abook_aggregator_contacts_removed(OssoABookRoster *roster,
+                                       const char **uids)
+{
+  OssoABookAggregator *aggregator = OSSO_ABOOK_AGGREGATOR(roster);
+  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+  GSignalInvocationHint *hint = g_signal_get_invocation_hint(roster);
+
+
+  g_return_if_fail(signals[CONTACTS_REMOVED] == hint->signal_id);
+
+  if (hint->run_type & G_SIGNAL_RUN_FIRST)
+  {
+    const char **uid = uids;
+
+    while (*uid)
+      remove_master_contact(*uid++, priv);
+  }
+
+  OSSO_ABOOK_ROSTER_CLASS(osso_abook_aggregator_parent_class)->
+      contacts_removed(roster, uids);
+  g_object_notify(G_OBJECT(roster), "master-contact-count");
+}
+
+static void
 osso_abook_aggregator_contacts_changed(OssoABookRoster *roster,
                                        OssoABookContact **contacts)
 {
@@ -746,8 +788,8 @@ osso_abook_aggregator_class_init(OssoABookAggregatorClass *klass)
   object_class->dispose = osso_abook_aggregator_dispose;
   object_class->notify = osso_abook_aggregator_notify;
 /*
-  roster_class->contacts_added = osso_abook_aggregator_contacts_added;
-  roster_class->contacts_removed = osso_abook_aggregator_contacts_removed;*/
+  roster_class->contacts_added = osso_abook_aggregator_contacts_added;*/
+  roster_class->contacts_removed = osso_abook_aggregator_contacts_removed;
   roster_class->contacts_changed = osso_abook_aggregator_contacts_changed;
   /*roster_class->sequence_complete = osso_abook_aggregator_sequence_complete;
   roster_class->set_book_view = osso_abook_aggregator_set_book_view;

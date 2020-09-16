@@ -373,3 +373,30 @@ _osso_abook_eventlogger_update(OssoABookContact *new_contact,
     }
   }
 }
+
+void
+_osso_abook_eventlogger_remove(OssoABookContact *contact)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+
+  if (_osso_abook_is_addressbook())
+  {
+    const char *uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+    GList *vals;
+
+    for (vals = contact_get_attribute_values(contact, "TEL"); vals;
+         vals = g_list_delete_link(vals, vals))
+    {
+
+      const char *vcf = vcard_field_table_find_uid(vals->data, uid);
+
+      if (vcf)
+      {
+        _osso_abook_eventlogger_append("ring/tel/account0", vals->data, vcf,
+                                       NULL);
+      }
+    }
+
+    el_uids = g_list_prepend(el_uids, g_strdup(uid));
+  }
+}

@@ -171,14 +171,9 @@ osso_abook_roster_get_property(GObject *object, guint property_id,
     case PROP_NAME:
       g_value_set_string(value, osso_abook_roster_get_name(roster));
       break;
-#if 0
     case PROP_ACCOUNT:
       g_value_set_object(value, osso_abook_roster_get_account(roster));
       break;
-#else
-#pragma message("FIXME!!! - replace McAccout (with TpAccount?)")
-      g_assert(0);
-#endif
     case PROP_VCARD_FIELD:
       g_value_set_string(value, osso_abook_roster_get_vcard_field(roster));
       break;
@@ -366,11 +361,11 @@ osso_abook_roster_class_init(OssoABookRosterClass *klass)
         );
   g_object_class_install_property(
         object_class, PROP_ACCOUNT,
-        g_param_spec_string(
+        g_param_spec_object(
                  "account",
                  "Account",
-                 "The Mission Control account of this roster",
-                 0,
+                 "The Telepathy account of this roster",
+                 TP_TYPE_ACCOUNT,
                  GTK_PARAM_READABLE));
   g_object_class_install_property(
         object_class, PROP_VCARD_FIELD,
