@@ -814,3 +814,18 @@ osso_abook_roster_new(const char *name, EBookView *book_view,
                       "vcard-field", vcard_field,
                       NULL);
 }
+
+OssoABookCapsFlags
+osso_abook_roster_get_capabilities(OssoABookRoster *roster)
+{
+  TpAccount *account;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER(roster), OSSO_ABOOK_CAPS_NONE);
+
+  account = osso_abook_roster_get_account(roster);
+
+  if (account)
+    return osso_abook_caps_from_account(account);
+
+  return OSSO_ABOOK_CAPS_NONE;
+}
