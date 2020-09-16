@@ -48,6 +48,8 @@ G_CONST_RETURN G@Type@Value *
   {
     if (!g_ascii_strcasecmp(v->value_name, name))
       return v;
+
+    v++;
   }
 
   return NULL;
@@ -64,6 +66,8 @@ G_CONST_RETURN G@Type@Value *
   {
     if (!g_ascii_strcasecmp(v->value_nick, nick))
       return v;
+
+    v++;
   }
 
   return NULL;
@@ -78,6 +82,8 @@ G_CONST_RETURN char *
   {
     if (v->value == value)
       return v->value_name;
+
+    v++;
   }
 
   return NULL;
@@ -92,6 +98,8 @@ G_CONST_RETURN char *
   {
     if (v->value == value)
       return v->value_nick;
+
+    v++;
   }
   return NULL;
 }

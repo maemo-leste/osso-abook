@@ -153,3 +153,74 @@ osso_abook_system_book_dup_singleton(gboolean open, GError **error)
 
   return NULL;
 }
+
+gboolean
+osso_abook_is_fax_attribute(EVCardAttribute *attribute)
+{
+  GList *p;
+  gboolean is_fax = FALSE;
+
+  g_return_val_if_fail(attribute != NULL, FALSE);
+
+  if (g_strcmp0(e_vcard_attribute_get_name(attribute), "TEL"))
+    return FALSE;
+
+  for (p = e_vcard_attribute_get_params(attribute); p; p = p->next)
+  {
+    if (!g_strcmp0(e_vcard_attribute_param_get_name(p->data), "TYPE"))
+    {
+      GList *l;
+
+      for (l = e_vcard_attribute_param_get_values(p->data); l; l = l->next)
+      {
+        if (l->data)
+        {
+          if (!g_ascii_strcasecmp(l->data, "CELL") ||
+              !g_ascii_strcasecmp(l->data, "CAR") ||
+              !g_ascii_strcasecmp(l->data, "VOICE"))
+          {
+            return FALSE;
+          }
+
+          if (!g_ascii_strcasecmp(l->data, "FAX"))
+            is_fax = TRUE;
+        }
+      }
+    }
+  }
+
+  return is_fax;
+}
+
+gboolean
+osso_abook_is_mobile_attribute(EVCardAttribute *attribute)
+{
+  GList *p;
+
+  g_return_val_if_fail(attribute != NULL, FALSE);
+
+  if (g_strcmp0(e_vcard_attribute_get_name(attribute), "TEL"))
+    return FALSE;
+
+  for (p = e_vcard_attribute_get_params(attribute); p; p = p->next)
+  {
+    if (!g_strcmp0(e_vcard_attribute_param_get_name(p->data), "TYPE"))
+    {
+      GList *v;
+
+      for (v = e_vcard_attribute_param_get_values(p->data); v; v = v->next)
+      {
+        if (v->data)
+        {
+          if (!g_ascii_strcasecmp(v->data, "CELL") ||
+              !g_ascii_strcasecmp(v->data, "CAR"))
+          {
+            return TRUE;
+          }
+        }
+      }
+    }
+  }
+
+  return FALSE;
+}

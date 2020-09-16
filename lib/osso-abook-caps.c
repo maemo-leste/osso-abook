@@ -98,3 +98,14 @@ osso_abook_caps_from_tp_connection(TpConnection *connection)
   return rv;
 }
 
+OssoABookCapsFlags
+osso_abook_caps_from_account(TpAccount *account)
+{
+  OssoABookCapsFlags caps = OSSO_ABOOK_CAPS_NONE;
+  TpConnection *connection = tp_account_get_connection(account);
+
+  if (connection)
+    caps |= osso_abook_caps_from_tp_connection(connection);
+
+  return caps;
+}

@@ -432,10 +432,7 @@ osso_abook_account_manager_create_roster(struct account_info *info)
 
   if (info->flags & 2)
   {
-    TpConnection *connection = tp_account_get_connection(account);
-
-    if (connection)
-      caps |= osso_abook_caps_from_tp_connection(connection);
+    caps |= osso_abook_caps_from_account(account);
 
     if (caps & OSSO_ABOOK_CAPS_ADDRESSBOOK)
     {

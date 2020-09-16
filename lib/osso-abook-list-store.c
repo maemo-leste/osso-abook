@@ -174,7 +174,7 @@ osso_abook_list_store_iter_next(GtkTreeModel *tree_model, GtkTreeIter *iter)
 
   g_return_val_if_fail(row_index >= 0, FALSE);
 
-  if (row_index == -1 || row_index > priv->extra + priv->count)
+  if (row_index == -1 || (row_index + 1) >= priv->extra + priv->count)
     return FALSE;
 
   iter->user_data2 = GINT_TO_POINTER(row_index + 1);
@@ -745,17 +745,17 @@ osso_abook_list_store_move_baloon(OssoABookListStore *store)
 static int
 osso_abook_list_store_sort(gconstpointer a, gconstpointer b, gpointer user_data)
 {
-  const OssoABookListStoreRow *row_a = a;
-  const OssoABookListStoreRow *row_b = b;
+  const OssoABookListStoreRow *const *_a = a;
+  const OssoABookListStoreRow *const *_b = b;
   OssoABookListStore *store = user_data;
   OssoABookListStorePrivate *priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
   int rv;
 
   if (!priv->group_sort_func ||
-      (rv = priv->group_sort_func(row_a, row_b, priv->group_sort_data)) == 0)
+      (rv = priv->group_sort_func(*_a, *_b, priv->group_sort_data)) == 0)
   {
     if (priv->sort_func)
-      rv = priv->sort_func(row_a, row_b, priv->sort_data);
+      rv = priv->sort_func(*_a, *_b, priv->sort_data);
     else
       rv = 0;
   }

@@ -49,6 +49,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-roster-manager.c \
 		osso-abook-contact-filter.c \
 		osso-abook-eventlogger.c \
+		osso-abook-quarks.c \
 		osso-abook-account-manager.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
@@ -61,7 +62,7 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-errors.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
-		osso-abook-enum-types.h
+		osso-abook-enums.h
 
 libosso_abook_@API_VERSION_MAJOR@_include_HEADERS = \
 		$(libosso_abook_@API_VERSION_MAJOR@_public_headers) \

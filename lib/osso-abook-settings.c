@@ -31,7 +31,8 @@ osso_abook_settings_get_name_order(void)
   return order;
 }
 
-OssoABookContactOrder osso_abook_settings_get_contact_order(void)
+OssoABookContactOrder
+osso_abook_settings_get_contact_order(void)
 {
   GConfValue *val = gconf_client_get(osso_abook_get_gconf_client(),
                                      OSSO_ABOOK_SETTINGS_KEY_CONTACT_ORDER,
@@ -45,4 +46,11 @@ OssoABookContactOrder osso_abook_settings_get_contact_order(void)
   }
 
   return order;
+}
+
+gboolean
+osso_abook_settings_get_sms_button()
+{
+  return gconf_client_get_bool(osso_abook_get_gconf_client(),
+                               OSSO_ABOOK_SETTINGS_KEY_SMS_BUTTON, FALSE);
 }
