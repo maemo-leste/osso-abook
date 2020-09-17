@@ -1135,7 +1135,7 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
 
   g_object_set(cell,
                "pixbuf", icon,
-               "yalign", (gfloat)0.0f,
+               "yalign", (gfloat)0.5f,
                "sensitive", sensitive,
                NULL);
 
