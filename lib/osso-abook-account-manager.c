@@ -16,6 +16,7 @@
 #include "osso-abook-util.h"
 #include "osso-abook-log.h"
 #include "eds.h"
+#include "tp-glib-enums.h"
 
 enum {
   ROSTER_CREATED,
@@ -1071,6 +1072,92 @@ get_roster_overrides(OssoABookAccountManagerPrivate *priv)
 }
 
 static void
+emit_account_changed(struct account_info *info, GQuark property, GValue *value)
+{
+  if (!update_visibility(info))
+  {
+    if (info->flags & 2)
+      g_signal_emit(info->manager, signals[ACCOUNT_CHANGED], property,
+                    info->account, property, value);
+  }
+}
+
+static void
+status_changed_cb(TpAccount *account, guint old_status,
+                  guint       new_status,
+                  guint       reason,
+                  gchar      *dbus_error_name,
+                  GHashTable *details,
+                  gpointer    user_data)
+{
+  struct account_info *info = user_data;
+  GValue value = G_VALUE_INIT;
+
+  g_value_init(&value, G_TYPE_STRING);
+  g_value_set_string(&value, tp_connection_status_reason_get_nick(reason));
+  emit_account_changed(info, new_status, &value);
+  g_value_unset(&value);
+}
+
+static void
+update_presence_status(TpAccount *account,
+                       guint      presence,
+                       gchar     *status,
+                       gchar     *status_message,
+                       gpointer   user_data)
+{
+  struct account_info *info = user_data;
+  OssoABookAccountManagerPrivate *priv =
+      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(info->manager);
+  GArray *array = g_array_sized_new (FALSE, FALSE, sizeof(GValue), 3);
+  struct account_info *roster_info;
+  GHashTableIter iter;
+  GValue value = G_VALUE_INIT;
+
+  g_value_init(&value, G_TYPE_UINT);
+  g_value_set_uint(&value, presence);
+  g_array_append_val(array, value);
+
+  g_value_unset(&value);
+  g_value_init(&value, G_TYPE_STRING);
+  g_value_set_string(&value, status);
+  g_array_append_val(array, value);
+
+  g_value_set_string(&value, status_message);
+  g_array_append_val(array, value);
+  g_value_unset(&value);
+
+  g_value_init(&value, G_TYPE_ARRAY);
+  g_value_set_boxed(&value, array);
+
+  emit_account_changed(info, 0, &value);
+
+  g_value_unset(&value);
+  g_array_free(array, TRUE);
+
+  g_hash_table_iter_init(&iter, priv->rosters);
+
+  while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&roster_info))
+  {
+    TpConnectionPresenceType _presence =
+        tp_account_get_current_presence(roster_info->account, NULL, NULL);
+
+    _presence = default_presence_convert(_presence);
+
+    if (tp_connection_presence_type_cmp_availability(_presence, presence) > 0)
+      presence = _presence;
+  }
+
+  if (priv->presence != presence)
+  {
+    OSSO_ABOOK_NOTE(TP, "presence changed: %d => %d\n", priv->presence,
+                    presence);
+    priv->presence = presence;
+    g_object_notify(G_OBJECT(info->manager), "presence");
+  }
+}
+
+static void
 account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
                             gboolean valid, gpointer user_data)
 {
@@ -1109,15 +1196,16 @@ account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
 
     g_hash_table_insert(priv->protocol_rosters, g_strdup(protocol_name),
                         g_list_prepend(protocol_rosters, info));
+  }
 
   if (priv->is_ready)
     get_all_uri_schemes(priv);
 
-/*  g_signal_connect(info->account, "flag-changed", flag_changed_cb, info, 0, 0);
-  g_signal_connect(info->account, "presence-changed", (GCallback)update_presence_status, info, 0, 0);
-  g_signal_connect(info->account, "string-changed", (GCallback)string_changed_cb, info, 0, 0);
-  g_signal_connect(info->account, "parameters-changed", (GCallback)parameters_changed_cb, info, 0, 0);
-*/
+  g_signal_connect(info->account, "presence-changed",
+                   G_CALLBACK(update_presence_status), info);
+  g_signal_connect(info->account, "status-changed",
+                   G_CALLBACK(status_changed_cb), info);
+
   info->flags = (info->flags & 0xFD) | 2 * (accept_account(info) & 1);
 
   if (info->flags & 2)
