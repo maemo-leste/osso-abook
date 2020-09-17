@@ -40,8 +40,13 @@ struct _OssoABookContactPrivate
   gchar *presence_status_message;
   gchar *presence_location_string;
   OssoABookPresence *presence;
-  int flags;
+  gboolean resetting : 1;          /* priv->flags & 1 */
+  gboolean updating_evc : 1;       /* priv->flags & 2 */
+  gboolean caps_parsed : 1;        /* priv->flags & 4 */
   gboolean master_uids_parsed : 1; /* priv->flags & 8 */
+  gboolean presence_parsed : 1;    /* priv->flags & 0x10 */
+  gboolean is_tel : 1;             /* priv->flags & 0x20 */
+  gboolean disposed : 1;           /* priv->flags & 0x40 */
 };
 
 typedef struct _OssoABookContactPrivate OssoABookContactPrivate;
@@ -179,7 +184,7 @@ osso_abook_contact_notify(OssoABookContact *contact, const gchar *property_name)
 {
   OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
 
-  if (!(priv->flags & 0x40)) //!priv->disposed
+  if (!priv->disposed)
   {
     /* if (!e_vcard_is_parsing(E_VCARD(contact))) - not in upstream eds*/
       g_object_notify(G_OBJECT(contact), property_name);
@@ -213,7 +218,7 @@ parse_presence(OssoABookContact *contact, OssoABookContactPrivate *priv)
   gchar *presence_status = NULL;
   GList *vals;
 
-  if (priv->flags & 0x11)
+  if (priv->presence_parsed || priv->resetting)
     return;
 
   vals = osso_abook_contact_get_values(E_CONTACT(contact),
@@ -317,7 +322,7 @@ parse_presence(OssoABookContact *contact, OssoABookContactPrivate *priv)
   g_free(presence_status_message);
   g_free(presence_status);
   g_free(presence_location_string);
-  priv->flags |= 0x10u;
+  priv->presence_parsed = TRUE;
 }
 
 static void
@@ -327,16 +332,16 @@ parse_capabilities(OssoABookContact *contact, OssoABookContactPrivate *priv)
   GList *l;
   GList *attr;
 
-  if (priv->flags & 5)
+  if (priv->resetting || priv->caps_parsed)
     return;
 
   priv->caps = OSSO_ABOOK_CAPS_NONE;
-  priv->flags &= ~0x20;
+  priv->is_tel = FALSE;
 
   caps = e_vcard_get_attribute(E_VCARD(contact),
                                OSSO_ABOOK_VCA_TELEPATHY_CAPABILITIES);
 
-  if ( caps )
+  if (caps)
   {
     gboolean immutable_streams = FALSE;
 
@@ -427,14 +432,14 @@ parse_capabilities(OssoABookContact *contact, OssoABookContactPrivate *priv)
           if (osso_abook_is_mobile_attribute(attr->data))
             priv->caps |= OSSO_ABOOK_CAPS_SMS;
           else
-            priv->flags |= OSSO_ABOOK_CAPS_VIDEO;
+            priv->is_tel = TRUE;
         }
       }
     }
   }
 
   update_combined_capabilities(contact);
-  priv->flags |= 4;
+  priv->caps_parsed = TRUE;
 }
 
 static void
@@ -449,7 +454,7 @@ osso_abook_contact_update_attributes(OssoABookContact *contact,
 
   if (quark == osso_abook_quark_vca_osso_master_uid())
   {
-    if (!(priv->flags & 2))
+    if (!priv->updating_evc)
     {
       osso_abook_string_list_free(priv->master_uids);
       priv->master_uids = NULL;
@@ -469,7 +474,7 @@ osso_abook_contact_update_attributes(OssoABookContact *contact,
   }
   else if (quark == osso_abook_quark_vca_telepathy_presence())
   {
-    priv->flags &= ~0x10;
+    priv->presence_parsed = FALSE;
     parse_presence(contact, priv);
     return;
   }
@@ -477,7 +482,7 @@ osso_abook_contact_update_attributes(OssoABookContact *contact,
   else if (quark == osso_abook_quark_vca_telepathy_capabilities() ||
            is_vcard_field(quark, attribute_name))
   {
-    priv->flags &= ~4u;
+    priv->caps_parsed = FALSE;
     parse_capabilities(contact, priv);
     osso_abook_contact_notify(contact, "capabilities");
   }
@@ -573,7 +578,7 @@ connect_signals(OssoABookContact *contact, OssoABookPresence *presence)
     avatar_image_cb(priv->presence, NULL, contact);
   }
 
-  if (!(priv->flags & 0x40))
+  if (!priv->disposed)
   {
     g_object_freeze_notify(G_OBJECT(contact));
     osso_abook_contact_notify(contact, "avatar-image");
@@ -592,7 +597,8 @@ osso_abook_contact_dispose(GObject *object)
   OssoABookContact *contact = OSSO_ABOOK_CONTACT(object);
   OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
 
-  priv->flags |= 0x41u;
+  priv->disposed = TRUE;
+  priv->resetting = TRUE;
   connect_signals(contact, NULL);
 
   if (priv->avatar_image)
@@ -1129,7 +1135,6 @@ osso_abook_contact_set_value(EContact *contact, const char *attr_name,
   {
     osso_abook_contact_update_attributes(OSSO_ABOOK_CONTACT(contact),
                                          attr_name);
-
   }
 }
 
@@ -1675,10 +1680,10 @@ osso_abook_contact_reset(OssoABookContact *contact,
 
   priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
 
-  g_return_if_fail(/* !priv->disposed */!(priv->flags & 0x40));
+  g_return_if_fail(!priv->disposed);
 
   g_object_freeze_notify(G_OBJECT(contact));
-  priv->flags |= 1u;
+  priv->resetting = TRUE;
 
   for (l = e_vcard_get_attributes(E_VCARD(contact)); l; l = l->next)
   {
@@ -1689,7 +1694,7 @@ osso_abook_contact_reset(OssoABookContact *contact,
   for (l = e_vcard_get_attributes(E_VCARD(replacement)); l; l = l->next)
     e_vcard_add_attribute(E_VCARD(contact), e_vcard_attribute_copy(l->data));
 
-  priv->flags &= 0xFEu;
+  priv->resetting = FALSE;
   parse_capabilities(contact, priv);
   parse_presence(contact, priv);
   g_object_thaw_notify(G_OBJECT(contact));
@@ -1871,7 +1876,8 @@ update_combined_capabilities(OssoABookContact *master_contact)
       _caps |= osso_abook_caps_get_capabilities(
             OSSO_ABOOK_CAPS(link->roster_contact));
 
-      priv->flags |= (roster_priv->flags & 0x20);
+      if (roster_priv->is_tel)
+        priv->is_tel = TRUE;
     }
   }
 
@@ -1879,7 +1885,7 @@ update_combined_capabilities(OssoABookContact *master_contact)
   {
     priv->combined_caps = _caps;
 
-    if (priv->flags & 4)
+    if (priv->caps_parsed)
       osso_abook_contact_notify(master_contact, "capabilities");
   }
 }
@@ -2156,14 +2162,14 @@ osso_abook_contact_add_master_uid(OssoABookContact *roster_contact,
   if (osso_abook_string_list_find(priv->master_uids, master_uid))
     return FALSE;
 
-  priv->flags |= 2;
+  priv->updating_evc = TRUE;
 
   e_vcard_add_attribute_with_value(
         E_VCARD(roster_contact),
         e_vcard_attribute_new(NULL, OSSO_ABOOK_VCA_OSSO_MASTER_UID),
         master_uid);
 
-  priv->flags &= ~2;
+  priv->updating_evc = FALSE;
   priv->master_uids = g_list_prepend(priv->master_uids, g_strdup(master_uid));
 
   return TRUE;
@@ -2372,7 +2378,7 @@ osso_abook_contact_presence_get_presence_type(OssoABookPresence *presence)
       return osso_abook_presence_get_presence_type(presence_contact);
   }
 
-  if (!(priv->flags & 0x10))
+  if (!priv->presence_parsed)
     parse_presence(contact, priv);
 
   return priv->presence_type;
@@ -2396,7 +2402,7 @@ osso_abook_contact_presence_get_location_string(OssoABookPresence *presence)
     G_GNUC_END_IGNORE_DEPRECATIONS
   }
 
-  if (!(priv->flags & 0x10))
+  if (!priv->presence_parsed)
     parse_presence(contact, priv);
 
   return priv->presence_location_string;
@@ -2416,7 +2422,7 @@ osso_abook_contact_presence_get_presence_status(OssoABookPresence *presence)
       return osso_abook_presence_get_presence_status(presence_contact);
   }
 
-  if (!(priv->flags & 0x10))
+  if (!priv->presence_parsed)
     parse_presence(contact, priv);
 
   return priv->presence_status;
@@ -2437,7 +2443,7 @@ osso_abook_contact_presence_get_presence_status_message(
       return osso_abook_presence_get_presence_status_message(presence_contact);
   }
 
-  if (!(priv->flags & 0x10))
+  if (!priv->presence_parsed)
     parse_presence(contact, priv);
 
   return priv->presence_status_message;
@@ -2468,12 +2474,12 @@ osso_abook_contact_get_capabilities(OssoABookCaps *caps)
 
   OssoABookCapsFlags caps_flags;
 
-  if (!(priv->flags & 4))
+  if (!priv->caps_parsed)
     parse_capabilities(contact, priv);
 
   caps_flags = priv->combined_caps;
 
-  if ((caps_flags & OSSO_ABOOK_CAPS_SMS) || !(priv->flags & 0x20))
+  if ((caps_flags & OSSO_ABOOK_CAPS_SMS) || !priv->is_tel)
     return caps_flags;
 
   if (!osso_abook_settings_get_sms_button())
