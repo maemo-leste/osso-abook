@@ -1,3 +1,55 @@
+bin_PROGRAMS = testam
+testam_SOURCES = \
+		testam.c \
+		osso-abook-enums.c \
+		osso-abook-marshal.c \
+		tp-glib-enums.c \
+		osso-abook-init.c \
+		osso-abook-debug.c \
+		osso-abook-errors.c \
+		osso-abook-string-list.c \
+		osso-abook-contact-chooser.c \
+		osso-abook-filter-model.c \
+		osso-abook-row-model.c \
+		osso-abook-list-store.c \
+		osso-abook-waitable.c \
+		osso-abook-util.c \
+		osso-abook-contact-view.c \
+		osso-abook-tree-view.c \
+		osso-abook-contact-model.c \
+		osso-abook-presence.c \
+		osso-abook-caps.c \
+		osso-abook-settings.c \
+		osso-abook-avatar.c \
+		osso-abook-group.c \
+		osso-abook-all-group.c \
+		osso-abook-avatar-cache.c \
+		eds.c \
+		osso-abook-roster.c \
+		osso-abook-gconf-contact.c \
+		osso-abook-voicemail-contact.c \
+		osso-abook-aggregator.c \
+		osso-abook-contact.c \
+		osso-abook-utils-private.c \
+		osso-abook-roster-manager.c \
+		osso-abook-contact-filter.c \
+		osso-abook-eventlogger.c \
+		osso-abook-quarks.c \
+		osso-abook-account-manager.c
+
+testam_CFLAGS = \
+		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
+		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
+		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
+		$(RTCOM_CFLAGS) -DOSSOLOG_COMPILE=1 -Wno-format-extra-args \
+		$(DGETTEXT) -g -DTEST
+
+testam_LDADD = \
+		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
+		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) -lm
+
+testam_LDFLAGS = -no-undefined
+
 lib_LTLIBRARIES = libosso-abook-@API_VERSION_MAJOR@.la
 
 libosso_abook_@API_VERSION_MAJOR@_includedir = \
