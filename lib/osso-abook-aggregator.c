@@ -24,14 +24,6 @@
 #include "osso-abook-contact-private.h"
 #include "osso-abook-string-list.h"
 
-enum OSSO_ABOOK_AGGREGATOR_FLAGS
-{
-  OSSO_ABOOK_AGGREGATOR_FLAGS_1 = 1,
-  OSSO_ABOOK_AGGREGATOR_FLAGS_READY = 2,
-  OSSO_ABOOK_AGGREGATOR_FLAGS_4 = 4,
-  OSSO_ABOOK_AGGREGATOR_FLAGS_SYSTEM_BOOK = 8,
-};
-
 enum {
   PROP_ROSTER_MANAGER = 1,
   PROP_STATE,
@@ -69,7 +61,10 @@ struct _OssoABookAggregatorPrivate
   GPtrArray *contacts_changed;
   GList *pending_rosters;
   GList *complete_rosters;
-  unsigned char flags;
+  gboolean sequence_complete : 1;  /* priv->flags & 1 */
+  gboolean is_ready : 1;           /* priv->flags & 2 */
+  gboolean roster_manager_set : 1; /* priv->flags & 4 */
+  gboolean is_system_book : 1;     /* priv->flags & 8 */
 };
 
 typedef struct _OssoABookAggregatorPrivate OssoABookAggregatorPrivate;
@@ -302,7 +297,7 @@ voicemail_contact_reset_cb(OssoABookVoicemailContact *contact,
 
   exists = !!g_hash_table_lookup(priv->master_contacts, uid);
 
-  if (priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_SYSTEM_BOOK)
+  if (priv->is_system_book)
   {
     OssoABookGconfContact *gconf_contact = OSSO_ABOOK_GCONF_CONTACT(contact);
 
@@ -355,12 +350,9 @@ notify_book_cb(GObject *gobject, GParamSpec *pspec, gpointer user_data)
     }
   }
 
-  if (system_book_used)
-    priv->flags |= OSSO_ABOOK_AGGREGATOR_FLAGS_SYSTEM_BOOK;
-  else
-    priv->flags &= !OSSO_ABOOK_AGGREGATOR_FLAGS_SYSTEM_BOOK;
+  priv->is_system_book = system_book_used;
 
-  if (priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_SYSTEM_BOOK )
+  if (priv->is_system_book)
   {
     if (!priv->voicemail_contact)
     {
@@ -675,7 +667,7 @@ process_postponed_contacts(OssoABookAggregator *aggregator,
     {
       if (osso_abook_contact_attach(contact, roster_contact))
       {
-        if (priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_1)
+        if (priv->sequence_complete)
         {
           _osso_abook_eventlogger_update_roster(
                 osso_abook_contact_get_account(roster_contact),
@@ -746,7 +738,7 @@ create_master_contact(OssoABookAggregator *aggregator,
 
     if (!osso_abook_is_temporary_uid(uid))
     {
-      if (priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_1)
+      if (priv->sequence_complete)
         _osso_abook_eventlogger_update(contact, NULL);
       else
         _osso_abook_eventlogger_update_phone_table(contact);
@@ -917,9 +909,9 @@ process_unclaimed_contacts(OssoABookAggregator *aggregator)
   GHashTable *postponed_table;
   OssoABookContact *roster_contact;
 
-  if (!(priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_1))
+  if (!priv->sequence_complete)
   {
-    priv->flags |= OSSO_ABOOK_AGGREGATOR_FLAGS_1;
+    priv->sequence_complete = TRUE;
     osso_abook_aggregator_change_state(aggregator, state);
   }
 
@@ -1265,10 +1257,10 @@ osso_abook_aggregator_get_state(OssoABookAggregator *aggregator)
   if (osso_abook_roster_is_running(OSSO_ABOOK_ROSTER(aggregator)))
     state = OSSO_ABOOK_AGGREGATOR_RUNNING;
 
-  if (priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_1)
+  if (priv->sequence_complete)
     state |= OSSO_ABOOK_AGGREGATOR_MASTERS_READY;
 
-  if (priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_READY && !priv->pending_rosters)
+  if (priv->is_ready && !priv->pending_rosters)
     state |= OSSO_ABOOK_AGGREGATOR_ROSTERS_READY;
 
   return state;
@@ -1665,10 +1657,9 @@ roster_sequence_complete_cb(OssoABookRoster *roster, EBookViewStatus status,
         osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
         aggregator, osso_abook_roster_get_book_uri(roster),
         g_list_length(priv->pending_rosters),
-        g_hash_table_size(priv->master_contacts),
-        !!(priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_READY));
+        g_hash_table_size(priv->master_contacts), priv->is_ready);
 
-  if (priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_READY && !priv->pending_rosters)
+  if (priv->is_ready && !priv->pending_rosters)
     osso_abook_aggregator_change_state(aggregator, state);
 
   _osso_abook_eventlogger_apply();
@@ -1728,7 +1719,7 @@ attach_roster_contact(OssoABookAggregator *aggregator, gchar *master_uid,
     }
   }
 
-  if (!(priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_1))
+  if (!priv->sequence_complete)
   {
     postpone_roster_contact(aggregator, master_uid, roster_contact);
     return POSTPONED;
@@ -2057,7 +2048,7 @@ roster_created_cb(OssoABookRosterManager *manager, OssoABookRoster *roster,
   g_signal_connect(roster, "sequence-complete",
                    G_CALLBACK(roster_sequence_complete_cb), aggregator);
 
-  if (!(priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_READY))
+  if (!priv->is_ready)
     priv->pending_rosters = g_list_prepend(priv->pending_rosters, roster);
 }
 
@@ -2132,7 +2123,7 @@ roster_manager_ready_cb(OssoABookWaitable *waitable, const GError *error,
     return;
   }
 
-  priv->flags |= OSSO_ABOOK_AGGREGATOR_FLAGS_READY;
+  priv->is_ready = TRUE;
 
   roster_manager = OSSO_ABOOK_ROSTER_MANAGER(waitable);
 
@@ -2158,7 +2149,7 @@ osso_abook_aggregator_real_set_roster_manager(
   OssoABookAggregatorState state = osso_abook_aggregator_get_state(aggregator);
   OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
 
-  priv->flags |= OSSO_ABOOK_AGGREGATOR_FLAGS_4;
+  priv->roster_manager_set = TRUE;
 
   if (roster_manager)
   {
@@ -2199,10 +2190,7 @@ osso_abook_aggregator_real_set_roster_manager(
     g_object_unref(priv->roster_manager);
   }
 
-  if (!roster_manager)
-    priv->flags |= OSSO_ABOOK_AGGREGATOR_FLAGS_READY;
-  else
-    priv->flags &= !OSSO_ABOOK_AGGREGATOR_FLAGS_READY;
+  priv->is_ready = !roster_manager;
 
   priv->roster_manager = roster_manager;
   g_list_free(priv->pending_rosters);
@@ -2242,7 +2230,7 @@ osso_abook_aggregator_get_roster_manager(OssoABookAggregator *aggregator)
 
   priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
 
-  if (!priv->roster_manager && !(priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_4))
+  if (!priv->roster_manager && !priv->roster_manager_set)
   {
     osso_abook_aggregator_set_roster_manager(
           aggregator, osso_abook_roster_manager_get_default());
