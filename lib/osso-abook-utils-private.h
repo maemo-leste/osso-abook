@@ -3,6 +3,7 @@
 
 #include <glib-object.h>
 #include <gtk/gtk.h>
+#include <telepathy-glib/telepathy-glib.h>
 
 G_BEGIN_DECLS
 
@@ -32,6 +33,9 @@ _osso_abook_flags_to_string(GType flags_type, guint value);
 
 gboolean
 _osso_abook_is_addressbook(void);
+
+TpConnectionPresenceType
+default_presence_convert(TpConnectionPresenceType presence_type);
 
 G_END_DECLS
 

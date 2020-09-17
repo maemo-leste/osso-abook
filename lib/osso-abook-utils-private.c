@@ -384,3 +384,25 @@ _osso_abook_is_addressbook()
 
   return getpid() == pid;
 }
+
+TpConnectionPresenceType
+default_presence_convert(TpConnectionPresenceType presence_type)
+{
+  switch (presence_type)
+  {
+    case TP_CONNECTION_PRESENCE_TYPE_UNSET:
+    case TP_CONNECTION_PRESENCE_TYPE_AVAILABLE:
+    case TP_CONNECTION_PRESENCE_TYPE_ERROR:
+      return presence_type;
+    case TP_CONNECTION_PRESENCE_TYPE_OFFLINE:
+    case TP_CONNECTION_PRESENCE_TYPE_HIDDEN:
+      return TP_CONNECTION_PRESENCE_TYPE_OFFLINE;
+    case TP_CONNECTION_PRESENCE_TYPE_AWAY:
+    case TP_CONNECTION_PRESENCE_TYPE_EXTENDED_AWAY:
+      return TP_CONNECTION_PRESENCE_TYPE_AWAY;
+    case TP_CONNECTION_PRESENCE_TYPE_BUSY:
+      return TP_CONNECTION_PRESENCE_TYPE_BUSY;
+    default:
+      return TP_CONNECTION_PRESENCE_TYPE_UNKNOWN;
+  }
+}
