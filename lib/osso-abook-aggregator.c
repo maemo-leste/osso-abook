@@ -98,7 +98,7 @@ static OssoABookRoster *default_aggregator = NULL;
 static void
 g_object_unref0(gpointer object)
 {
-  if ( object )
+  if (object)
     g_object_unref(object);
 }
 
@@ -1133,14 +1133,14 @@ release_default_aggregator()
 
 
     g_object_unref(default_aggregator);
-    default_aggregator = 0;
+    default_aggregator = NULL;
   }
 }
 
 OssoABookRoster *
 osso_abook_aggregator_get_default(GError **error)
 {
-  if ( !default_aggregator )
+  if (!default_aggregator)
   {
     default_aggregator = osso_abook_aggregator_new(NULL, error);
 

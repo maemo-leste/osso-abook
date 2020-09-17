@@ -67,6 +67,37 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE(
   G_ADD_PRIVATE (OssoABookListStore);
 );
 
+OssoABookListStoreRow *
+osso_abook_list_store_row_copy(OssoABookListStoreRow *row)
+{
+  OssoABookListStoreRow *copy;
+
+  g_return_val_if_fail(NULL != row, NULL);
+
+  copy = g_slice_new0(OssoABookListStoreRow);
+
+  if (row->contact)
+    copy->contact = g_object_ref(row->contact);
+
+  return copy;
+}
+
+void
+osso_abook_list_store_row_free(OssoABookListStoreRow *row)
+{
+  g_return_if_fail(NULL != row);
+
+  if (row->contact)
+    g_object_unref(row->contact);
+
+  g_slice_free(OssoABookListStoreRow, row);
+}
+
+G_DEFINE_BOXED_TYPE(OssoABookListStoreRow,
+                    osso_abook_list_store_row,
+                    osso_abook_list_store_row_copy,
+                    osso_abook_list_store_row_free);
+
 static gboolean
 osso_abook_list_iter_nth_child(GtkTreeModel *tree_model, GtkTreeIter *iter,
                                GtkTreeIter *parent, gint n)
@@ -1149,13 +1180,16 @@ osso_abook_list_store_set_roster(OssoABookListStore *store,
   if (priv->roster == roster)
     return;
 
-  if (!OSSO_ABOOK_IS_AGGREGATOR(roster) && osso_abook_roster_is_running(roster))
+  if (roster)
   {
-    g_warning("Cannot attach already running roster of type %s",
-              g_type_name(G_TYPE_FROM_INSTANCE(roster)));
-    return;
+    if (!OSSO_ABOOK_IS_AGGREGATOR(roster) &&
+        osso_abook_roster_is_running(roster))
+    {
+      g_warning("Cannot attach already running roster of type %s",
+                g_type_name(G_TYPE_FROM_INSTANCE(roster)));
+      return;
+    }
   }
-
   if (old_roster)
   {
     if (priv->notify_book_view_id)

@@ -37,7 +37,7 @@ osso_abook_contact_model_class_init(OssoABookContactModelClass *klass)
   OssoABookListStoreClass *store_class = OSSO_ABOOK_LIST_STORE_CLASS(klass);
 
   store_class->contacts_added = osso_abook_contact_model_contacts_added;
-  store_class->row_type = OSSO_ABOOK_TYPE_LIST_STORE;
+  store_class->row_type = OSSO_ABOOK_TYPE_LIST_STORE_ROW;
 }
 
 OssoABookContactModel *

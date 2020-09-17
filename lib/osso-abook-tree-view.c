@@ -240,10 +240,10 @@ get_cached_icon(OssoABookTreeView *view, const gchar *icon_name, gint size)
 
     icon = gtk_icon_theme_load_icon(theme, icon_name, size, 0, NULL);
 
-    if ( !icon )
+    if (!icon)
       return icon;
 
-    g_hash_table_insert(icon_cache, g_strdup(icon_name), (gpointer)icon);
+    g_hash_table_insert(icon_cache, g_strdup(icon_name), icon);
   }
 
   g_object_ref(icon);

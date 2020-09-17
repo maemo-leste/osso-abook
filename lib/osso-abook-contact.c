@@ -164,8 +164,8 @@ is_vcard_field(GQuark quark, const char *attr_name)
     if (val)
       return GPOINTER_TO_INT(val) == 1;
   }
-
-  vca_fields = g_hash_table_new(g_str_hash, g_str_equal);
+  else
+    vca_fields = g_hash_table_new(g_str_hash, g_str_equal);
 
   if (osso_abook_account_manager_has_primary_vcard_field(0, attr_name) ||
       osso_abook_account_manager_has_secondary_vcard_field(0, attr_name))
