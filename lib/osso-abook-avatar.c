@@ -139,7 +139,8 @@ osso_abook_avatar_get_image_rounded(OssoABookAvatar *avatar, int width,
 
   g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR(avatar), NULL);
 
-  name = _osso_abook_avatar_get_cache_name(width, height, crop, radius, border_color);
+  name = _osso_abook_avatar_get_cache_name(width, height, crop, radius,
+                                           border_color);
   cache = osso_abook_avatar_cache_get_for_name(name);
   image = osso_abook_avatar_cache_lookup(cache, avatar);
   g_free(name);

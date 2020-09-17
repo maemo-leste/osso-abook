@@ -311,7 +311,7 @@ create_avatar_image(OssoABookTreeView *view, OssoABookContact *contact)
   }
   else
   {
-    int size = HILDON_ICON_SIZE_FINGER;
+    int size = hildon_get_icon_pixel_size(HILDON_ICON_SIZE_FINGER);
     const guint8 *border_color = get_avatar_border_color(priv);
 
     avatar_image = osso_abook_avatar_get_image_rounded(

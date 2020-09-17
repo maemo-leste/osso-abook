@@ -374,10 +374,10 @@ osso_abook_aggregator_init(OssoABookAggregator *aggregator)
                                          g_object_unref0);
   priv->roster_contacts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
                                          g_object_unref0);
-  priv->temp_master_contacts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
-                                         g_object_unref0);
-  priv->postponed_contacts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
-                                         (GDestroyNotify)g_hash_table_unref);
+  priv->temp_master_contacts = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                                     g_free, g_object_unref0);
+  priv->postponed_contacts = g_hash_table_new_full(
+        g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_unref);
   priv->contacts_added = g_ptr_array_new();
   priv->contacts_removed = g_ptr_array_new();
   priv->contacts_changed = g_ptr_array_new();
@@ -1657,7 +1657,7 @@ roster_sequence_complete_cb(OssoABookRoster *roster, EBookViewStatus status,
         osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
         aggregator, osso_abook_roster_get_book_uri(roster),
         g_list_length(priv->pending_rosters),
-        g_hash_table_size(priv->master_contacts), priv->is_ready);
+        g_hash_table_size(priv->master_contacts), !!priv->is_ready);
 
   if (priv->is_ready && !priv->pending_rosters)
     osso_abook_aggregator_change_state(aggregator, state);

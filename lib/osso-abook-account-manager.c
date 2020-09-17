@@ -84,6 +84,7 @@ struct _OssoABookAccountManagerPrivate
   GList *closures;
   GError *error;
   int pending_accounts;
+  int pending_connections;
   gboolean is_ready : 1;             /* priv->flags & 1 */
   gboolean is_running : 1;           /* priv->flags & 2 */
   gboolean rosters_completed : 1;    /* priv->flags & 4 */
@@ -1184,8 +1185,17 @@ connecion_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
   if (!tp_proxy_prepare_finish (object, res, &error))
     OSSO_ABOOK_WARN("Error preparing connection: %s\n", error->message);
 
+  priv->pending_connections--;
+
   account_validity_changed_cb(
         priv->tp_am, tp_connection_get_account(connection), TRUE, manager);
+
+  if (!priv->pending_connections)
+  {
+    priv->is_ready = TRUE;
+    check_pending_accounts(manager);
+  }
+
 }
 
 static void
@@ -1230,6 +1240,7 @@ am_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
           0
         };
 
+        priv->pending_connections++;
         tp_proxy_prepare_async(connection, features, connecion_prepared_cb,
                                manager);
       }
@@ -1238,8 +1249,11 @@ am_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
     g_list_free_full (accounts, g_object_unref);
   }
 
-  priv->is_ready = TRUE;
-  check_pending_accounts(manager);
+  if (!priv->pending_connections)
+  {
+    priv->is_ready = TRUE;
+    check_pending_accounts(manager);
+  }
 }
 
 static void
@@ -1297,11 +1311,11 @@ cms_ready_cb(GObject *object, GAsyncResult *res, gpointer user_data)
         if (vcard_field)
         {
           const gchar *protocol_name = tp_protocol_get_name(p->data);
+          gchar *vcf = g_ascii_strup(vcard_field, -1);
 
           OSSO_ABOOK_NOTE(TP, "adding %s primary vcard field: %s",
-                          protocol_name, vcard_field);
-          g_hash_table_insert(priv->vcard_fields, g_strdup(protocol_name),
-                              g_strdup(vcard_field));
+                          protocol_name, vcf);
+          g_hash_table_insert(priv->vcard_fields, g_strdup(protocol_name), vcf);
         }
       }
 

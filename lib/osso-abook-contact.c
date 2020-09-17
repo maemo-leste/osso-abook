@@ -452,7 +452,7 @@ osso_abook_contact_update_attributes(OssoABookContact *contact,
   if (!quark)
     return;
 
-  if (quark == osso_abook_quark_vca_osso_master_uid())
+  if (quark == OSSO_ABOOK_QUARK_VCA_OSSO_MASTER_UID)
   {
     if (!priv->updating_evc)
     {
@@ -461,7 +461,7 @@ osso_abook_contact_update_attributes(OssoABookContact *contact,
       priv->master_uids_parsed = FALSE;
     }
   }
-  else if (quark == osso_abook_quark_vca_photo())
+  else if (quark == OSSO_ABOOK_QUARK_VCA_PHOTO)
   {
     if (priv->avatar_image)
     {
@@ -472,24 +472,24 @@ osso_abook_contact_update_attributes(OssoABookContact *contact,
     osso_abook_contact_notify(contact, "avatar-image");
     osso_abook_contact_notify(contact, "photo");
   }
-  else if (quark == osso_abook_quark_vca_telepathy_presence())
+  else if (quark == OSSO_ABOOK_QUARK_VCA_TELEPATHY_PRESENCE)
   {
     priv->presence_parsed = FALSE;
     parse_presence(contact, priv);
     return;
   }
 
-  else if (quark == osso_abook_quark_vca_telepathy_capabilities() ||
+  else if (quark == OSSO_ABOOK_QUARK_VCA_TELEPATHY_CAPABILITIES ||
            is_vcard_field(quark, attribute_name))
   {
     priv->caps_parsed = FALSE;
     parse_capabilities(contact, priv);
     osso_abook_contact_notify(contact, "capabilities");
   }
-  else if (quark == osso_abook_quark_vca_n() ||
-           quark == osso_abook_quark_vca_fn() ||
-           quark == osso_abook_quark_vca_org() ||
-           quark == osso_abook_quark_vca_nickname() ||
+  else if (quark == OSSO_ABOOK_QUARK_VCA_N ||
+           quark == OSSO_ABOOK_QUARK_VCA_FN || /* FIXME - lowercase */
+           quark == OSSO_ABOOK_QUARK_VCA_ORG ||
+           quark == OSSO_ABOOK_QUARK_VCA_NICKNAME ||
            is_vcard_field(quark, attribute_name))
   {
     free_names_and_collate_keys(priv);
@@ -1685,10 +1685,17 @@ osso_abook_contact_reset(OssoABookContact *contact,
   g_object_freeze_notify(G_OBJECT(contact));
   priv->resetting = TRUE;
 
-  for (l = e_vcard_get_attributes(E_VCARD(contact)); l; l = l->next)
+  l = e_vcard_get_attributes(E_VCARD(contact));
+
+  while (l)
   {
     if (!osso_abook_contact_attribute_is_readonly(l->data))
+    {
       e_vcard_remove_attribute(E_VCARD(contact), l->data);
+      l = e_vcard_get_attributes(E_VCARD(contact));
+    }
+    else
+      l = l->next;
   }
 
   for (l = e_vcard_get_attributes(E_VCARD(replacement)); l; l = l->next)
@@ -2096,7 +2103,7 @@ osso_abook_contact_attach(OssoABookContact *master_contact,
                        FALSE);
   g_return_val_if_fail(master_contact != roster_contact, FALSE);
 
-  priv = OSSO_ABOOK_CONTACT_PRIVATE(roster_contact);
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(master_contact);
   master_uid = e_contact_get_const(E_CONTACT(master_contact), E_CONTACT_UID);
   roster_uid = e_contact_get_const(E_CONTACT(roster_contact), E_CONTACT_UID);
 

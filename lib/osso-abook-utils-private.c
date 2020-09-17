@@ -326,6 +326,7 @@ _osso_abook_flags_to_string(GType flags_type, guint value)
 {
   GFlagsClass *flags_class;
   GString *s;
+  gboolean not_first = FALSE;
 
   g_return_val_if_fail(G_TYPE_IS_FLAGS(flags_type), NULL);
 
@@ -341,13 +342,15 @@ _osso_abook_flags_to_string(GType flags_type, guint value)
   {
     GFlagsValue *v = &flags_class->values[i];
 
-    if (value && v->value)
+    if (v->value && (value & v->value) == v->value)
     {
-      if (i > 1)
+      if (not_first)
         g_string_append_c(s, '|');
-    }
+      else
+        not_first = TRUE;
 
-    g_string_append(s, v->value_nick);
+      g_string_append(s, v->value_nick);
+    }
   }
 
   g_string_append_c(s, ')');

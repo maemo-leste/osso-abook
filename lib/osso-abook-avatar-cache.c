@@ -138,7 +138,7 @@ osso_abook_avatar_cache_class_init(OssoABookAvatarCacheClass *klass)
                  0,
                  G_MAXUINT,
                  DEFAULT_CACHE_LIMIT,
-                 GTK_PARAM_READWRITE));
+                 GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
