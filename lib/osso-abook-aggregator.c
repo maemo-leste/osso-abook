@@ -1998,7 +1998,7 @@ roster_contacts_removed_cb(OssoABookRoster *roster, const char **uids,
 
   while (*uids)
   {
-    const char *uid = *uids;
+    const char *uid = *uids++;
     OssoABookContact *roster_contact;
     GList *master_uids, *l;
 
