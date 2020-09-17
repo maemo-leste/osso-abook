@@ -39,14 +39,6 @@ enum
   PROP_RUNNING
 };
 
-enum ACCOUNT_MANAGER_STATE
-{
-  ACCOUNT_MANAGER_STATE_1 = 0x1,
-  ACCOUNT_MANAGER_STATE_RUNNING = 0x2,
-  ACCOUNT_MANAGER_STATE_ROSTERS_COMPLETED = 0x4,
-  ACCOUNT_MANAGER_ACTIVE_ACCOUNTS_ONLY = 0x8,
-};
-
 #define DEFAULT_ALLOWED_CAPABILITIES \
   (OSSO_ABOOK_CAPS_ALL | OSSO_ABOOK_CAPS_CHAT_ADDITIONAL | \
   OSSO_ABOOK_CAPS_VOICE_ADDITIONAL | OSSO_ABOOK_CAPS_ADDRESSBOOK | \
@@ -92,7 +84,10 @@ struct _OssoABookAccountManagerPrivate
   GList *closures;
   GError *error;
   int pending_accounts;
-  unsigned char flags;
+  gboolean is_ready : 1;             /* priv->flags & 1 */
+  gboolean is_running : 1;           /* priv->flags & 2 */
+  gboolean rosters_completed : 1;    /* priv->flags & 4 */
+  gboolean active_accounts_only : 1; /* priv->flags & 4 */
 };
 
 typedef struct _OssoABookAccountManagerPrivate OssoABookAccountManagerPrivate;
@@ -129,19 +124,17 @@ osso_abook_account_manager_waitable_is_ready(OssoABookWaitable *waitable,
 {
   OssoABookAccountManagerPrivate *priv =
       OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(waitable));
-  gboolean is_ready;
+  gboolean is_ready = FALSE;
 
-  if (priv->flags & ACCOUNT_MANAGER_STATE_1 && !priv->pending_accounts)
-    is_ready = (priv->flags & (ACCOUNT_MANAGER_STATE_ROSTERS_COMPLETED|ACCOUNT_MANAGER_STATE_RUNNING)) == (ACCOUNT_MANAGER_STATE_ROSTERS_COMPLETED|ACCOUNT_MANAGER_STATE_RUNNING);
-  else
-    is_ready = FALSE;
+  if (priv->is_ready && !priv->pending_accounts)
+    is_ready = priv->is_running && priv->rosters_completed;
 
   OSSO_ABOOK_NOTE(
         TP, "account-manager: %s (%d accounts pending), roster-manager: %s (%s) => %s",
-        priv->flags & ACCOUNT_MANAGER_STATE_1 ? "ready" : "pending",
+        priv->is_ready ? "ready" : "pending",
         priv->pending_accounts,
-        priv->flags & ACCOUNT_MANAGER_STATE_ROSTERS_COMPLETED ? "ready" : "pending",
-        priv->flags & ACCOUNT_MANAGER_STATE_RUNNING ? "running" : "idle",
+        priv->rosters_completed ? "ready" : "pending",
+        priv->is_running ? "running" : "idle",
         is_ready ? "ready" : "pending");
 
   if (error)
@@ -209,13 +202,13 @@ check_pending_accounts(OssoABookAccountManager *manager)
 
   if (priv->pending_accounts)
     OSSO_ABOOK_NOTE(TP, "accounts pending: %d", priv->pending_accounts);
-  else if (priv->flags & ACCOUNT_MANAGER_STATE_1)
+  else if (priv->is_ready)
   {
     OSSO_ABOOK_NOTE(TP, "no more accounts pending...");
     get_all_uri_schemes(priv);
   }
 
-  if (priv->flags & ACCOUNT_MANAGER_STATE_RUNNING)
+  if (priv->is_running)
   {
     GHashTableIter iter;
     struct account_info *info;
@@ -236,10 +229,7 @@ check_pending_accounts(OssoABookAccountManager *manager)
       }
     }
 
-    if (!pending)
-      priv->flags |= ACCOUNT_MANAGER_STATE_ROSTERS_COMPLETED;
-    else
-      priv->flags &= !ACCOUNT_MANAGER_STATE_ROSTERS_COMPLETED;
+    priv->rosters_completed = !pending;
   }
 
   if (osso_abook_waitable_is_ready(OSSO_ABOOK_WAITABLE(manager), &error) )
@@ -386,7 +376,7 @@ roster_get_book_view_cb(EBook *book, EBookStatus status, EBookView *book_view,
     info->roster = osso_abook_roster_new(path_suffix, book_view, vcard_field);
     g_signal_emit(info->manager, signals[ROSTER_CREATED], 0, info->roster);
 
-    if (priv->flags & ACCOUNT_MANAGER_STATE_RUNNING)
+    if (priv->is_running)
       osso_abook_roster_start(info->roster);
   }
 
@@ -487,12 +477,11 @@ osso_abook_account_manager_roster_manager_start(OssoABookRosterManager *manager)
   GHashTableIter iter;
   struct account_info *info;
 
-  OSSO_ABOOK_NOTE(TP, "running=%d",
-                  priv->flags & ACCOUNT_MANAGER_STATE_RUNNING);
+  OSSO_ABOOK_NOTE(TP, "running=%d", priv->is_running);
 
-  if (!(priv->flags & ACCOUNT_MANAGER_STATE_RUNNING))
+  if (!priv->is_running)
   {
-    priv->flags |= ACCOUNT_MANAGER_STATE_RUNNING;
+    priv->is_running = TRUE;
     g_object_notify(G_OBJECT(manager), "running");
     g_hash_table_iter_init(&iter, priv->rosters);
 
@@ -527,15 +516,14 @@ osso_abook_account_manager_roster_manager_stop(OssoABookRosterManager *manager)
   OssoABookAccountManager *am = OSSO_ABOOK_ACCOUNT_MANAGER(manager);
   OssoABookAccountManagerPrivate *priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(am);
 
-  OSSO_ABOOK_NOTE(TP, "running=%d",
-                  priv->flags & ACCOUNT_MANAGER_STATE_RUNNING);
+  OSSO_ABOOK_NOTE(TP, "running=%d", priv->is_running);
 
-  if (priv->flags & ACCOUNT_MANAGER_STATE_RUNNING)
+  if (priv->is_running)
   {
     GHashTableIter iter;
     struct account_info *info;
 
-    priv->flags &= ~ACCOUNT_MANAGER_STATE_RUNNING;
+    priv->is_running = FALSE;
     g_object_notify(G_OBJECT(manager), "running");
     g_hash_table_iter_init(&iter, priv->rosters);
 
@@ -677,7 +665,7 @@ osso_abook_account_manager_account_created(OssoABookAccountManager *manager,
 
   osso_abook_account_manager_create_roster(info);
 
-  if (!(priv->flags & ACCOUNT_MANAGER_STATE_1))
+  if (!priv->is_ready)
   {
     priv->pending_accounts--;
     check_pending_accounts(manager);
@@ -780,7 +768,7 @@ osso_abook_account_manager_get_property(GObject *object, guint property_id,
       OssoABookAccountManagerPrivate *priv =
           OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
 
-      g_value_set_boolean(value, (priv->flags & ACCOUNT_MANAGER_STATE_RUNNING) == ACCOUNT_MANAGER_STATE_RUNNING);
+      g_value_set_boolean(value, priv->is_running);
       break;
     }
     default:
@@ -801,7 +789,7 @@ accept_account(struct account_info *info)
   const gchar *protocol_name;
   GList *l;
 
-  if (priv->flags & ACCOUNT_MANAGER_ACTIVE_ACCOUNTS_ONLY)
+  if (priv->active_accounts_only)
   {
     if (!tp_account_is_enabled(info->account))
     {
@@ -918,7 +906,7 @@ osso_abook_account_manager_set_property(GObject *object, guint property_id,
   {
     case PROP_ACTIVE_ACCOUNTS_ONLY:
     {
-      priv->flags = (priv->flags & ~ACCOUNT_MANAGER_ACTIVE_ACCOUNTS_ONLY) | (ACCOUNT_MANAGER_ACTIVE_ACCOUNTS_ONLY * g_value_get_boolean(value));
+      priv->active_accounts_only = g_value_get_boolean(value);
       update_all_visibilities(priv);
       break;
     }
@@ -1121,7 +1109,7 @@ account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
     g_hash_table_insert(priv->protocol_rosters, g_strdup(protocol_name),
                         g_list_prepend(protocol_rosters, info));
 
-  if (priv->flags & ACCOUNT_MANAGER_STATE_1)
+  if (priv->is_ready)
     get_all_uri_schemes(priv);
 
 /*  g_signal_connect(info->account, "flag-changed", flag_changed_cb, info, 0, 0);
@@ -1135,7 +1123,7 @@ account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
   {
     g_signal_emit(manager, signals[ACCOUNT_CREATED], 0, info->account);
   }
-  else if (!(priv->flags & ACCOUNT_MANAGER_STATE_1))
+  else if (!priv->is_ready)
   {
     priv->pending_accounts--;
     check_pending_accounts(manager);
@@ -1169,7 +1157,7 @@ account_removed_cb(TpAccountManager *am, TpAccount *account,
 #endif
 
 
-  if (priv->flags & ACCOUNT_MANAGER_STATE_1)
+  if (priv->is_ready)
     get_all_uri_schemes(priv);
 
   if ((info->flags & 2))
@@ -1250,7 +1238,7 @@ am_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
     g_list_free_full (accounts, g_object_unref);
   }
 
-  priv->flags |= ACCOUNT_MANAGER_STATE_1;
+  priv->is_ready = TRUE;
   check_pending_accounts(manager);
 }
 
@@ -1341,7 +1329,7 @@ osso_abook_account_manager_init(OssoABookAccountManager *manager)
   priv->tp_am = tp_account_manager_new(priv->tp_dbus);
   priv->vcard_fields =
       g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-  priv->flags |= ACCOUNT_MANAGER_ACTIVE_ACCOUNTS_ONLY;
+  priv->active_accounts_only = TRUE;
 
   get_roster_overrides(priv);
   tp_list_connection_managers_async(priv->tp_dbus, cms_ready_cb, manager);
@@ -1368,7 +1356,7 @@ osso_abook_account_manager_is_active_accounts_only(
 
   g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), TRUE);
 
-  return OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->flags & ACCOUNT_MANAGER_ACTIVE_ACCOUNTS_ONLY;
+  return OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->active_accounts_only;
 }
 
 GList *
@@ -1438,8 +1426,7 @@ osso_abook_account_manager_lookup_by_name(OssoABookAccountManager *manager,
   if (info)
     return info->account;
 
-  /* "priv->account_manager_ready"); */
-  g_return_val_if_fail(priv->flags & ACCOUNT_MANAGER_STATE_1, NULL);
+  g_return_val_if_fail(priv->is_ready, NULL);
 
   return NULL;
 }
