@@ -1016,9 +1016,9 @@ osso_abook_aggregator_class_init(OssoABookAggregatorClass *klass)
   roster_class->contacts_removed = osso_abook_aggregator_contacts_removed;
   roster_class->contacts_changed = osso_abook_aggregator_contacts_changed;
   roster_class->sequence_complete = osso_abook_aggregator_sequence_complete;
-  /*roster_class->set_book_view = osso_abook_aggregator_set_book_view;
-  */
-  g_assert(0);
+
+  /* upstream EDS doesn't have e_book_view_get_query() */
+  /* roster_class->set_book_view = osso_abook_aggregator_set_book_view; */
 
   roster_class->start = osso_abook_aggregator_start;
   roster_class->stop = osso_abook_aggregator_stop;
