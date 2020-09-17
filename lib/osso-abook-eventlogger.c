@@ -400,3 +400,20 @@ _osso_abook_eventlogger_remove(OssoABookContact *contact)
     el_uids = g_list_prepend(el_uids, g_strdup(uid));
   }
 }
+
+void
+_osso_abook_eventlogger_update_phone_table(OssoABookContact *contact)
+{
+  GList *v;
+
+  if (_osso_abook_is_addressbook())
+  {
+    const char *uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+
+    for (v = contact_get_attribute_values(contact, "TEL") ; v;
+         v = g_list_delete_link(v, v))
+    {
+      vcard_field_table_add_uid(v->data, uid);
+    }
+  }
+}

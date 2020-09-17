@@ -92,7 +92,11 @@ G_DEFINE_TYPE_WITH_CODE(
   G_ADD_PRIVATE(OssoABookAggregator);
 );
 
-static void contact_filter_changed_cb(OssoABookContactFilter *filter, gpointer user_data);
+static void contact_filter_changed_cb(OssoABookContactFilter *filter,
+                                      gpointer user_data);
+static void create_temporary_master(OssoABookAggregator *aggregator,
+                                    OssoABookContact *roster_contact,
+                                    const char *tag);
 
 static OssoABookRoster *default_aggregator = NULL;
 
@@ -688,6 +692,107 @@ process_postponed_contacts(OssoABookAggregator *aggregator,
 }
 
 static void
+remove_temporary_master(OssoABookAggregator *aggregator, const char *temp_uid,
+                        OssoABookContact *master_contact, const char *reason)
+{
+  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+  OssoABookContact *contact =
+      g_hash_table_lookup(priv->temp_master_contacts, temp_uid);
+
+  if (!contact)
+    return;
+
+  OSSO_ABOOK_NOTE(
+        AGGREGATOR, "%s@%p: dropping temporary master \"%s\" (%s) for %s",
+        osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+        aggregator, osso_abook_contact_get_display_name(contact),
+        e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID), reason);
+
+  g_ptr_array_add(priv->contacts_removed, g_object_ref(contact));
+  g_hash_table_remove(priv->temp_master_contacts, temp_uid);
+
+  if (master_contact)
+  {
+    g_signal_emit(aggregator, signals[TEMPORARY_CONTACT_SAVED], 0,
+                  get_temporary_uid(contact), master_contact);
+  }
+}
+
+static void
+discard_temporary_contacts(OssoABookAggregator *aggregator,
+                           OssoABookContact *contact)
+{
+  GList *l;
+
+  for (l = osso_abook_contact_get_roster_contacts(contact); l;
+       l = g_list_delete_link(l, l))
+  {
+    remove_temporary_master(
+          aggregator,
+          e_contact_get_const(E_CONTACT(l->data), E_CONTACT_UID),
+          contact, __FUNCTION__);
+  }
+}
+
+static void
+create_master_contact(OssoABookAggregator *aggregator,
+                      OssoABookContact *contact)
+{
+  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+  const char *uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+
+  if (accept_contact(priv, contact))
+  {
+
+    if (!osso_abook_is_temporary_uid(uid))
+    {
+      if (priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_1)
+        _osso_abook_eventlogger_update(contact, NULL);
+      else
+        _osso_abook_eventlogger_update_phone_table(contact);
+    }
+
+    OSSO_ABOOK_NOTE(
+          AGGREGATOR, "%s@%p: storing master contact: %s (%s)",
+          osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+          aggregator, osso_abook_contact_get_display_name(contact), uid);
+
+    g_hash_table_insert(priv->master_contacts, g_strdup(uid),
+                        g_object_ref(contact));
+
+    process_postponed_contacts(aggregator, contact);
+
+    if (osso_abook_is_temporary_uid(uid))
+      return;
+
+    discard_temporary_contacts(aggregator, contact);
+  }
+  else
+    g_hash_table_insert(priv->master_contacts, g_strdup(uid), NULL);
+}
+static void
+osso_abook_aggregator_contacts_added(OssoABookRoster *roster,
+                                     OssoABookContact **contacts)
+{
+  OssoABookAggregator *aggregator = OSSO_ABOOK_AGGREGATOR(roster);
+  GSignalInvocationHint *hint = g_signal_get_invocation_hint(roster);
+
+  g_return_if_fail(signals[CONTACTS_ADDED] == hint->signal_id);
+
+  if (hint->run_type & G_SIGNAL_RUN_FIRST)
+  {
+    OssoABookContact **contact = contacts;
+
+    while (*contact)
+      create_master_contact(aggregator, *contact++);
+  }
+
+  OSSO_ABOOK_ROSTER_CLASS(osso_abook_aggregator_parent_class)->
+      contacts_added(roster, contacts);
+  g_object_notify(G_OBJECT(roster), "master-contact-count");
+}
+
+static void
 remove_master_contact(const char *uid, OssoABookAggregatorPrivate *priv)
 {
   OssoABookContact *contact = g_hash_table_lookup(priv->master_contacts, uid);
@@ -776,6 +881,133 @@ osso_abook_aggregator_contacts_changed(OssoABookRoster *roster,
       contacts_changed(roster, contacts);
 }
 
+
+static void
+reject_dangling_roster_contacts(OssoABookAggregator *aggregator,
+                                OssoABookContact *roster_contact)
+{
+  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+  GList *l;
+
+  if (!_osso_abook_is_addressbook())
+    return;
+
+  for (l = osso_abook_contact_get_master_uids(roster_contact); l; l = l->next)
+  {
+    OssoABookContact *contact =
+        g_hash_table_lookup(priv->master_contacts, l->data);
+
+    if (!contact ||
+        is_dangling_roster_contact(aggregator, contact, roster_contact))
+    {
+      _osso_abook_contact_reject_for_uid_full(roster_contact, l->data, 1, 0);
+    }
+  }
+}
+
+static void
+process_unclaimed_contacts(OssoABookAggregator *aggregator)
+{
+  OssoABookAggregatorState state = osso_abook_aggregator_get_state(aggregator);
+  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+  GHashTable *unclaimed_roster_contacts;
+  GHashTableIter postponed_iter;
+  GHashTableIter contacts_iter;
+  const char *uid;
+  GHashTable *postponed_table;
+  OssoABookContact *roster_contact;
+
+  if (!(priv->flags & OSSO_ABOOK_AGGREGATOR_FLAGS_1))
+  {
+    priv->flags |= OSSO_ABOOK_AGGREGATOR_FLAGS_1;
+    osso_abook_aggregator_change_state(aggregator, state);
+  }
+
+  OSSO_ABOOK_NOTE(AGGREGATOR,
+                  "%s@%p: processing postponed contacts not claimed yet",
+                  osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+                  aggregator);
+
+  unclaimed_roster_contacts = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                                    g_free, g_object_unref);
+  g_hash_table_iter_init(&postponed_iter, priv->postponed_contacts);
+
+  while (g_hash_table_iter_next(&postponed_iter, (gpointer *)&uid,
+                                (gpointer *)&postponed_table))
+  {
+    g_hash_table_iter_init(&contacts_iter, postponed_table);
+
+    while (g_hash_table_iter_next(&contacts_iter, NULL,
+                                  (gpointer *)&roster_contact))
+    {
+      OSSO_ABOOK_NOTE(
+            AGGREGATOR, "%s@%p: unclaimed roster contact %s(%p) for %s",
+            osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+            aggregator,
+            e_contact_get_const(E_CONTACT(roster_contact), E_CONTACT_UID),
+            roster_contact, uid);
+
+      g_hash_table_insert(
+            unclaimed_roster_contacts,
+            g_strdup(e_contact_get_const(E_CONTACT(roster_contact),
+                                         E_CONTACT_UID)),
+            g_object_ref(roster_contact));
+      g_hash_table_iter_remove(&contacts_iter);
+    }
+  }
+
+  g_hash_table_iter_init(&contacts_iter, unclaimed_roster_contacts);
+
+  while (g_hash_table_iter_next(&contacts_iter, NULL,
+                                (gpointer *)&roster_contact))
+  {
+    reject_dangling_roster_contacts(aggregator, roster_contact);
+
+    if (g_hash_table_lookup(
+          priv->temp_master_contacts,
+          e_contact_get_const(E_CONTACT(roster_contact), E_CONTACT_UID)))
+    {
+
+      OSSO_ABOOK_NOTE(
+            AGGREGATOR, "%s@%p: skipping attached roster contact %s(%p)",
+            osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
+            aggregator,
+            e_contact_get_const(E_CONTACT(roster_contact), E_CONTACT_UID),
+            roster_contact);
+    }
+    else
+    {
+      GList *ruid = osso_abook_contact_get_master_uids(roster_contact);
+
+      while (ruid && !g_hash_table_lookup(priv->master_contacts, ruid->data))
+        ruid = ruid->next;
+
+      if (!ruid)
+        create_temporary_master(aggregator, roster_contact, __FUNCTION__);
+    }
+  }
+
+  g_hash_table_unref(unclaimed_roster_contacts);
+}
+
+static void
+osso_abook_aggregator_sequence_complete(OssoABookRoster *roster,
+                                        EBookViewStatus status)
+{
+  OssoABookAggregator *aggregator = OSSO_ABOOK_AGGREGATOR(roster);
+
+  if (g_signal_get_invocation_hint(roster)->run_type & G_SIGNAL_RUN_FIRST)
+  {
+    process_unclaimed_contacts(aggregator);
+    osso_abook_aggregator_emit_all(aggregator, "process_unclaimed_contacts");
+    g_signal_emit(roster, signals[ROSTER_SEQUENCE_COMPLETE], 0, roster, status);
+    _osso_abook_eventlogger_apply();
+  }
+
+  OSSO_ABOOK_ROSTER_CLASS(osso_abook_aggregator_parent_class)->
+      sequence_complete(roster, status);
+}
+
 static void
 osso_abook_aggregator_class_init(OssoABookAggregatorClass *klass)
 {
@@ -787,12 +1019,12 @@ osso_abook_aggregator_class_init(OssoABookAggregatorClass *klass)
   object_class->finalize = osso_abook_aggregator_finalize;
   object_class->dispose = osso_abook_aggregator_dispose;
   object_class->notify = osso_abook_aggregator_notify;
-/*
-  roster_class->contacts_added = osso_abook_aggregator_contacts_added;*/
+
+  roster_class->contacts_added = osso_abook_aggregator_contacts_added;
   roster_class->contacts_removed = osso_abook_aggregator_contacts_removed;
   roster_class->contacts_changed = osso_abook_aggregator_contacts_changed;
-  /*roster_class->sequence_complete = osso_abook_aggregator_sequence_complete;
-  roster_class->set_book_view = osso_abook_aggregator_set_book_view;
+  roster_class->sequence_complete = osso_abook_aggregator_sequence_complete;
+  /*roster_class->set_book_view = osso_abook_aggregator_set_book_view;
   */
   g_assert(0);
 
@@ -1046,10 +1278,15 @@ static void
 aggregator_get_book_view_cb(EBook *book, EBookStatus status,
                             EBookView *book_view, gpointer user_data)
 {
-  g_signal_emit(user_data, signals[EBOOK_STATUS], 0, status);
+  gboolean result;
+
+  g_signal_emit(user_data, signals[EBOOK_STATUS], 0, status, &result);
 
   if (status)
-    osso_abook_handle_estatus(NULL, status, book);
+  {
+    if (!result)
+      osso_abook_handle_estatus(NULL, status, book);
+  }
   else
     g_object_set(user_data, "book-view", book_view, NULL);
 
@@ -1274,7 +1511,6 @@ create_temporary_master(OssoABookAggregator *aggregator,
       g_object_set_data_full(G_OBJECT(master_contact), "temporary-uid",
                              temp_uid, g_free);
 
-
       for (l = e_vcard_get_attributes(E_VCARD(master_contact)); l; l = l->next)
       {
         const char *attr_name = e_vcard_attribute_get_name(l->data);
@@ -1438,33 +1674,6 @@ roster_sequence_complete_cb(OssoABookRoster *roster, EBookViewStatus status,
   _osso_abook_eventlogger_apply();
 }
 
-static void
-remove_temporary_master(OssoABookAggregator *aggregator, const char *temp_uid,
-                        OssoABookContact *master_contact, const char *reason)
-{
-  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
-  OssoABookContact *contact =
-      g_hash_table_lookup(priv->temp_master_contacts, temp_uid);
-
-  if (!contact)
-    return;
-
-  OSSO_ABOOK_NOTE(
-        AGGREGATOR, "%s@%p: dropping temporary master \"%s\" (%s) for %s",
-        osso_abook_roster_get_book_uri(OSSO_ABOOK_ROSTER(aggregator)),
-        aggregator, osso_abook_contact_get_display_name(contact),
-        e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID), reason);
-
-  g_ptr_array_add(priv->contacts_removed, g_object_ref(contact));
-  g_hash_table_remove(priv->temp_master_contacts, temp_uid);
-
-  if (master_contact)
-  {
-    g_signal_emit(aggregator, signals[TEMPORARY_CONTACT_SAVED], 0,
-                  get_temporary_uid(contact), master_contact);
-  }
-}
-
 typedef enum {
   NOT_ATTACHED,
   POSTPONED,
@@ -1543,30 +1752,6 @@ attach_roster_contact(OssoABookAggregator *aggregator, gchar *master_uid,
   g_ptr_array_add(priv->contacts_changed, g_object_ref(master_contact));
 
   return ATTACHED_TO_TEMPORARY;
-}
-
-
-static void
-reject_dangling_roster_contacts(OssoABookAggregator *aggregator,
-                                OssoABookContact *roster_contact)
-{
-  OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
-  GList *l;
-
-  if (!_osso_abook_is_addressbook())
-    return;
-
-  for (l = osso_abook_contact_get_master_uids(roster_contact); l; l = l->next)
-  {
-    OssoABookContact *contact =
-        g_hash_table_lookup(priv->master_contacts, l->data);
-
-    if (!contact ||
-        is_dangling_roster_contact(aggregator, contact, roster_contact))
-    {
-      _osso_abook_contact_reject_for_uid_full(roster_contact, l->data, 1, 0);
-    }
-  }
 }
 
 static void
@@ -1766,7 +1951,7 @@ roster_contacts_changed_cb(OssoABookRoster *roster, OssoABookContact **contacts,
               aggregator, uid, contact_uids->data);
 
         status = attach_roster_contact(aggregator, contact_uids->data,
-                                              roster_contact);
+                                       roster_contact);
 
         if (status == ATTACHED_TO_MASTER)
         {

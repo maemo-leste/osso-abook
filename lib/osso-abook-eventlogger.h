@@ -32,6 +32,8 @@ void _osso_abook_eventlogger_update_roster(TpAccount *account,
 void _osso_abook_eventlogger_update(OssoABookContact *new_contact,
                                     OssoABookContact *old_contact);
 
+void _osso_abook_eventlogger_update_phone_table(OssoABookContact *contact);
+
 void _osso_abook_eventlogger_remove(OssoABookContact *contact);
 
 G_END_DECLS
