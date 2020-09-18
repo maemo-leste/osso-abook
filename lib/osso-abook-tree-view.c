@@ -874,7 +874,7 @@ osso_abook_tree_view_set_property(GObject *object, guint property_id,
   OssoABookTreeView *view = OSSO_ABOOK_TREE_VIEW(object);
   OssoABookTreeViewPrivate *priv = OSSO_ABOOK_TREE_VIEW_PRIVATE(view);
 
-  switch ( property_id )
+  switch (property_id)
   {
     case PARAM_MODEL:
       osso_abook_tree_view_set_model(view, g_value_get_object(value));
