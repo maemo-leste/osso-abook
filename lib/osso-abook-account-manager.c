@@ -69,7 +69,7 @@ struct _OssoABookAccountManagerPrivate
   TpAccountManager *tp_am;
   EBookQuery *query;
   GHashTable *rosters;
-  GHashTable *field_10;
+  GHashTable *account_by_vcard_field;
   GHashTable *protocol_rosters;
   GHashTable *override_rosters;
   gulong account_ready_id;
@@ -161,6 +161,18 @@ osso_abook_account_manager_waitable_iface_init(OssoABookWaitableIface *iface)
   iface->pop = osso_abook_account_manager_waitable_pop;
   iface->is_ready = osso_abook_account_manager_waitable_is_ready;
   iface->push = osso_abook_account_manager_waitable_push;
+}
+
+static const gchar *
+get_tp_account_vcard_field(TpAccount *account,
+                           OssoABookAccountManagerPrivate *priv)
+{
+  if (!priv->vcard_fields)
+    return NULL;
+
+  return g_hash_table_lookup(priv->vcard_fields,
+                             tp_account_get_protocol_name(account));
+
 }
 
 static void
@@ -366,8 +378,7 @@ roster_get_book_view_cb(EBook *book, EBookStatus status, EBookView *book_view,
       OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(info->manager);
   TpAccount *account = info->account;
   const gchar *path_suffix = tp_account_get_path_suffix(account);
-  const gchar *vcard_field = g_hash_table_lookup(
-        priv->vcard_fields, tp_account_get_protocol_name(account));
+  const gchar *vcard_field = get_tp_account_vcard_field(account, priv);
 
   OSSO_ABOOK_NOTE(TP, "got book view for %s", path_suffix);
 
@@ -402,8 +413,7 @@ osso_abook_account_manager_create_roster(struct account_info *info)
       OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   TpAccount *account = info->account;
   GError *error = NULL;
-  const gchar *vcard_field = g_hash_table_lookup(
-        priv->vcard_fields, tp_account_get_protocol_name(account));
+  const gchar *vcard_field = get_tp_account_vcard_field(account, priv);
   const gchar *path_suffix = tp_account_get_path_suffix(account);
   OssoABookCapsFlags caps = OSSO_ABOOK_CAPS_NONE;
   gchar *uid = NULL;
@@ -621,7 +631,7 @@ osso_abook_account_manager_dispose(GObject *object)
   }
 
   g_hash_table_remove_all(priv->rosters);
-  g_hash_table_remove_all(priv->field_10);
+  g_hash_table_remove_all(priv->account_by_vcard_field);
   g_hash_table_remove_all(priv->protocol_rosters);
   g_hash_table_remove_all(priv->vcard_fields);
   osso_abook_waitable_reset(OSSO_ABOOK_WAITABLE(object));
@@ -642,7 +652,7 @@ osso_abook_account_manager_finalize(GObject *object)
     g_hash_table_destroy(priv->override_rosters);
 
   g_hash_table_destroy(priv->rosters);
-  g_hash_table_destroy(priv->field_10);
+  g_hash_table_destroy(priv->account_by_vcard_field);
   g_hash_table_destroy(priv->protocol_rosters);
   g_hash_table_destroy(priv->vcard_fields);
   osso_abook_string_list_free(priv->uri_schemes);
@@ -1157,6 +1167,34 @@ update_presence_status(TpAccount *account,
   }
 }
 
+static gchar *
+get_vcard_field_account_id(const gchar *vcard_field, const gchar *vcard_value)
+{
+  if (!vcard_field || !vcard_value)
+    return NULL;
+
+  return g_strconcat(vcard_field, ":", vcard_value, NULL);
+}
+
+static gchar *
+create_account_vcard_field_id(struct account_info *info,
+                              OssoABookAccountManagerPrivate *priv)
+{
+  const gchar *bound_name = NULL;
+  const gchar *vcard_field = NULL;
+
+  if (info->account)
+  {
+    bound_name = osso_abook_tp_account_get_bound_name(info->account);
+    vcard_field = get_tp_account_vcard_field(info->account, priv);
+  }
+
+  if (!bound_name || !vcard_field)
+    return NULL;
+
+  return get_vcard_field_account_id(vcard_field, bound_name);
+}
+
 static void
 account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
                             gboolean valid, gpointer user_data)
@@ -1166,6 +1204,7 @@ account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
       OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   const gchar *path_suffix = tp_account_get_path_suffix(account);
   const gchar *protocol_name;
+  gchar *vcard_field_id;
   struct account_info *info;
 
   OSSO_ABOOK_NOTE(TP, "account validity changed: %s", path_suffix);
@@ -1180,23 +1219,22 @@ account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
 
   g_hash_table_insert(priv->rosters, g_strdup(path_suffix), info);
 
-#ifdef TEST
-  g_print("!!!! FIXME\n");
-#else
-  g_assert(0);
-#endif
-
-
   protocol_name = tp_account_get_protocol_name(info->account);
 
-  if (protocol_name && *protocol_name)
+  if (!IS_EMPTY(protocol_name))
   {
     GList *protocol_rosters = g_list_copy(
           g_hash_table_lookup(priv->protocol_rosters, protocol_name));
 
     g_hash_table_insert(priv->protocol_rosters, g_strdup(protocol_name),
                         g_list_prepend(protocol_rosters, info));
+
   }
+
+  vcard_field_id = create_account_vcard_field_id(info, priv);
+
+  if (vcard_field_id)
+    g_hash_table_insert(priv->account_by_vcard_field, vcard_field_id, info);
 
   if (priv->is_ready)
     get_all_uri_schemes(priv);
@@ -1228,6 +1266,8 @@ account_removed_cb(TpAccountManager *am, TpAccount *account,
       OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   const gchar *path_suffix = tp_account_get_path_suffix(account);
   struct account_info *info;
+  const gchar *protocol_name;
+  gchar *vcard_field_id;
 
   OSSO_ABOOK_NOTE(TP, "account removed: %s", path_suffix);
 
@@ -1239,12 +1279,25 @@ account_removed_cb(TpAccountManager *am, TpAccount *account,
 
   info->flags |= 4;
 
-#ifdef TEST
-  g_print("!!!! FIXME\n");
-#else
-  g_assert(0);
-#endif
+  protocol_name = tp_account_get_protocol_name(info->account);
 
+  if (!IS_EMPTY(protocol_name))
+  {
+    GList *protocol_rosters = g_list_copy(
+          g_hash_table_lookup(priv->protocol_rosters, protocol_name));
+
+    g_hash_table_insert(priv->protocol_rosters, g_strdup(protocol_name),
+                        g_list_remove(protocol_rosters, info));
+
+  }
+
+  vcard_field_id = create_account_vcard_field_id(info, priv);
+
+  if (vcard_field_id)
+  {
+    g_hash_table_remove(priv->account_by_vcard_field, vcard_field_id);
+    g_free(vcard_field_id);
+  }
 
   if (priv->is_ready)
     get_all_uri_schemes(priv);
@@ -1426,7 +1479,8 @@ osso_abook_account_manager_init(OssoABookAccountManager *manager)
         g_str_hash, g_str_equal, g_free, (GDestroyNotify)account_info_unref);
   priv->protocol_rosters = g_hash_table_new_full(
         g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_list_free);
-  priv->field_10 = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+  priv->account_by_vcard_field = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                                       g_free, NULL);
   priv->tp_dbus = tp_dbus_daemon_dup(NULL);
   priv->tp_am = tp_account_manager_new(priv->tp_dbus);
   priv->vcard_fields =
@@ -1585,4 +1639,37 @@ osso_abook_account_manager_has_secondary_vcard_field(
   return g_list_find_custom(
         OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->uri_schemes,
         vcard_field, (GCompareFunc)&strcmp) != NULL;
+}
+
+TpAccount *
+osso_abook_account_manager_lookup_by_vcard_field(
+    OssoABookAccountManager *manager, const char *vcard_field,
+    const char *vcard_value)
+{
+  OssoABookAccountManagerPrivate *priv;
+  gchar *id;
+  struct account_info *info;
+  TpAccount *account = NULL;
+
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+  g_return_val_if_fail(NULL != vcard_field, NULL);
+  g_return_val_if_fail(NULL != vcard_value, NULL);
+
+  priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+
+  g_return_val_if_fail(priv->is_ready, NULL);
+
+  id = get_vcard_field_account_id(vcard_field, vcard_value);
+
+  info = g_hash_table_lookup(priv->account_by_vcard_field, id);
+
+  g_free(id);
+
+  if (info)
+      account = info->account;
+
+  return account;
 }

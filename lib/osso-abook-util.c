@@ -2,6 +2,7 @@
 
 #include "osso-abook-util.h"
 #include "osso-abook-filter-model.h"
+#include "osso-abook-utils-private.h"
 
 gboolean
 osso_abook_screen_is_landscape_mode(GdkScreen *screen)
@@ -223,4 +224,22 @@ osso_abook_is_mobile_attribute(EVCardAttribute *attribute)
   }
 
   return FALSE;
+}
+
+const gchar *
+osso_abook_tp_account_get_bound_name(TpAccount *account)
+{
+  const gchar *bound_name;
+
+  g_return_val_if_fail(TP_IS_ACCOUNT (account), NULL);
+
+  bound_name = tp_account_get_normalized_name(account);
+
+  if (IS_EMPTY(bound_name))
+  {
+    bound_name = tp_asv_get_string(tp_account_get_parameters(account),
+                                   "account");
+  }
+
+  return bound_name;
 }
