@@ -414,7 +414,6 @@ osso_abook_account_manager_create_roster(struct account_info *info)
   OssoABookAccountManagerPrivate *priv =
       OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   TpAccount *account = info->account;
-  GError *error = NULL;
   const gchar *vcard_field = get_tp_account_vcard_field(account, priv);
   const gchar *path_suffix = tp_account_get_path_suffix(account);
   OssoABookCapsFlags caps = OSSO_ABOOK_CAPS_NONE;
@@ -454,10 +453,12 @@ osso_abook_account_manager_create_roster(struct account_info *info)
 
         if (source)
         {
+          GError *error = NULL;
           EBook *book = e_book_new(source, &error);
+
           g_object_unref(source);
 
-          if (book)
+          if (book && e_book_open(book, TRUE, &error))
           {
             OSSO_ABOOK_NOTE(TP, "creating roster %s for %s contacts",
                             path_suffix, vcard_field);
@@ -466,11 +467,13 @@ osso_abook_account_manager_create_roster(struct account_info *info)
               priv->query = get_telepathy_not_blocked_query();
 
             g_atomic_int_add(&info->refcount, 1);
-            _osso_abook_async_get_book_view(book, priv->query, 0, 0,
-                                            roster_get_book_view_cb, info, 0);
+            _osso_abook_async_get_book_view(book, priv->query, NULL, 0,
+                                            roster_get_book_view_cb, info,
+                                            NULL);
             g_object_unref(book);
           }
-          else
+
+          if (error)
           {
             OSSO_ABOOK_WARN("%s", error->message);
             g_clear_error(&error);
