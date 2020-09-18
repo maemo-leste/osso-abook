@@ -583,7 +583,7 @@ backend_died_cb(OssoABookRoster *roster)
   OssoABookRosterPrivate *priv = OSSO_ABOOK_ROSTER_PRIVATE(roster);
 
   priv->backend_died = TRUE;
-  g_object_set(roster, "book-view", NULL);
+  g_object_set(roster, "book-view", NULL, NULL);
 }
 
 static void
