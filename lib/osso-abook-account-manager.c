@@ -76,6 +76,7 @@ struct _OssoABookAccountManagerPrivate
   GHashTable *override_rosters;
   gulong account_ready_id;
   gulong account_removed_id;
+  gulong account_enabled_id;
   /* protocol_name -> vcard field */
   GHashTable *vcard_fields;
   GList *uri_schemes;
@@ -248,7 +249,7 @@ check_pending_accounts(OssoABookAccountManager *manager)
     priv->rosters_completed = !pending;
   }
 
-  if (osso_abook_waitable_is_ready(OSSO_ABOOK_WAITABLE(manager), &error) )
+  if (osso_abook_waitable_is_ready(OSSO_ABOOK_WAITABLE(manager), &error))
   {
     osso_abook_waitable_notify(OSSO_ABOOK_WAITABLE(manager), error);
     g_clear_error(&error);
@@ -353,6 +354,12 @@ account_info_disconnect_account_signals(struct account_info *info)
 {
   g_signal_handlers_disconnect_matched(info->account, G_SIGNAL_MATCH_DATA, 0, 0,
                                        NULL, NULL, info);
+}
+
+static void
+account_info_ref(struct account_info *info)
+{
+  g_atomic_int_add(&info->refcount, 1);
 }
 
 static void
@@ -466,7 +473,7 @@ osso_abook_account_manager_create_roster(struct account_info *info)
             if (!priv->query)
               priv->query = get_telepathy_not_blocked_query();
 
-            g_atomic_int_add(&info->refcount, 1);
+            account_info_ref(info);
             _osso_abook_async_get_book_view(book, priv->query, NULL, 0,
                                             roster_get_book_view_cb, info,
                                             NULL);
@@ -621,6 +628,12 @@ osso_abook_account_manager_dispose(GObject *object)
   {
     g_signal_handler_disconnect(priv->tp_am, priv->account_removed_id);
     priv->account_removed_id = 0;
+  }
+
+  if (priv->account_enabled_id)
+  {
+    g_signal_handler_disconnect(priv->tp_am, priv->account_enabled_id);
+    priv->account_enabled_id = 0;
   }
 
   if (priv->tp_am)
@@ -886,7 +899,7 @@ update_visibility(struct account_info *info)
     return FALSE;
 
   OSSO_ABOOK_NOTE(TP, "visibility changed for %s (%d)",
-      tp_account_get_path_suffix(info->account), info->is_visible);
+      tp_account_get_path_suffix(info->account), !!info->is_visible);
 
   if (info->is_visible)
     g_signal_emit(info->manager, signals[ACCOUNT_CREATED], 0, info->account);
@@ -1197,8 +1210,7 @@ create_account_vcard_field_id(struct account_info *info,
 }
 
 static void
-account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
-                            gboolean valid, gpointer user_data)
+account_enabled_cb(TpAccountManager *am, TpAccount *account, gpointer user_data)
 {
   OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(user_data);
   OssoABookAccountManagerPrivate *priv =
@@ -1208,10 +1220,7 @@ account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
   gchar *vcard_field_id;
   struct account_info *info;
 
-  OSSO_ABOOK_NOTE(TP, "account validity changed: %s", path_suffix);
-
-  if (!valid)
-    return;
+  OSSO_ABOOK_NOTE(TP, "account enabled: %s", path_suffix);
 
   info = g_slice_new0(struct account_info);
   info->manager = g_object_ref(manager);
@@ -1312,6 +1321,20 @@ account_removed_cb(TpAccountManager *am, TpAccount *account,
 }
 
 static void
+account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
+                            gboolean valid, gpointer user_data)
+{
+  const gchar *path_suffix = tp_account_get_path_suffix(account);
+
+  OSSO_ABOOK_NOTE(TP, "account validity changed: %s", path_suffix);
+
+  if (valid)
+    account_enabled_cb(am, account, user_data);
+  else
+    account_removed_cb(am, account, user_data);
+}
+
+static void
 connecion_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 {
   OssoABookAccountManager *manager = user_data;
@@ -1333,7 +1356,6 @@ connecion_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
     priv->is_ready = TRUE;
     check_pending_accounts(manager);
   }
-
 }
 
 static void
@@ -1405,6 +1427,11 @@ get_accounts(OssoABookAccountManager *manager)
         factory,
         TP_ACCOUNT_FEATURE_CONNECTION,
         0);
+  tp_simple_client_factory_add_connection_features_varargs (
+        factory,
+        TP_CONNECTION_FEATURE_CONTACT_LIST,
+        TP_CONNECTION_FEATURE_CAPABILITIES,
+        0);
 
   tp_proxy_prepare_async (priv->tp_am, NULL, am_prepared_cb, manager);
 
@@ -1415,6 +1442,10 @@ get_accounts(OssoABookAccountManager *manager)
   priv->account_removed_id =
       g_signal_connect(priv->tp_am, "account-removed",
                        G_CALLBACK(account_removed_cb), manager);
+
+  priv->account_enabled_id =
+      g_signal_connect(priv->tp_am, "account-enabled",
+                       G_CALLBACK(account_enabled_cb), manager);
 }
 
 static void
