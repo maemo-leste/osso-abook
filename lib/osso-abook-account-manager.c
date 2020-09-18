@@ -51,7 +51,9 @@ struct account_info
   TpAccount *account;
   TpConnectionManager *cm;
   OssoABookRoster *roster;
-  unsigned char flags;
+  gboolean is_pending : 1; /* info->flags & 1 */
+  gboolean is_visible : 1; /* info->flags & 2 */
+  gboolean is_removed : 1; /* info->flags & 4 */
   volatile gint refcount;
 };
 
@@ -234,7 +236,7 @@ check_pending_accounts(OssoABookAccountManager *manager)
 
     while (g_hash_table_iter_next(&iter, 0, (gpointer *)&info))
     {
-      if (info->flags & 1)
+      if (info->is_pending)
       {
         OSSO_ABOOK_NOTE(TP, "roster for %s is pending still",
                         tp_account_get_path_suffix(info->account));
@@ -384,7 +386,7 @@ roster_get_book_view_cb(EBook *book, EBookStatus status, EBookView *book_view,
 
   if (status)
     osso_abook_handle_estatus(NULL, status, book);
-  else if (info->flags & 1)
+  else if (info->is_pending)
   {
     info->roster = osso_abook_roster_new(path_suffix, book_view, vcard_field);
     g_signal_emit(info->manager, signals[ROSTER_CREATED], 0, info->roster);
@@ -393,9 +395,9 @@ roster_get_book_view_cb(EBook *book, EBookStatus status, EBookView *book_view,
       osso_abook_roster_start(info->roster);
   }
 
-  if (info->flags & 1)
+  if (info->is_pending)
   {
-    info->flags = info->flags & ~1;
+    info->is_pending = FALSE;
     check_pending_accounts(info->manager);
   }
 
@@ -432,13 +434,13 @@ osso_abook_account_manager_create_roster(struct account_info *info)
   if (!vcard_field)
     return;
 
-  if (info->flags & 2)
+  if (info->is_visible)
   {
     caps |= osso_abook_caps_from_account(account);
 
     if (caps & OSSO_ABOOK_CAPS_ADDRESSBOOK)
     {
-      info->flags |= 1;
+      info->is_pending = TRUE;
 
       if (osso_abook_roster_manager_is_running(
             OSSO_ABOOK_ROSTER_MANAGER(manager)))
@@ -507,7 +509,7 @@ osso_abook_account_manager_roster_manager_start(OssoABookRosterManager *manager)
 static void
 osso_abook_account_manager_destroy_account_info(struct account_info *info)
 {
-  info->flags &= ~1;
+  info->is_pending = FALSE;
 
   if (info->roster)
   {
@@ -712,7 +714,7 @@ osso_abook_account_manager_account_removed(OssoABookAccountManager *manager,
 
     if (book)
     {
-      if (info->flags & 4)
+      if (info->is_removed)
       {
         ESource *source = e_book_get_source (book);
 
@@ -873,21 +875,17 @@ accept_account(struct account_info *info)
 static gboolean
 update_visibility(struct account_info *info)
 {
-  gboolean was_visible;
-  int visible;
+  gboolean was_visible = info->is_visible;
 
-  was_visible = info->flags & 2;
-  visible = accept_account(info) & 1;
+  info->is_visible = accept_account(info);
 
-  info->flags = (info->flags & 0xFD) | (2 * visible);
-
-  if ((!!(info->flags & 2)) == was_visible)
+  if (info->is_visible == was_visible)
     return FALSE;
 
   OSSO_ABOOK_NOTE(TP, "visibility changed for %s (%d)",
-      tp_account_get_path_suffix(info->account), visible);
+      tp_account_get_path_suffix(info->account), info->is_visible);
 
-  if (info->flags & 2)
+  if (info->is_visible)
     g_signal_emit(info->manager, signals[ACCOUNT_CREATED], 0, info->account);
   else
     g_signal_emit(info->manager, signals[ACCOUNT_REMOVED], 0, info->account);
@@ -1086,7 +1084,7 @@ emit_account_changed(struct account_info *info, GQuark property, GValue *value)
 {
   if (!update_visibility(info))
   {
-    if (info->flags & 2)
+    if (info->is_visible)
       g_signal_emit(info->manager, signals[ACCOUNT_CHANGED], property,
                     info->account, property, value);
   }
@@ -1244,12 +1242,10 @@ account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
   g_signal_connect(info->account, "status-changed",
                    G_CALLBACK(status_changed_cb), info);
 
-  info->flags = (info->flags & 0xFD) | 2 * (accept_account(info) & 1);
+  info->is_visible = accept_account(info);
 
-  if (info->flags & 2)
-  {
+  if (info->is_visible)
     g_signal_emit(manager, signals[ACCOUNT_CREATED], 0, info->account);
-  }
   else if (!priv->is_ready)
   {
     priv->pending_accounts--;
@@ -1276,9 +1272,7 @@ account_removed_cb(TpAccountManager *am, TpAccount *account,
   g_return_if_fail(NULL != info);
 
   account_info_disconnect_account_signals(info);
-
-  info->flags |= 4;
-
+  info->is_removed = TRUE;
   protocol_name = tp_account_get_protocol_name(info->account);
 
   if (!IS_EMPTY(protocol_name))
@@ -1302,12 +1296,12 @@ account_removed_cb(TpAccountManager *am, TpAccount *account,
   if (priv->is_ready)
     get_all_uri_schemes(priv);
 
-  if ((info->flags & 2))
+  if (info->is_visible)
     g_signal_emit(user_data, signals[ACCOUNT_REMOVED], 0, info->account);
 
-  if ((info->flags & 1))
+  if (info->is_pending)
   {
-    info->flags &= ~1;
+    info->is_pending = FALSE;
     check_pending_accounts(info->manager);
   }
 
