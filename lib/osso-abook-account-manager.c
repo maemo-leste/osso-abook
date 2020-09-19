@@ -88,7 +88,6 @@ struct _OssoABookAccountManagerPrivate
   GList *closures;
   GError *error;
   int pending_accounts;
-  int pending_connections;
   gboolean is_ready : 1;             /* priv->flags & 1 */
   gboolean is_running : 1;           /* priv->flags & 2 */
   gboolean rosters_completed : 1;    /* priv->flags & 4 */
@@ -356,10 +355,12 @@ account_info_disconnect_account_signals(struct account_info *info)
                                        NULL, NULL, info);
 }
 
-static void
+static struct account_info *
 account_info_ref(struct account_info *info)
 {
   g_atomic_int_add(&info->refcount, 1);
+
+  return info;
 }
 
 static void
@@ -681,19 +682,88 @@ osso_abook_account_manager_finalize(GObject *object)
 }
 
 static void
+account_connecion_prepared_cb(GObject *object, GAsyncResult *res,
+                              gpointer user_data)
+{
+  struct account_info *info = user_data;
+  GError *error = NULL;
+
+  if (!tp_proxy_prepare_finish (object, res, &error))
+    OSSO_ABOOK_WARN("Error preparing connection: %s\n", error->message);
+
+  osso_abook_account_manager_create_roster(info);
+  account_info_unref(info);
+}
+
+static void
+prepare_connection_capabilities(TpConnection *connection,
+                                GAsyncReadyCallback callback,
+                                gpointer user_data)
+{
+  GQuark features[] =
+  {
+    TP_CONNECTION_FEATURE_CAPABILITIES,
+    TP_CONNECTION_FEATURE_CONTACT_LIST,
+    0
+  };
+
+  OSSO_ABOOK_NOTE(
+        TP, "preparing account %s connection",
+        tp_account_get_path_suffix(tp_connection_get_account(connection)));
+
+  tp_proxy_prepare_async(connection, features, callback, user_data);
+}
+
+static void
+acccount_connection_cb(GObject *gobject, GParamSpec *pspec, gpointer user_data)
+{
+  struct account_info *info = user_data;
+  TpConnection *connection = tp_account_get_connection(info->account);
+
+  OSSO_ABOOK_NOTE(TP, "account %s got connection",
+                  tp_account_get_path_suffix(info->account));
+
+  g_signal_handlers_disconnect_matched(
+        info->account, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+        acccount_connection_cb, info);
+  prepare_connection_capabilities(connection, account_connecion_prepared_cb,
+                                  info);
+}
+
+static void
 osso_abook_account_manager_account_created(OssoABookAccountManager *manager,
                                            TpAccount *account)
 {
   OssoABookAccountManagerPrivate *priv =
       OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   struct account_info *info;
+  TpConnection *connection;
 
   info = g_hash_table_lookup(priv->rosters,
                              tp_account_get_path_suffix(account));
 
   g_return_if_fail(NULL != info);
 
-  osso_abook_account_manager_create_roster(info);
+  connection = tp_account_get_connection(info->account);
+
+  if (connection)
+  {
+    if (!tp_proxy_is_prepared(connection, TP_CONNECTION_FEATURE_CAPABILITIES))
+    {
+      prepare_connection_capabilities(connection, account_connecion_prepared_cb,
+                                      account_info_ref(info));
+    }
+    else
+      osso_abook_account_manager_create_roster(info);
+  }
+  else
+  {
+    OSSO_ABOOK_NOTE(TP, "account %s is not connected, setting up notifier",
+                    tp_account_get_path_suffix(info->account));
+    g_signal_connect(info->account, "notify::connection",
+                     G_CALLBACK(acccount_connection_cb),
+                     account_info_ref(info));
+  }
 
   if (!priv->is_ready)
   {
@@ -1335,30 +1405,6 @@ account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
 }
 
 static void
-connecion_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
-{
-  OssoABookAccountManager *manager = user_data;
-  OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
-  TpConnection *connection = (TpConnection *)object;
-  GError *error = NULL;
-
-  if (!tp_proxy_prepare_finish (object, res, &error))
-    OSSO_ABOOK_WARN("Error preparing connection: %s\n", error->message);
-
-  priv->pending_connections--;
-
-  account_validity_changed_cb(
-        priv->tp_am, tp_connection_get_account(connection), TRUE, manager);
-
-  if (!priv->pending_connections)
-  {
-    priv->is_ready = TRUE;
-    check_pending_accounts(manager);
-  }
-}
-
-static void
 am_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 {
   TpAccountManager *am = (TpAccountManager *)object;
@@ -1385,35 +1431,15 @@ am_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 
     for (l = accounts; l != NULL; l = l->next)
     {
-      TpAccount *account = l->data;
-
       priv->pending_accounts++;
-      TpConnection *connection = tp_account_get_connection(account);
-
-      if (!connection)
-        account_validity_changed_cb(am, account, TRUE, manager);
-      else if (connection)
-      {
-        GQuark features[] = {
-          TP_CONNECTION_FEATURE_CAPABILITIES,
-          TP_CONNECTION_FEATURE_CONTACT_LIST,
-          0
-        };
-
-        priv->pending_connections++;
-        tp_proxy_prepare_async(connection, features, connecion_prepared_cb,
-                               manager);
-      }
+      account_validity_changed_cb(am, l->data, TRUE, manager);
     }
 
     g_list_free_full (accounts, g_object_unref);
   }
 
-  if (!priv->pending_connections)
-  {
-    priv->is_ready = TRUE;
-    check_pending_accounts(manager);
-  }
+  priv->is_ready = TRUE;
+  check_pending_accounts(manager);
 }
 
 static void
