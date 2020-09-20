@@ -1790,7 +1790,7 @@ osso_abook_account_manager_list_protocols(OssoABookAccountManager *manager,
 
     if (no_roster_only)
     {
-      const GHashTable *props = NULL;
+      GHashTable *props = NULL;
       const GValue *value;
 
       g_object_get(protocol, "protocol-properties", &props, NULL);
@@ -1804,8 +1804,11 @@ osso_abook_account_manager_list_protocols(OssoABookAccountManager *manager,
           g_strv_contains(g_value_get_boxed(value),
                           TP_IFACE_CONNECTION_INTERFACE_CONTACT_LIST))
       {
+        g_hash_table_destroy(props);
         continue;
       }
+
+      g_hash_table_destroy(props);
     }
 
     if (attr_name)
