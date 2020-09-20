@@ -78,7 +78,7 @@ struct _OssoABookAccountManagerPrivate
   gulong account_removed_id;
   gulong account_enabled_id;
   /* protocol_name -> vcard field */
-  GHashTable *vcard_fields;
+  GHashTable *protocols;
   GList *uri_schemes;
   int presence;
   OssoABookCapsFlags allowed_capabilities;
@@ -165,16 +165,30 @@ osso_abook_account_manager_waitable_iface_init(OssoABookWaitableIface *iface)
   iface->push = osso_abook_account_manager_waitable_push;
 }
 
+static TpProtocol *
+get_tp_account_protocol(TpAccount *account,
+                        OssoABookAccountManagerPrivate *priv)
+{
+  return g_hash_table_lookup(priv->protocols,
+                             tp_account_get_protocol_name(account));
+
+}
+
 static const gchar *
 get_tp_account_vcard_field(TpAccount *account,
                            OssoABookAccountManagerPrivate *priv)
 {
-  if (!priv->vcard_fields)
+  TpProtocol *protocol;
+
+  if (!priv->protocols)
     return NULL;
 
-  return g_hash_table_lookup(priv->vcard_fields,
-                             tp_account_get_protocol_name(account));
+  protocol = get_tp_account_protocol(account, priv);
 
+  if (!protocol)
+    return NULL;
+
+  return tp_protocol_get_vcard_field(protocol);
 }
 
 static void
@@ -652,7 +666,7 @@ osso_abook_account_manager_dispose(GObject *object)
   g_hash_table_remove_all(priv->rosters);
   g_hash_table_remove_all(priv->account_by_vcard_field);
   g_hash_table_remove_all(priv->protocol_rosters);
-  g_hash_table_remove_all(priv->vcard_fields);
+  g_hash_table_remove_all(priv->protocols);
   osso_abook_waitable_reset(OSSO_ABOOK_WAITABLE(object));
 
   G_OBJECT_CLASS(osso_abook_account_manager_parent_class)->dispose(object);
@@ -673,7 +687,7 @@ osso_abook_account_manager_finalize(GObject *object)
   g_hash_table_destroy(priv->rosters);
   g_hash_table_destroy(priv->account_by_vcard_field);
   g_hash_table_destroy(priv->protocol_rosters);
-  g_hash_table_destroy(priv->vcard_fields);
+  g_hash_table_destroy(priv->protocols);
   osso_abook_string_list_free(priv->uri_schemes);
   g_free(priv->account_protocol);
   g_list_free(priv->allowed_accounts);
@@ -1451,16 +1465,13 @@ cms_ready_cb(GObject *object, GAsyncResult *res, gpointer user_data)
       for (p = protocols; p; p = p->next)
       {
         const gchar *vcard_field = tp_protocol_get_vcard_field(p->data);
+        const gchar *protocol_name = tp_protocol_get_name(p->data);
 
-        if (vcard_field)
-        {
-          const gchar *protocol_name = tp_protocol_get_name(p->data);
-          gchar *vcf = g_ascii_strup(vcard_field, -1);
+        OSSO_ABOOK_NOTE(TP, "adding protocol (%s primary vcard field: %s)",
+                        protocol_name, vcard_field);
 
-          OSSO_ABOOK_NOTE(TP, "adding %s primary vcard field: %s",
-                          protocol_name, vcf);
-          g_hash_table_insert(priv->vcard_fields, g_strdup(protocol_name), vcf);
-        }
+        g_hash_table_insert(priv->protocols, g_strdup(protocol_name),
+                            g_object_ref(p->data));
       }
 
       g_list_free_full(protocols, g_object_unref);
@@ -1513,10 +1524,11 @@ osso_abook_account_manager_init(OssoABookAccountManager *manager)
         g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_list_free);
   priv->account_by_vcard_field = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                        g_free, NULL);
+  priv->protocols =
+      g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
+
   priv->tp_dbus = tp_dbus_daemon_dup(NULL);
   priv->tp_am = create_account_manager(priv->tp_dbus);
-  priv->vcard_fields =
-      g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
   priv->active_accounts_only = TRUE;
 
   get_roster_overrides(priv);
@@ -1639,7 +1651,12 @@ osso_abook_account_manager_new(void)
 static gboolean
 match_vcard_field(gpointer key, gpointer value, gpointer user_data)
 {
-  return g_strcmp0(value, user_data) == 0;
+  gchar *vcf = g_ascii_strup(tp_protocol_get_vcard_field(value), -1);
+  gboolean rv = g_strcmp0(vcf, user_data) == 0;
+
+  g_free(vcf);
+
+  return rv;
 }
 
 gboolean
@@ -1654,7 +1671,7 @@ osso_abook_account_manager_has_primary_vcard_field(
 
   return
       g_hash_table_find(
-        OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->vcard_fields,
+        OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols,
         match_vcard_field, (gpointer)vcard_field) != NULL;
 }
 
