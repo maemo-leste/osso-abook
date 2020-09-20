@@ -367,41 +367,24 @@ parse_capabilities(OssoABookContact *contact, OssoABookContactPrivate *priv)
       priv->caps |= OSSO_ABOOK_CAPS_IMMUTABLE_STREAMS;
   }
 
-#if 0
-  for (l = osso_abook_account_manager_list_profiles(NULL, NULL, TRUE); l;
+  for (l = osso_abook_account_manager_list_protocols(NULL, NULL, TRUE); l;
        l = g_list_delete_link(l, l))
   {
-    const char *vcf = mc_profile_get_vcard_field(l->data);
+    const char *vcf = tp_protocol_get_vcard_field(l->data);
 
-    if (g_strcmp0(vcf, "TEL"))
+    /*
+     * FIXME revisit - seems upstream TP returns vcard fields in lowercase,
+     * however, telepathy-ring in its current shape does not devine vcard-field
+     * at all.
+     */
+    if (vcf && g_strcmp0(vcf, "TEL"))
     {
       if (e_vcard_get_attribute(E_VCARD(contact), vcf))
-      {
-        OssoABookCapsFlags profile_caps = OSSO_ABOOK_CAPS_NONE;
-        McProfileCapabilityFlags mc_profile_caps =
-            mc_profile_get_capabilities(l->data);
-
-        if (mc_profile_caps & MC_PROFILE_CAPABILITY_CHAT_P2P)
-          profile_caps = OSSO_ABOOK_CAPS_CHAT;
-
-        if (mc_profile_caps & MC_PROFILE_CAPABILITY_VOICE_P2P)
-          profile_caps |= OSSO_ABOOK_CAPS_VOICE;
-
-        if (mc_profile_caps & MC_PROFILE_CAPABILITY_VIDEO_P2P)
-          profile_caps |= OSSO_ABOOK_CAPS_VIDEO;
-
-        if (mc_profile_caps & MC_PROFILE_CAPABILITY_SUPPORTS_ROSTER)
-          profile_caps |= OSSO_ABOOK_CAPS_ADDRESSBOOK;
-
-        priv->caps |= profile_caps ;
-      }
+        priv->caps |= osso_abook_caps_from_tp_protocol(l->data);
     }
 
     g_object_unref(l->data);
   }
-#else
-#pragma message("FIXME!!! - replace McProfile")
-#endif
 
   for (attr = e_vcard_get_attributes(E_VCARD(contact)); attr; attr = attr->next)
   {
@@ -2501,4 +2484,19 @@ osso_abook_contact_osso_abook_caps_iface_init(OssoABookCapsIface *iface,
 {
   /*iface->get_static_capabilities = osso_abook_contact_get_static_capabilities; */
   iface->get_capabilities = osso_abook_contact_get_capabilities;
+}
+
+TpProtocol *
+osso_abook_contact_get_profile(OssoABookContact *contact)
+{
+  OssoABookRoster *roster;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  roster = OSSO_ABOOK_CONTACT_PRIVATE(contact)->roster;
+
+  if (roster)
+    return osso_abook_roster_get_protocol(roster);
+
+  return NULL;
 }

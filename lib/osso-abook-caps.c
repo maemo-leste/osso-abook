@@ -104,8 +104,39 @@ osso_abook_caps_from_account(TpAccount *account)
   OssoABookCapsFlags caps = OSSO_ABOOK_CAPS_NONE;
   TpConnection *connection = tp_account_get_connection(account);
 
+  /* FIXME - revisit - shall we return offline caps from the protocol? */
   if (connection)
-    caps |= osso_abook_caps_from_tp_connection(connection);
+    caps = osso_abook_caps_from_tp_connection(connection);
+
+  return caps;
+}
+
+OssoABookCapsFlags
+osso_abook_caps_from_tp_protocol(TpProtocol *protocol)
+{
+  OssoABookCapsFlags caps = OSSO_ABOOK_CAPS_NONE;
+  const GHashTable *props = NULL;
+  const GValue *value;
+  TpCapabilities *capabilities;
+
+  g_object_get(protocol, "protocol-properties", &props, NULL);
+
+  if (props)
+  {
+    value = tp_asv_lookup(props, TP_PROP_PROTOCOL_CONNECTION_INTERFACES);
+
+    if (value && G_VALUE_HOLDS(value, G_TYPE_STRV) &&
+        g_strv_contains(g_value_get_boxed(value),
+                        TP_IFACE_CONNECTION_INTERFACE_CONTACT_LIST))
+    {
+      caps |= OSSO_ABOOK_CAPS_ADDRESSBOOK;
+    }
+  }
+
+  capabilities = tp_protocol_get_capabilities(protocol);
+
+  if (capabilities)
+    caps |= osso_abook_caps_from_tp_capabilities(capabilities);
 
   return caps;
 }

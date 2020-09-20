@@ -824,3 +824,21 @@ osso_abook_roster_get_capabilities(OssoABookRoster *roster)
 
   return OSSO_ABOOK_CAPS_NONE;
 }
+
+TpProtocol *
+osso_abook_roster_get_protocol(OssoABookRoster *roster)
+{
+  TpAccount *account;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER(roster), NULL);
+
+  account = osso_abook_roster_get_account(roster);
+
+  if (account)
+  {
+    return
+        osso_abook_account_manager_get_account_protocol_object(NULL, account);
+  }
+
+  return NULL;
+}

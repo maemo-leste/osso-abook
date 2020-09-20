@@ -136,6 +136,10 @@ const char*
 osso_abook_account_manager_get_account_protocol
                                             (OssoABookAccountManager *manager);
 
+TpProtocol *
+osso_abook_account_manager_get_account_protocol_object
+                                            (OssoABookAccountManager *manager,
+                                             TpAccount *account);
 TpAccount *
 osso_abook_account_manager_lookup_by_name   (OssoABookAccountManager *manager,
                                              const char              *name);
@@ -191,7 +195,7 @@ osso_abook_account_manager_get_vcard_field  (OssoABookAccountManager *manager,
                                              const char              *account_name);
 
 GList *
-osso_abook_account_manager_list_profiles    (OssoABookAccountManager *manager,
+osso_abook_account_manager_list_protocols   (OssoABookAccountManager *manager,
                                              const gchar             *attr_name,
                                              gboolean                 no_roster_only);
 

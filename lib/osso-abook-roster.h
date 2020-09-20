@@ -84,12 +84,8 @@ osso_abook_roster_get_name         (OssoABookRoster   *roster);
 TpAccount *
 osso_abook_roster_get_account      (OssoABookRoster   *roster);
 
-#if 0
-McProfile *
-osso_abook_roster_get_profile      (OssoABookRoster   *roster);
-#else
-#pragma message("FIXME!!! - replace McAccout (with TpAccount?)")
-#endif
+TpProtocol *
+osso_abook_roster_get_protocol     (OssoABookRoster   *roster);
 
 const char *
 osso_abook_roster_get_vcard_field  (OssoABookRoster   *roster);

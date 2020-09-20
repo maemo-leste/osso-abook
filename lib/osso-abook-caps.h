@@ -97,6 +97,9 @@ OssoABookCapsFlags
 osso_abook_caps_from_tp_connection      (TpConnection *connection);
 
 OssoABookCapsFlags
+osso_abook_caps_from_tp_protocol        (TpProtocol *protocol);
+
+OssoABookCapsFlags
 osso_abook_caps_from_account            (TpAccount     *account);
 
 G_END_DECLS

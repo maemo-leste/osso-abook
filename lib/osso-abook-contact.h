@@ -436,12 +436,8 @@ osso_abook_contact_get_roster              (OssoABookContact         *contact);
 TpAccount *
 osso_abook_contact_get_account             (OssoABookContact         *contact);
 
-#if 0
-McProfile *
-osso_abook_contact_get_profile             (OssoABookContact         *contact);
-#else
-#pragma message("FIXME!!! - replace McAccout (with TpAccount?)")
-#endif
+TpProtocol *
+osso_abook_contact_get_protocol            (OssoABookContact         *contact);
 
 const char *
 osso_abook_contact_get_vcard_field         (OssoABookContact         *contact);

@@ -1651,10 +1651,16 @@ osso_abook_account_manager_new(void)
 static gboolean
 match_vcard_field(gpointer key, gpointer value, gpointer user_data)
 {
-  gchar *vcf = g_ascii_strup(tp_protocol_get_vcard_field(value), -1);
-  gboolean rv = g_strcmp0(vcf, user_data) == 0;
+  const gchar *vcf = tp_protocol_get_vcard_field(value);
+  gboolean rv  = FALSE;
 
-  g_free(vcf);
+  if (vcf)
+  {
+    gchar *vcfup = g_ascii_strup(vcf, -1);
+    rv = g_strcmp0(vcfup, user_data) == 0;
+
+    g_free(vcfup);
+  }
 
   return rv;
 }
@@ -1721,4 +1727,119 @@ osso_abook_account_manager_lookup_by_vcard_field(
       account = info->account;
 
   return account;
+}
+
+GList *
+osso_abook_account_manager_list_accounts(OssoABookAccountManager *manager,
+                                         TpAccountFilterFunc filter,
+                                         gpointer user_data)
+{
+  OssoABookAccountManagerPrivate *priv;
+  GList *accounts = NULL;
+  GHashTableIter iter;
+  struct account_info *info;
+
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+
+  priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+
+  g_hash_table_iter_init(&iter, priv->rosters);
+
+  while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&info))
+  {
+    if (accept_account(info) && (!filter || filter(info->account, user_data)))
+      accounts = g_list_prepend(accounts, info->account);
+  }
+
+  return g_list_reverse(accounts);
+}
+
+GList *
+osso_abook_account_manager_list_protocols(OssoABookAccountManager *manager,
+                                          const gchar *attr_name,
+                                          gboolean no_roster_only)
+{
+  OssoABookAccountManagerPrivate *priv;
+  GList *accounts;
+  GList *protocols = NULL;
+  GList *l;
+
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+
+  priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+  accounts = osso_abook_account_manager_list_accounts(manager, NULL, NULL);
+
+  for (l = accounts; l; l = l->next)
+  {
+    TpAccount *account = l->data;
+    TpProtocol *protocol;
+
+    if (!tp_account_is_enabled(account))
+      continue;
+
+    protocol = get_tp_account_protocol(account, priv);
+
+    if (!protocol)
+      continue;
+
+    if (no_roster_only)
+    {
+      const GHashTable *props = NULL;
+      const GValue *value;
+
+      g_object_get(protocol, "protocol-properties", &props, NULL);
+
+      if (!props)
+        continue;
+
+      value = tp_asv_lookup(props, TP_PROP_PROTOCOL_CONNECTION_INTERFACES);
+
+      if (value && G_VALUE_HOLDS(value, G_TYPE_STRV) &&
+          g_strv_contains(g_value_get_boxed(value),
+                          TP_IFACE_CONNECTION_INTERFACE_CONTACT_LIST))
+      {
+        continue;
+      }
+    }
+
+    if (attr_name)
+    {
+       const gchar *vcf = tp_protocol_get_vcard_field(protocol);
+
+       if (strcmp(attr_name, vcf))
+         continue;
+    }
+
+    if (g_list_find(protocols, protocol))
+      continue;
+
+    protocols = g_list_prepend(protocols, g_object_ref(protocol));
+  }
+
+  g_list_free(accounts);
+
+  return protocols;
+}
+
+TpProtocol *
+osso_abook_account_manager_get_account_protocol_object(
+    OssoABookAccountManager *manager, TpAccount *account)
+{
+  OssoABookAccountManagerPrivate *priv;
+
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+
+  priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+
+  return g_hash_table_lookup(priv->protocols,
+                             tp_account_get_protocol_name(account));
 }
