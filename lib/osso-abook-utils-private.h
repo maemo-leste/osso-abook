@@ -7,7 +7,7 @@
 
 G_BEGIN_DECLS
 
-#define IS_EMPTY(s) ((s) && (((const char *)(s))[0]))
+#define IS_EMPTY(s) (!((s) && (((const char *)(s))[0])))
 
 void
 disconnect_signal_if_connected(gpointer instance, gulong handler);
