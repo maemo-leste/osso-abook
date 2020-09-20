@@ -682,88 +682,19 @@ osso_abook_account_manager_finalize(GObject *object)
 }
 
 static void
-account_connecion_prepared_cb(GObject *object, GAsyncResult *res,
-                              gpointer user_data)
-{
-  struct account_info *info = user_data;
-  GError *error = NULL;
-
-  if (!tp_proxy_prepare_finish (object, res, &error))
-    OSSO_ABOOK_WARN("Error preparing connection: %s\n", error->message);
-
-  osso_abook_account_manager_create_roster(info);
-  account_info_unref(info);
-}
-
-static void
-prepare_connection_capabilities(TpConnection *connection,
-                                GAsyncReadyCallback callback,
-                                gpointer user_data)
-{
-  GQuark features[] =
-  {
-    TP_CONNECTION_FEATURE_CAPABILITIES,
-    TP_CONNECTION_FEATURE_CONTACT_LIST,
-    0
-  };
-
-  OSSO_ABOOK_NOTE(
-        TP, "preparing account %s connection",
-        tp_account_get_path_suffix(tp_connection_get_account(connection)));
-
-  tp_proxy_prepare_async(connection, features, callback, user_data);
-}
-
-static void
-acccount_connection_cb(GObject *gobject, GParamSpec *pspec, gpointer user_data)
-{
-  struct account_info *info = user_data;
-  TpConnection *connection = tp_account_get_connection(info->account);
-
-  OSSO_ABOOK_NOTE(TP, "account %s got connection",
-                  tp_account_get_path_suffix(info->account));
-
-  g_signal_handlers_disconnect_matched(
-        info->account, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-        acccount_connection_cb, info);
-  prepare_connection_capabilities(connection, account_connecion_prepared_cb,
-                                  info);
-}
-
-static void
 osso_abook_account_manager_account_created(OssoABookAccountManager *manager,
                                            TpAccount *account)
 {
   OssoABookAccountManagerPrivate *priv =
       OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   struct account_info *info;
-  TpConnection *connection;
 
   info = g_hash_table_lookup(priv->rosters,
                              tp_account_get_path_suffix(account));
 
   g_return_if_fail(NULL != info);
 
-  connection = tp_account_get_connection(info->account);
-
-  if (connection)
-  {
-    if (!tp_proxy_is_prepared(connection, TP_CONNECTION_FEATURE_CAPABILITIES))
-    {
-      prepare_connection_capabilities(connection, account_connecion_prepared_cb,
-                                      account_info_ref(info));
-    }
-    else
-      osso_abook_account_manager_create_roster(info);
-  }
-  else
-  {
-    OSSO_ABOOK_NOTE(TP, "account %s is not connected, setting up notifier",
-                    tp_account_get_path_suffix(info->account));
-    g_signal_connect(info->account, "notify::connection",
-                     G_CALLBACK(acccount_connection_cb),
-                     account_info_ref(info));
-  }
+  osso_abook_account_manager_create_roster(info);
 
   if (!priv->is_ready)
   {
@@ -1280,6 +1211,26 @@ create_account_vcard_field_id(struct account_info *info,
 }
 
 static void
+account_connection_cb(GObject *gobject, GParamSpec *pspec, gpointer user_data)
+{
+  struct account_info *info = user_data;
+
+  OSSO_ABOOK_NOTE(TP, "account %s got connection",
+                  tp_account_get_path_suffix(info->account));
+
+  g_signal_handlers_disconnect_matched(
+        info->account, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+        account_connection_cb, info);
+
+  info->is_visible = accept_account(info);
+
+  if (info->is_visible)
+    g_signal_emit(info->manager, signals[ACCOUNT_CREATED], 0, info->account);
+
+  account_info_unref(info);
+}
+
+static void
 account_enabled_cb(TpAccountManager *am, TpAccount *account, gpointer user_data)
 {
   OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(user_data);
@@ -1323,6 +1274,15 @@ account_enabled_cb(TpAccountManager *am, TpAccount *account, gpointer user_data)
                    G_CALLBACK(update_presence_status), info);
   g_signal_connect(info->account, "status-changed",
                    G_CALLBACK(status_changed_cb), info);
+
+  if (!tp_account_get_connection(info->account))
+  {
+    OSSO_ABOOK_NOTE(TP, "account %s is not connected, setting up notifier",
+                    tp_account_get_path_suffix(info->account));
+    g_signal_connect(info->account, "notify::connection",
+                     G_CALLBACK(account_connection_cb),
+                     account_info_ref(info));
+  }
 
   info->is_visible = accept_account(info);
 
@@ -1447,17 +1407,6 @@ get_accounts(OssoABookAccountManager *manager)
 {
   OssoABookAccountManagerPrivate *priv =
       OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
-  TpSimpleClientFactory *factory = tp_proxy_get_factory(priv->tp_am);
-
-  tp_simple_client_factory_add_account_features_varargs(
-        factory,
-        TP_ACCOUNT_FEATURE_CONNECTION,
-        0);
-  tp_simple_client_factory_add_connection_features_varargs (
-        factory,
-        TP_CONNECTION_FEATURE_CONTACT_LIST,
-        TP_CONNECTION_FEATURE_CAPABILITIES,
-        0);
 
   tp_proxy_prepare_async (priv->tp_am, NULL, am_prepared_cb, manager);
 
@@ -1523,6 +1472,35 @@ cms_ready_cb(GObject *object, GAsyncResult *res, gpointer user_data)
   get_accounts(manager);
 }
 
+static TpAccountManager *
+create_account_manager(TpDBusDaemon *tp_dbus)
+{
+  TpAccountManager *manager;
+  TpSimpleClientFactory *factory;
+  GQuark account_features[] =
+  {
+    TP_ACCOUNT_FEATURE_CONNECTION,
+    0
+  };
+  GQuark connection_features[] =
+  {
+    TP_CONNECTION_FEATURE_CAPABILITIES,
+    TP_CONNECTION_FEATURE_CONTACT_LIST,
+    0
+  };
+
+  factory = tp_simple_client_factory_new(tp_dbus);
+  tp_simple_client_factory_add_account_features(factory, account_features);
+  tp_simple_client_factory_add_connection_features(factory, connection_features);
+
+  manager = tp_account_manager_new_with_factory (factory);
+  tp_account_manager_set_default(manager);
+
+  g_object_unref(factory);
+
+  return manager;
+}
+
 static void
 osso_abook_account_manager_init(OssoABookAccountManager *manager)
 {
@@ -1536,7 +1514,7 @@ osso_abook_account_manager_init(OssoABookAccountManager *manager)
   priv->account_by_vcard_field = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                        g_free, NULL);
   priv->tp_dbus = tp_dbus_daemon_dup(NULL);
-  priv->tp_am = tp_account_manager_new(priv->tp_dbus);
+  priv->tp_am = create_account_manager(priv->tp_dbus);
   priv->vcard_fields =
       g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
   priv->active_accounts_only = TRUE;
