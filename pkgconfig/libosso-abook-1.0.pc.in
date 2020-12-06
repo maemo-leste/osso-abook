@@ -1,0 +1,12 @@
+prefix=/usr
+exec_prefix=@prefix@
+libdir=@libdir@
+includedir=$@includedir@
+syncml_ctcap=/etc/libosso-abook/syncml-ctcap
+
+Name: libosso-abook-1.0
+Description: Osso addressbook widget library
+Version: @VERSION@
+Libs: -L${libdir} -losso-abook-1.0
+Cflags: -I${includedir}/libosso-abook-1.0
+Requires: gconf-2.0 glib-2.0 >= 2.16 gio-2.0 >= 2.16 gtk+-2.0 >= 2.14 hildon-1 >= 2.2.11 hildon-fm-2 >= 2.17 libhildonmime libebook-1.2 >= 1.4.2.1-20100122 libmcclient >= 5.0-beta33 libosso >= 2.0

@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<gconfschemafile>
+  <schemalist>
+    <schema>
+      <key>/schemas/apps/osso-addressbook/self-vcard</key>
+      <applyto>/apps/osso-addressbook/self-vcard</applyto>
+      <owner>osso-addressbook</owner>
+      <type>string</type>
+      <default></default>
+      <locale name="C">
+        <short>Me-card</short>
+        <long>The VCard of the user.</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/osso-addressbook/self-avatar-imported</key>
+      <applyto>/apps/osso-addressbook/self-avatar-imported</applyto>
+      <owner>osso-addressbook</owner>
+      <type>bool</type>
+      <default>0</default>
+      <locale name="C">
+        <short>Is self avatar imported</short>
+        <long>Is the user's avatar already imported from an IM account into the Me-card.</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/osso-addressbook/contact-order</key>
+      <applyto>/apps/osso-addressbook/contact-order</applyto>
+      <owner>osso-addressbook</owner>
+      <type>int</type>
+      <default>0</default>
+      <locale name="C">
+        <short>Contact order</short>
+        <long>Contact order: 0 = name; 1 = presence.</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/osso-addressbook/name-order</key>
+      <applyto>/apps/osso-addressbook/name-order</applyto>
+      <owner>osso-addressbook</owner>
+      <type>int</type>
+
+      <locale name="C">
+        <default>0</default>
+        <short>Name order when sorting</short>
+        <long>
+          Display method: 0 = given name first; 1 = family name first, separated by comma;
+          2 = family name first, separated by space; 3 = nickname.
+        </long>
+      </locale>
+
+      <locale name="de"><default>1</default></locale>
+      <locale name="fi"><default>1</default></locale>
+      <locale name="nl"><default>1</default></locale>
+      <locale name="no"><default>1</default></locale>
+      <locale name="ru"><default>1</default></locale>
+      <locale name="sv"><default>1</default></locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/osso-addressbook/home-applets</key>
+      <applyto>/apps/osso-addressbook/home-applets</applyto>
+      <owner>osso-addressbook</owner>
+      <type>list</type>
+      <list_type>string</list_type>
+      <locale name="C">
+        <short>Home Applets</short>
+        <long>UID list of contacts with a desktop shortcut.</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/osso-addressbook/last-imsi</key>
+      <applyto>/apps/osso-addressbook/last-imsi</applyto>
+      <owner>osso-addressbook</owner>
+      <type>string</type>
+      <locale name="C">
+        <short>Last IMSI</short>
+        <long>Id code of the last inserted SIM card.</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/osso-addressbook/voicemail-vcard</key>
+      <applyto>/apps/osso-addressbook/voicemail-vcard</applyto>
+      <owner>osso-addressbook</owner>
+      <type>string</type>
+      <locale name="C">
+        <short>Voicemail vCard</short>
+        <long>Description of the voicemail contact.</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/osso-addressbook/voicemail-numbers</key>
+      <applyto>/apps/osso-addressbook/voicemail-numbers</applyto>
+      <owner>osso-addressbook</owner>
+      <type>list</type>
+      <list_type>string</list_type>
+      <locale name="C">
+        <short>Voicemail numbers</short>
+        <long>Phone numbers of preferred voicemail boxes.</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/osso-addressbook/map-helper</key>
+      <applyto>/apps/osso-addressbook/map-helper</applyto>
+      <owner>osso-addressbook</owner>
+      <type>string</type>
+      <default>nokia-maps</default>
+      <locale name="C">
+        <short>Name of the map helper program.</short>
+	<long>Short name of the map helper program installed in /usr/lib/osso-addressbook/map-helpers, e.g. "nokia-maps" or "browser-maps".</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/osso-addressbook/video-button</key>
+      <applyto>/apps/osso-addressbook/video-button</applyto>
+      <owner>osso-addressbook</owner>
+      <type>bool</type>
+      <default>1</default>
+      <locale name="C">
+        <short>Show video call button</short>
+        <long>Whether or not we should display the video call button in contact starter.</long>
+      </locale>
+    </schema>
+
+    <schema>
+      <key>/schemas/apps/osso-addressbook/sms-button</key>
+      <applyto>/apps/osso-addressbook/sms-button</applyto>
+      <owner>osso-addressbook</owner>
+      <type>bool</type>
+      <default>0</default>
+      <locale name="C">
+        <short>Show SMS button only for mobiles</short>
+        <long>Whether or not we should display the SMS button in contact starter only for mobile numbers.</long>
+      </locale>
+    </schema>
+
+  </schemalist>
+</gconfschemafile>

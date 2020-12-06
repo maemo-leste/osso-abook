@@ -1,0 +1,4 @@
+debian/tmp/usr/lib/*/*.so.*
+../../schema/libosso-abook.schemas /usr/share/gconf/schemas
+debian/tmp/usr/share/libosso-abook/*
+debian/tmp/etc/libosso-abook/*

@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# Disable any locale specific string formatting
+export LANG=C
+
+# Create URL encoded query string from VCARD_ADR_FULL
+l=`expr length "$VCARD_ADR_FULL"`
+i=1
+q=
+
+while [ $i -le $l ]
+do
+    # Get next character from VCARD_ADR_FULL
+    c=`expr substr "$VCARD_ADR_FULL" $i 1`
+    i=`expr $i + 1`
+
+    # Apply URL encoding when needed
+    case $c in
+        [A-Za-z0-9:,.-]);;
+        *) c=`printf '%%%02X' "'$c'"`;;
+    esac
+
+    # Append (encoded) character to query string
+    q="$q$c"
+done
+
+# URL template for maps service from GConf
+url=`gconftool-2 --get /apps/osso-addressbook/map-helpers/browser-maps/url`
+test -n "$url" && url="http://www.google.com/maps/m?q=%s"
+
+# Build final service URL from template and query string
+url=`printf "$url" $q`
+
+# Open map service URL in browser
+dbus-send \
+    --print-reply --dest="com.nokia.osso_browser" \
+    "/com/nokia/osso_browser/request" \
+    "com.nokia.osso_browser.load_url" string:"$url"
+

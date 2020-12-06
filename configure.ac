@@ -96,5 +96,7 @@ AC_SUBST(CFLAGS)
 AC_OUTPUT([
 Makefile
 lib/Makefile
+dist/Makefile
+pkgconfig/Makefile
+pkgconfig/libosso-abook-1.0.pc
 ])
-

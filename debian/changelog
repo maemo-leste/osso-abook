@@ -1,0 +1,2089 @@
+libosso-abook (4.20201206) unstable; urgency=low
+
+  * Initial packaging, package still work in progress
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Sun, 06 Dec 2020 15:13:55 +0100
+
+libosso-abook (4.20100622+0m5) unstable; urgency=low
+
+  * This entry has been added by BIFH queue processor
+    version has been changed to 4.20100622+0m5
+
+ -- Gary Birkett <ext-gary.2.birkett@nokia.com>  Wed, 23 Jun 2010 11:41:44 +0300
+
+libosso-abook (4.20100622) unstable; urgency=low
+
+  * Fixes: NB#145913 - "Internal error" when merging contacts with pics
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Tue, 22 Jun 2010 17:36:52 +0100
+
+libosso-abook (4.20100621) unstable; urgency=low
+
+  * Revert the fix for bug NB#164123 (for real this time)
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Mon, 21 Jun 2010 09:30:16 +0100
+
+libosso-abook (4.20100618) unstable; urgency=low
+
+  * Revert the fix for bug NB#164123 as it was not supposed to be integrated
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Fri, 18 Jun 2010 18:12:37 +0100
+
+libosso-abook (4.20100616) unstable; urgency=low
+
+  * Fixes: NB#165679 - Big contact lists are slow
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Wed, 16 Jun 2010 15:45:08 +0100
+
+libosso-abook (4.20100415) unstable; urgency=low
+
+  * OssoABookAvatarImage loading the fallback pixbuf quite often [this fix for
+    bug NB#164123 was reverted in 4.20100618]
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Thu, 15 Apr 2010 19:02:42 +0100
+
+libosso-abook (4.20100414) unstable; urgency=low
+
+  * OssoABookAvatarImage loading the fallback pixbuf quite often [this fix for
+    bug NB#164123 was overwritten by a better fix in 4.20100415 and then
+    reverted in 4.20100618]
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Wed, 14 Apr 2010 16:14:56 +0100
+
+libosso-abook (4.20100302) unstable; urgency=low
+
+  * Fixes: NB#158304 - addr_va_add_field_phone_other ID is not translated to russian
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Tue, 02 Mar 2010 18:35:41 +0000
+
+libosso-abook (4.20100212) unstable; urgency=low
+
+  * Fix some headers to make it build with C++. (see NB#153458)
+  * Delay the UI creation until the screen rotated to landscape. (see NB#155627)
+  * Fixes: NB#156674 - Infinite loop when trying to open a contact address without internet connectivity
+  * Deprecate the location string (see NB#135979)
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Fri, 12 Feb 2010 17:44:55 +0000
+
+libosso-abook (4.20100210) unstable; urgency=low
+
+  * Fixes: NB#153359 - The address button size in contact starter view is not consistent
+  * Make sure to to add the roster contact in the 'matches' list when we find a match (see NB#136941)
+  * Make sure to set the profile for all roster contact actions (see NB#146770)
+  * Fallback to normal mode if the single attribute mode makes empty view (see NB#146770)
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Wed, 10 Feb 2010 17:00:17 +0000
+
+libosso-abook (4.20100209) unstable; urgency=low
+
+  * Fixes: NB#152718 - Voicemail contact shortcut is not created on desktop
+  * Fixes: NB#136941 - Unable to delete a contact pointing to a non-existing master UID 
+  * Add support for non-normalized IM user names (see NB#136941)
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Tue, 09 Feb 2010 15:43:03 +0000
+
+libosso-abook (4.20100208) unstable; urgency=low
+
+  * Fixes: NB#146770 - SACS: does not show SIP and Skype options for TEL attribute
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Mon, 08 Feb 2010 10:24:46 +0000
+
+libosso-abook (4.20100203) unstable; urgency=low
+
+  * Add the SMS capability on contacts, and SMS filter in detail store. (NB#153973)
+  * Fixes: NB#146770 - SACS: does not show SIP and Skype options for TEL attributes
+  * Fix a memory leak (see NB#150532)
+  * Fixes: NB#152736 - Menu Extensions should be available for all menus, not only IM group menus
+  * Fixes: NB#145865 - Contacts - Country list contains regions
+  * Not clear enough that contacts will be deleted from the roster on the server (see NB#153788)
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Wed, 03 Feb 2010 15:29:49 +0000
+
+libosso-abook (4.20100129.2) unstable; urgency=low
+
+  * Revert the code to fix NB#153359 as it introduce some regressions
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Tue, 02 Feb 2010 15:57:45 +0000
+
+libosso-abook (4.20100129.1) unstable; urgency=low
+
+  * Attempt to fix NB#153359 (reverted)
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Mon, 01 Feb 2010 19:14:57 +0000
+
+libosso-abook (4.20100129) unstable; urgency=low
+
+  * Attempt to fix NB#153359 (reverted)
+
+ -- Marco Barisione <marco.barisione@collabora.co.uk>  Fri, 29 Jan 2010 15:11:24 +0000
+
+libosso-abook (4.20100126) unstable; urgency=low
+
+  * Fixes: NB#148315 - The case of several contacts sharing the same detail needs to be special cased, when updating EL
+  * Fixes: NB#116910 - Not able to open Maps application with contacts location as a search string
+  * Fixes: NB#140268 - Phone number getting lost in this particular scenario
+  * Attempt to fix NB#153359 (reverted)
+  * Fixes: NB#153455 - Add a function to search for a matching attribute in a contact
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Tue, 26 Jan 2010 11:08:29 +0100
+
+libosso-abook (4.20100121) unstable; urgency=low
+
+  * Fixes: NB#152827 - 'display video calling button', 'display SMS only for mobile numbers' options are not shown in settings dialog
+  * Fixes: NB#134692 - Fix potential NULL pointer usage
+  * Fixes: NB#152665 - Contact names do not resolve correctly when country code is prefixed
+  * Fixes: NB#153435 - libosso-abook-dev depends on non-distributable libsim-dev and libtelcommon-dev
+  * Fixes: NB#153733 - SMS fields are shown for all the Phone fields even though the setting is select only for mobile fields
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu, 21 Jan 2010 11:13:31 +0100
+
+libosso-abook (4.20100115.4) unstable; urgency=low
+
+  * Fixes: NB#153662 - Video button should always be displayed
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Wed, 20 Jan 2010 16:23:41 +0100
+
+libosso-abook (4.20100115.3) unstable; urgency=low
+
+  * Temporaly disable map button.
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Wed, 20 Jan 2010 12:08:34 +0100
+
+libosso-abook (4.20100115.2) unstable; urgency=low
+
+  * Fixes: NB#142901 - GLIB CRITICAL ** libosso-abook - osso_abook_contact_async_accept: assertion `!IS_EMPTY (bound_name)' failed
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Mon, 18 Jan 2010 20:03:07 +0100
+
+libosso-abook (4.20100115.1) unstable; urgency=low
+
+  * Fixes: NB#142901 - GLIB CRITICAL ** libosso-abook - osso_abook_contact_async_accept: assertion `!IS_EMPTY (bound_name)' failed
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Mon, 18 Jan 2010 13:14:08 +0100
+ 
+ libosso-abook (4.20100115) unstable; urgency=low
+
+  * Fixes: NB#142901 - GLIB CRITICAL ** libosso-abook - osso_abook_contact_async_accept: assertion `!IS_EMPTY (bound_name)' failed
+  * Invoke action callback for CHATTO_ERROR and VOIPTO_ERROR actions.
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Fri, 15 Jan 2010 13:36:55 +0100
+
+libosso-abook (4.20100114) unstable; urgency=low
+
+  * Fix theming regression for avatar buttons.
+  * Fixes: NB#116910 - Not able to open Maps application with contacts location as a search string
+  * Fixes: NB#144000 - Contact merge of number dialed manually via Skype fails due to internal error
+  * Fixes: NB#143186 - Only two rows are shown in single contact view Note field
+  * Fixes: NB#146313 - Eventlogger does not get updated correctly for roster contacts
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu, 14 Jan 2010 10:53:57 +0100
+
+libosso-abook (4.20100108) unstable; urgency=low
+
+  * Fixes: NB#150532 - Contact Starter dialog (ADDR-DIA001) should highlight the detail that is used in sms/chat conversation/call item
+  * Fixes: NB#152241 - The contact starter view is not closed when a call/chat/sms action is initiated from contact starter view
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Fri,  8 Jan 2010 11:58:00 +0100
+
+libosso-abook (4.20100107) unstable; urgency=low
+
+  * Fixes: NB#143729 - Shouldn't create call requests for SS and USSD codes
+  * Contact starter view is shown empty in phone application if we change the phone field to fax (NB#150820)
+  * Avoid blurred action icons in contact starter.
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu,  7 Jan 2010 19:05:59 +0100
+
+libosso-abook (4.20091230) unstable; urgency=low
+
+  * Fixes: NB#148279 - Saved SIP contact in Address Book is treated in Conversations application as unknown contact
+  * Fixes: NB#149329 - libosso-abook exposes all clients to an eventlogger dependency
+  * Fixes: NB#136451 - Merging contacts causes duplicate skype/gtalk details in edit contact dialog
+  * Fixes: NB#149812 - Crash when sending contact card by bluetooth for a already merged contact
+  * Add osso_abook_touch_contact_starter_start_merge
+  * Fixes: NB#132021 - notification on birthday changes for IM accounts
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Wed, 30 Dec 2009 15:05:44 +0100
+
+libosso-abook (4.20091218) unstable; urgency=low
+
+  * Fixes: NB#128743 - Unifying the live search UX
+  * Do not use InitialAudio for audio-only calls. (See NB#151363, NB#151344)
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Fri, 18 Dec 2009 15:45:25 +0100
+
+libosso-abook (4.20091217.1) unstable; urgency=low
+
+  * Fixes: NB#149743 - Offline XMPP contacts have call-capability
+  * Fixes: NB#143227 - Provide UI to make Video calls
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu, 17 Dec 2009 15:39:07 +0100
+
+libosso-abook (4.20091217) unstable; urgency=low
+
+  * Add theming rules for communication history view (NB#145973).
+  * Fixes: NB#150069 - Add IM fields into "New contact" dialog if there is accounts setup
+  * Avoid prelight effect for avatar buttons.
+  * Fixes: NB#150957 - Addressbook crash when trying to enter data in new contact dialog after changing theme
+  * Fixes: NB#150742 - Unable to change phone/email/address field to any other phone field after opening the Delete field dialog
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Mon, 14 Dec 2009 14:45:14 +0100
+
+libosso-abook (4.20091214.1) unstable; urgency=low
+
+  * Properly encode mailto: URIs passed to Modest (see NB#124615).
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Mon, 14 Dec 2009 14:45:14 +0100
+
+libosso-abook (4.20091214) unstable; urgency=low
+
+  * Fixes: NB#140507 - Glib criticals observed when a contact is saved with empty address fields
+  * Fixes: NB#132021 - notification on birthday changes for IM accounts
+  * Introduce osso_abook_account_manager_set_roster_query (see NB#132021)
+  * Make the find functions match the roster contacts too
+  * Fixes: NB#131245 - Contacts: Merging should detect spaces in phone numbers
+  * Fixes: NB#147885 - Unsupported Phone field should be made usable
+  * Use proper message map for remove fields dialog.
+  * Fixes: NB#124615 - Contact's name is not added in To field when launching editor from Contacts application
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Mon, 14 Dec 2009 14:24:45 +0100
+
+libosso-abook (4.20091210) unstable; urgency=low
+
+  * Fixes: NB#144702 - List of countries not shown on tapping the country picker button and unable to change the country name from United Kingdom.
+  * Fixes: NB#148919 - Memory leak reported by valgrind while merging contacts
+  * Fixes: NB#145569 - Contacts impossible to merge contact card received by SMS
+  * Fixes: NB#148889 - Presence widget in the contact starter view is not in the expected position
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu, 10 Dec 2009 10:53:02 +0100
+
+libosso-abook (4.20091127.1) unstable; urgency=low
+
+  * Fixes: NB#144702 - List of countries not shown on tapping the country picker button and unable to change the country name from United Kingdom.
+  * Fixes: NB#146887 - Contacts crash on tapping Sip audio button
+  * Fixes: NB#148512 - Addressbook crashes on tapping 'save' button in settings dialog after editing the voicemail number few times
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Fri, 27 Nov 2009 14:53:38 +0100
+
+libosso-abook (4.20091127) unstable; urgency=low
+
+  * Fixes: NB#148339 - unable to open settings dialog after deleting voicemail no and a  local contact using select all
+  * Fixes: NB#148474 - Contacts application closes on merging a set of contacts
+  * Fixes: NB#148512 - Addressbook crashes on tapping 'save' button in settings dialog after editing the voicemail number few times
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Fri, 27 Nov 2009 14:53:38 +0100
+
+libosso-abook (4.20091125.1) unstable; urgency=low
+
+  * Fixes: NB#135093 - Merging needs to guarantee phone numbers have the right TYPE parameters
+  * Fixes: NB#140507 - Glib criticals observed when a contact is saved with empty address fields
+  * Fixes: NB#133426 - Memory leak in osso-abook-button
+  * Fixes: NB#133726 - Memory leak found while adding a new contact with default fields
+  * Fixes: NB#133754 - Memory leak found while sending contact detail of a sim contact
+  * Fixes: NB#132265 - Valgrind shows memleak in osso-abook-contact.c
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Wed, 25 Nov 2009 17:30:55 +0100
+
+libosso-abook (4.20091125) unstable; urgency=low
+
+  * Fixes: NB#144992 - Memory leak reported by valgrind while deleting fields from a contact
+  * Fixes: NB#131380 - Contacts: Contact card: Missing margin because of avatar button is 8 pixels
+  * Fixes: NB#133510 - After calling a contact's phone number from abook, the call log in Call UI may be not resolved to the correct contact
+  * Provide an API which returns the "full" vCard (see NB#133510).
+  * Fixes: NB#138295 - Calendar - Truncation found in longest possible date when adding birthday to Contact info
+  * Fixes: NB#137644 - Contact card dialog: Avatar function is unclear
+  * Fixes: NB#132009 - Valgrind shows leak in libosso-abook : osso-abook-contact-field-selector.c
+  * Fixes: NB#113480 - Delete field button should not be shown if no field can be deleted from me card
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Wed, 25 Nov 2009 12:07:00 +0100
+
+libosso-abook (4.20091124) unstable; urgency=low
+
+  * Fixes: NB#141315 - leaking service group in roster_created_cb()
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Tue, 24 Nov 2009 13:58:19 +0100
+
+libosso-abook (4.20091120) unstable; urgency=low
+
+  * Fixes: NB#145865 - Contacts - Country list contains regions
+  * Fixes: NB#144837 - Allow closing of voicemail dialog when no SIM card inserted.
+  * Exclude voicemail contact from list of merge candidates (partly fixes NB#147243).
+  * Refilter filter model after changing visible function.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 20 Nov 2009 16:48:18 +0100
+
+libosso-abook (4.20091117) unstable; urgency=low
+
+  * Fixes: NB#145714 - Single attribute contact starter: filtered out attributes make the avatar clickable
+  * Fixes: NB#144837 - Voicemail improvements
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 17 Nov 2009 12:46:25 +0100
+
+libosso-abook (4.20091106) unstable; urgency=low
+
+  * Fixes: NB#144835 - es-MX has wrong street address format.
+  * Fixes: NB#142812 - Not able to set avatar for IM contact from image viewer
+  * Also detach photos when adding contacts.
+  * Mark non-functional contact-view API as deprecated.
+  * Remove obsolete code for keeping focused row visible.
+  * Fixes: NB#136034 - Contacts: stepping back from contact detail to list ends up in a wrong place of the list
+  * Fixes: NB#145184 - Contact starter card is empty in few scenarious
+  * Fixes: NB#103180 - Update EL upon changes to contacts in libosso-abook
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Fri,  6 Nov 2009 17:45:35 +0100
+
+libosso-abook (4.20091102) unstable; urgency=low
+
+  * Fixes: NB#141055 - Contacts, '(null)' displayed as parameter in confirmation note for deleting an empty google talk field
+  * Fixes: NB#126570 - Application hangs while trying to save a contact through Temporary contact card dialog.
+  * Give visual touch feedback in the avatar chooser for opaque avatars.
+  * Fix 43k memory leak when loading home applet contacts.
+  * Fixes: NB#144898 - Sorting status is not same in merge with contact dialog in protrait mode
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Mon,  2 Nov 2009 17:14:31 +0100
+
+libosso-abook (4.20091030) unstable; urgency=low
+
+  * Fixes: NB#139448 - Contact icons move to another screen of desktop after merge
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu, 29 Oct 2009 11:56:54 +0100
+
+libosso-abook (4.20091029) unstable; urgency=low
+ 
+  * Fixes: NB#139448 - Contact icons move to another screen of desktop after merge
+  * Fixes: NB#128607 - Some accounts have their username next to them, whereas others don't
+ 
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu, 29 Oct 2009 11:56:54 +0100
+
+libosso-abook (4.20091020) unstable; urgency=low
+
+  * Merge fixes from libosso-abook 4.20091016.1.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 20 Oct 2009 16:16:48 +0200
+
+libosso-abook (4.20091019) unstable; urgency=low
+
+  * Fixes: NB#136702 - Merge contacts dialog should allow multiple selection
+  * Fixes: NB#139448 - Contact icons move to another screen of desktop after merge
+  * Fixes: NB#109994 - Several locales have bad _NL_ADDRESS_POSTAL_FMT
+  * Fixes: NB#128607 - Some accounts have their username next to them, whereas others don't
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Mon, 19 Oct 2009 23:32:52 +0200
+
+libosso-abook (4.20091016.1) unstable; urgency=low
+
+  * Fixes: NB#134211 - Sort by state behaves in an unexpected way
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 20 Oct 2009 14:02:23 +0200
+
+libosso-abook (4.20091016) unstable; urgency=low
+
+  * Fixes: NB#134211 - Sort by state behaves in an unexpected way
+  * Show call/messaging icons in temporary contact card.
+  * Add a way to do some operations in a single process.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 16 Oct 2009 12:16:19 +0200
+
+libosso-abook (4.20091013.1) unstable; urgency=low
+
+  * Cleanup 4.20091013 changelog for system integration.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 15 Oct 2009 13:28:28 +0200
+
+libosso-abook (4.20091013) unstable; urgency=low
+
+  * Fixes: NB#131408 - Contacts layout: Me card margins are not proper
+  * Fixes: NB#119547 - Weird layout of presence button in mecard
+  * Fixes: NB#137644 - Contact card dialog: Avatar function is unclear
+  * Fixes: NB#135788 - Contacts Layout: Avatars in main view should have rounded corners
+  * Fixes: NB#129218 - Contacts layout: The Settings dialog is not proper
+  * Fixes: NB#122357 - Selected field is not highlighted while setting the phone/email/address fields in the Contact editor dialog
+  * Fixes: NB#132965 - osso_abook_query_phone_number() not working for conference calls
+  * Add "allowed-actions" and "single-attribute" property to contact starter to support NB#133419.
+  * Reduce excessive padding in the starter (only shows up when packed in a dialog that is not full-height).
+  * Fixes: NB#138898 - Addressbook is always crashing when trying to merge the number from call list if delete field is opened
+  * Fixes: NB#137644 - Contact card dialog: Avatar function is unclear
+  * Update API documentation for SDK.
+  * NB#133419 - single-attribute mode for contact starter
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 13 Oct 2009 01:07:16 +0200
+
+libosso-abook (4.20090929) unstable; urgency=low
+
+  * Fixes: NB#137890 - 71k memory leak when removing fields from contact
+  * Fixes: NB#138964 - Memory leak found while tapping a letter...
+  * Fixes: NB#133452 - Memory leak in osso-abook-mc-account-model
+  * Fixes: NB#133450 - Memory leak in osso-abook-account-manager
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 29 Sep 2009 12:59:55 +0200
+
+libosso-abook (4.20090914) unstable; urgency=low
+
+  * Fixes: NB#136867 - notification-ui crashes when receiving late messages for disabled accounts
+  * Fixes: NB#135439 - Camera is launching in background when new contact dialog opened
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Mon, 14 Sep 2009 10:26:02 +0200
+
+libosso-abook (4.20090910.1) unstable; urgency=low
+
+  * Fixes: NB#135541 - Addressbook home applet crashed at emit_filter_changed_idle_cb while editing from layout mode
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 10 Sep 2009 23:16:20 +0200
+
+libosso-abook (4.20090910) unstable; urgency=low
+
+  * Fixes: NB#135305 - Addressbook is always crashing when trying to merge the number from call list
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 10 Sep 2009 10:42:44 +0200
+
+libosso-abook (4.20090908) unstable; urgency=low
+
+  * Fixes: NB#137001 - Use embedded orientation when available for avatars
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 08 Sep 2009 12:00:51 +0200
+
+libosso-abook (4.20090904) unstable; urgency=low
+
+  * Fixes: NB#135925 - It should be easier to select a photo as avatar for a contact
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 04 Sep 2009 11:33:08 +0200
+
+libosso-abook (4.20090902) unstable; urgency=low
+
+  * Fixes: NB#136405 - API-documentation update for SDK
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 02 Sep 2009 14:56:18 +0200
+
+libosso-abook (4.20090831) unstable; urgency=low
+
+  * Fixes: NB#110389 - Opening the contact-editor looks ugly
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Mon, 31 Aug 2009 20:51:58 +0200
+
+libosso-abook (4.20090827) unstable; urgency=low
+
+  * Fixes: NB#133514 - XError causing SIGABRT in osso-addressbook
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Thu, 27 Aug 2009 11:16:59 +0300
+
+libosso-abook (4.20090821) unstable; urgency=low
+
+  * Fixes: NB#133071 - phone number is not updating in certain scenario for contact in server side
+
+ -- Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>  Fri, 21 Aug 2009 17:28:16 -0500
+
+libosso-abook (4.20090820) unstable; urgency=low
+
+  * Fixes: NB#110389 - Opening the contact-editor looks ugly
+  * Fixes: NB#133444 - Set signal ids inside RowSignalData struct to be zero by default
+  * Fixes: NB#109994 - Several locales have bad _NL_ADDRESS_POSTAL_FMT
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu, 20 Aug 2009 17:17:40 +0200
+
+libosso-abook (4.20090819.1) unstable; urgency=low
+
+  * Fixes: NB#132235 - Specialized prompt when deleting a username from a contact
+  * Put infrastructure for NB#109994 (broken street address-formatting) into
+    place.
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu, 20 Aug 2009 10:42:00 +0200
+
+libosso-abook (4.20090818) unstable; urgency=low
+
+  * Fixes: NB#132235 - Specialized prompt when deleting a username from a contact
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Tue, 18 Aug 2009 21:22:37 +0200
+
+libosso-abook (4.20090817) unstable; urgency=low
+
+  * Fixes: NB#123453 - SIP actions for each TEL field shown when PSTN calls are disabled
+  * Fixes: NB#130299 - Avatar changed is not reflected in recent view
+  * Fixes: NB#131528 - Skype presence status 'Away' is not properly mapped to fremantle availability status
+  * Fixes: NB#133132 - Fix regression in SIM avatar icon size when we switched to the pixbuf cache
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Mon, 17 Aug 2009 12:28:36 +0200
+
+libosso-abook (4.20090813) unstable; urgency=low
+
+  * add public getter for action's profile.
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu, 13 Aug 2009 12:18:13 +0200
+
+libosso-abook (4.20090812) unstable; urgency=low
+
+  * Make OssoABookContactFieldAction structure opaque.
+  * Abort contact action when canceling account selector.
+  * Fixes: NB#130184 - Newly added IM fields don't get bound to account
+  * Fixes: NB#132105 - Buttons in the temporary contact card getting scaled on rotation
+  * Fixes: NB#130497 - Apply minimum height to phone number selection in portrait mode
+  * Fixes: NB#129733 - Address Book, Translation improvement of VoIP call and chat initiation buttons
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Wed, 12 Aug 2009 17:12:45 +0200
+
+libosso-abook (4.20090811.1) unstable; urgency=low
+
+  * Fixes: NB#132428 - libosso-abook should not depend on rtcom-accounts-settings
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Tue, 11 Aug 2009 16:26:49 +0200
+
+libosso-abook (4.20090811) unstable; urgency=low
+
+  * Fixes: NB#132222 - Show buttons addr_li_alpha_0 through addr_li_alpha_8
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Tue, 11 Aug 2009 12:22:25 +0200
+
+libosso-abook (4.20090810) unstable; urgency=low
+
+  * Don't fill or expand in the Y direction when table is resized (see NB#132105).
+  * Fixes: NB#132290 - Logical ID addr_bd_cont_starter_phone_beg is displayed in contact starter
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Mon, 10 Aug 2009 16:08:43 +0200
+
+libosso-abook (4.20090807) unstable; urgency=low
+
+  * Fixes: NB#129183 - Contacts: Buttons in edit contact dialog get cut
+  * Fixes: NB#124778 - Unable to pan in the contact starter view in the mentioned scenario
+  * Fixes: NB#130682 - Exporting of contacts fails if name fields contain ':' in it
+  * Fixes: NB#127566 - Both FN, LN fields appear in the vcard for several Nokia devices when the original contact has only FN
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 07 Aug 2009 17:30:54 +0200
+
+libosso-abook (4.20090806) unstable; urgency=low
+
+  * Fix warnings reported by the build bot.
+  * Translate voicemail contact name on the fly (see NB#130360)
+  * Add an efficient function for checking whether a contact has roster contacts
+  * Fixes: NB#129680 - Selected field is not reflected in the editor dialog
+  * Fixes: NB#126097 - Pack the alpha bar treeview into a pannable
+  * Fixes: NB#128864 - Weak ref the hook widgets and unhook when they die
+  * Fixes: NB#122478 - Match substrings delimited by comma and space
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 06 Aug 2009 13:45:35 +0200
+
+libosso-abook (4.20090805.1) unstable; urgency=low
+
+  * Merge emergency fix from libosso-abook 4.20090731.1.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 06 Aug 2009 12:45:17 +0200
+
+libosso-abook (4.20090805) unstable; urgency=low
+
+  * Fixes: NB#129181 - Edited Contact is not reflected in all contacts view
+  * Fixes: NB#130334 - Migrate Addressbook to global safe folder names
+  * Fixes: NB#128481 - Call UI and Contacts show IM accounts in pending state although they should be hidden
+  * Fixes: NB#118442 - Merged online contacts sometimes shown as offline in specific group
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 05 Aug 2009 00:57:06 +0200
+
+libosso-abook (4.20090731.1) unstable; urgency=high
+
+  * Fixes: NB#129733 - Address Book, Translation improvement of VoIP call and chat initiation buttons
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 06 Aug 2009 12:02:35 +0200
+
+libosso-abook (4.20090731) unstable; urgency=low
+
+  * Fixes: NB#129680 - Selected field is not reflected in the editor dialog
+  * Fixes: NB#120573 - Duplicate contact created if delete the Gtalk field of an IM contact
+  * Fixes: NB#123241 - Show "account disconnected" error banner if we are offline while starting a call/chat
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 31 Jul 2009 09:20:06 +0200
+
+libosso-abook (4.20090729) unstable; urgency=low
+
+  * Fixes: NB#129237 - Contacts application crashed once when tapped on a known contact in the Recent contacts view
+  * Fixes: NB#128596 - GLIB CRITICAL ** GLib - g_date_new_dmy: assertion `g_date_valid_dmy (day, m, y)' failed
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 29 Jul 2009 11:33:58 +0300
+
+libosso-abook (4.20090728) unstable; urgency=low
+
+  * Fixes: NB#122194 - Added details are not updated in the merged shortcut under the mentioned scenario
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 28 Jul 2009 23:51:54 +0300
+
+libosso-abook (4.20090724) unstable; urgency=low
+
+  * Fixes: NB#129894 - Five different processes crashing together in mentioned scenario
+  * Wrap around to the first letter when tapping on the alpha bar
+  * Remove excessive margins on OssoABookTouchContactStarter
+
+ -- Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>  Fri, 24 Jul 2009 14:04:23 -0500
+
+libosso-abook (4.20090723) unstable; urgency=low
+
+  * Fixes: NB#122194 - Added details are not updated in the merged shortcut under the mentioned scenario
+  * Fixes: NB#129615 - The temporary contact card text is left aligned instead of being in center
+  * Fixes: NB#117451 - Don't show duplicate bound names in the self contact when a new account is added
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 23 Jul 2009 18:38:17 +0300
+
+libosso-abook (4.20090722) unstable; urgency=low
+
+  * Fixes: NB#123750 - Buttons in the temporary contact card getting scaled on rotation
+  * Fixes: NB#106355 - Addressbook doesn't re-open books after EDS cr*sh
+  * Fixes: NB#122431 - Address fields are not shown consisitently after we reopen Me-card view.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 22 Jul 2009 15:49:29 +0300
+
+libosso-abook (4.20090721) unstable; urgency=low
+
+  * Fixes: NB#128715 - Turn ADR button into a label
+  * Fixes: NB#128845 - OssoABookButtons incorrectly themed
+  * Don't duplicate state in address display for en_US locale
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 21 Jul 2009 12:51:43 +0300
+
+libosso-abook (4.20090717) unstable; urgency=low
+
+  * Fixes: NB#126515 - tp-ring account is offered as binding option for IM accounts dialog
+  * Fixes: NB#122431 - Address fields are not shown consisitently after we reopen Me-card view.
+  * Fixes: NB#126883 - Disable AUTOCAP and DICTIONARY IM flags on the HildonEntry and im context
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 17 Jul 2009 11:49:37 +0300
+
+libosso-abook (4.20090715.1) unstable; urgency=low
+
+  * Fixes: NB#120609 - Opening a contact with 25 attributes taking 2secs to open and 4 seconds to edit
+  * Fixes: NB#121437 - Contact information boxes cut when portrait mode ongoing call
+  * Fixes: NB#123750 - Buttons in the temporary contact card getting scaled on rotation
+  * Fixes: NB#125189 - Contacts application not responding and closing when trying to open contacts
+  * Fixes: NB#125261 - Contact dialog opened from contact shortcut is not proper
+  * Fixes: NB#126610 - Contact details are not appearing in starter dialog when it is launched from shortcut
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 15 Jul 2009 19:00:05 +0300
+
+libosso-abook (4.20090715) unstable; urgency=low
+
+  * Fixes: NB#126097 - Remove need for timeouts from multi-tap on alpha shortcuts; Don't cap at 3 taps
+  * Fixes: NB#119190 - Not showing contacts starting from first contact in the Contacts main view, when the application is launched
+  * Fixes: NB#110226 - Displaying error message while saving invalid IM chat id
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 15 Jul 2009 00:07:03 +0200
+
+libosso-abook (4.20090714.1) unstable; urgency=low
+
+  * Fixes: NB#126643 - Server avatar not shown in avatar chooser dialog
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 14 Jul 2009 10:37:48 +0200
+
+libosso-abook (4.20090714) unstable; urgency=low
+
+  * Fixes: NB#126098 - Don't emit property notifications after dispose.
+  * Fixes: NB#126522 - <Coverity> FORWARD_NULL checker
+  * Fixes: NB#122478 - Scroll to closest prefix match in merge contact dialog
+  * Fixes: NB#126643 - Panning the avatar selector is über-slow
+  * Fixes: NB#126570 - Application hangs while trying to save a contact through Temporary contact card dialog.
+  * Fixes: NB#127336 - Device gets Freezed when tried to save a contact without entering name.
+  * Fixes: NB#127304 - OssoABookAvatarImage deprives call-ui of sleep
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 14 Jul 2009 00:15:21 +0200
+
+libosso-abook (4.20090709) unstable; urgency=low
+
+  * Fixes: NB#123203 - Don't select the first contact in the single selection contact chooser, contact view
+  * Fixes: NB#126170 - Crash when closing settings dialog while removing local contacts.
+  * Fixes: NB#127340 - Getting several people from Contacts to SMS recipient is hard.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 09 Jul 2009 10:02:14 +0200
+
+libosso-abook (4.20090707) unstable; urgency=low
+
+  * Display §addr_ti_main_view_loading§ without contact count when loading to workaround NB#125950.
+  * Revert NB#122431 and NB#121437 to workaround NB#126610.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 07 Jul 2009 15:20:45 +0200
+
+libosso-abook (4.20090706) unstable; urgency=low
+
+  * Fixes: NB#125049 - Add field dialog should use HILDON_UI_MODE_NORMAL
+  * Fixes: NB#119804 - Possibly excessive contact change notifications when merging contacts
+  * Released in 4.20090630.3: NB#126083 - Crash observed while creating contact shortcut
+  * Fixes: NB#121429 - Initialize priv name_order from settings
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Mon, 06 Jul 2009 13:32:24 +0200
+
+libosso-abook (4.20090702.1) unstable; urgency=low
+
+  * NB#125573 also got released with 4.20090630.3, adapt the changelog file.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 03 Jul 2009 11:23:34 +0200
+
+libosso-abook (4.20090702) unstable; urgency=low
+
+  * Fixes: NB#115612 - Improve margins in portrait mode contact chooser
+  * Fixes: NB#123147 - Crashes in accept_account() in OssoABookAccountManager
+  * Fixes: NB#121687 - Behaviour after editing IM contacts is confusing
+  * Fixes: NB#102851 - Edited  username of a IM contact is not reflected in single contact view
+  * Fixes: NB#122043 - Confirmation dialog should be shown when sending a contact/me-card with avatar
+  * Fixes: NB#125792 - AB crashed while opening the Starter view menu
+  * Fixes: NB#125331 - Contact not reponding when tapped on Save button when all fields are empty in edit dialog.
+  * Released in 4.20090630.3: NB#125573 - Messaging UI crash at osso_abook_aggregator_emit while trying to start ovi chat from shortcut
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 02 Jul 2009 16:16:24 +0200
+
+libosso-abook (4.20090630.1) unstable; urgency=low
+
+  * Display empty string instead of §addr_ti_main_view_loading§.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 01 Jul 2009 14:27:48 +0200
+
+libosso-abook (4.20090630) unstable; urgency=low
+
+  * Only include the contact count in the all-group's title once the aggregator is done loading (see NB#120744).
+  * Fixes: NB#125153 - hildon-status-menu crashed on created any IM account
+  * Fixes: NB#103930 - Show empty confirmation note when requested
+  * Fixes: NB#115089 - Proper avatar not shown in Edit dialog under certain scenario.
+  * Add support to style a GtkEntry as containing an error. This sets an error icon and makes the text use the theme's AttentionColor (ie, red).
+  * Fixes: NB#110226 - Displaying error message while saving invalid IM chat id
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 30 Jun 2009 14:33:06 +0200
+
+libosso-abook (4.20090626.1) unstable; urgency=low
+
+  * Fixes: NB#116928 - Dangling x-osso-master-uid attributes cause issues with merging, etc.
+  * Fixes: NB#121573 - Use pannable's height when computing where to jump to
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 26 Jun 2009 15:42:39 +0200
+
+libosso-abook (4.20090626) unstable; urgency=low
+
+  * Fixes: NB#124179 - Contact starter view looses presence status and server avatar after editing contacts.
+  * Fixes: NB#116145 - Refilter contacts after hide-offline-contacts property is set
+  * Fixes: NB#121437 - Contact information boxes cut when portrait mode ongoing call
+  * Consider widget state for avatar image.
+  * Fixes: NB#122198 - Duplicate contact is created when tapping frequently on save button while editing
+  * Plug memory leak in osso_abook_sort_phone_number_matches().
+  * Fixes: NB#123811 - Presence is displayed as online in My information(Me card), when skype account is in draft state.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 26 Jun 2009 10:13:14 +0200
+
+libosso-abook (4.20090623) unstable; urgency=low
+
+  * Fixes: NB#119518 - Chat notification not shows added name of the contact
+  * Fixes: NB#95522 - Contact editor does not close after adding many email fields
+  * Fixes: NB#118441 - Merged contacts disappear from list when nickname and surname are edited
+  * Fixes: NB#123532 - Wrong contact name is appearing in Call Ui after initiating the call from another contact
+  * Update API documentation for phone number utility functions.
+  * Sort contacts by quality of their phone number match on lookup.
+  * Fixes: NB#106852 - Update touch contact starter dialog's title when the name order changes
+  * Fixes: NB#123399 - Skip leading exclamation marks in alpha bar letter group translations
+  * Fixes: NB#118665 - Disable search which pops up using start-interactive-search key binding
+  * Remove obsolete visible setting for OssoABookRecentGroup and OssoABookServiceGroup.
+  * Fixes: NB#121106 - Settings: Default sorting order is decided by language
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 23 Jun 2009 10:49:45 +0200
+
+libosso-abook (4.20090619) unstable; urgency=low
+
+  * Fixes: NB#121761 - Unset the filter model's visible function
+  * Fixes: NB#109870 - The sorting technique is not shown in the 'Name Display' button in Settings dialog
+  * Fixes: NB#118675 - Ctrl-space keybord switch does not work
+  * Also print debugging timestamps when G_LOG_DOMAIN is not set.
+  * Implement OssoABookWaitable for OssoABookRoster.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 19 Jun 2009 10:31:52 +0200
+
+libosso-abook (4.20090616) unstable; urgency=low
+
+  * Fixes: NB#110921 - Not able to create the shortcut for Voice mailbox contact for second time
+  * Fixes: NB#121573 - Show matching contacts starting from top of the treeview when using alpha bar
+  * Fixes: NB#120573 - Duplicate contact created if delete the Gtalk field of an IM contact
+  * Fixes: NB#113358 - Not displaying the Address details completely in the summary of Me-card
+  * Introduce separate debug flag for the contact editor.
+  * Fixes: NB#119593 - Merging contacts with FNs but not Ns ignores the names entirely
+  * Fixes: NB#122109 - GLIB CRITICAL ** libosso-abook - osso_abook_concat_names: assertion `NULL != primary' failed
+  * Fixes: NB#121073 - Check for valid contact_view before using it
+  * Fixes: NB#106852 - Update contact detail selector dialog's title when contact order is changed
+  * Fixes: NB#119686 - Nickname and company name should be considered as name while sending contact detail
+  * Improve normalization of spaces when displaying address fields.
+  * Fixes: NB#107802 - Delete all contacts locally not present in Settings dialog
+  * Fixes: NB#121685 - handle failure to create contacts due to invalid utf-8
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 16 Jun 2009 11:00:00 +0200
+
+libosso-abook (4.20090611) unstable; urgency=low
+
+  * Fixes: NB#119221 - Unbound IM usernames
+  * Fixes: NB#110167 - Avatar of a contact is not updated properly under certain scenario.
+  * Fixes: NB#121430 - Hildon Touch Seek Bar missing in crop avatar dialog
+  * Fixes: NB#112488 - Coverity checks for libosso-abook
+  * Fixes: NB#121842 - Memory leaks found when enabling an account from me-card view menu
+  * Fixes: NB#119976 - Append to an existing filter model attr_list if one exists
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 11 Jun 2009 10:43:39 +0200
+
+libosso-abook (4.20090609) unstable; urgency=low
+
+  * Fixes: NB#120963 - Remove deprecated API
+  * Fixes: NB#120715 - GLIB CRITICAL ** libosso-abook - osso_abook_contact_find_roster_contact_for_attribute:
+                       assertion `OSSO_ABOOK_IS_CONTACT (master_contact)' failed
+  * Fixes: NB#118645 - “!! Unable to perform the operation.Internal Error” is observed when deleted a merged contact.
+  * Fixes: NB#121037 - Crash happening on taping on the address field of contact sortcut .
+  * Fixes: NB#118141 - Call sync_view_idle() in OssoABookTreeView when roster issues sequence-complete
+  * Fixes: NB#121396 - Implement multi-tapping in the alpha bar
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 09 Jun 2009 09:50:33 +0200
+
+libosso-abook (4.20090605.2) unstable; urgency=low
+
+  * Fixes: NB#120975 - Build fails with GTK+ 2.14
+  * Bump versions for libhildon1 and libhildonfm2
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 05 Jun 2009 16:49:34 +0200
+
+libosso-abook (4.20090605.1) unstable; urgency=low
+
+  * Fixes: NB#120975 - Build fails with GTK+ 2.14
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 05 Jun 2009 12:31:25 +0200
+
+libosso-abook (4.20090605) unstable; urgency=low
+
+  * Fixes: NB#118329 - Address export file names: ri%2C_P in file name
+  * Fixes: NB#111444 - Not able to send contact with more than 270 characters thru Text message,Email or Bluetooth
+  * Fixes: NB#120178 - hildon-status-menu: GLIB CRITICAL ** hildon-1 - Tried to initialized Hildon more than once.
+  * Fixes: NB#120182 - rtcom-messaging-ui: GLIB CRITICAL ** hildon-1 - Tried to initialized Hildon more than once.
+  * Fix regression from patch for NB#115826 where the final contact did not have an FN even if both merging contacts had it.
+  * Introduce functions to resolve McProfiles associated with contacts.
+  * Fixes: NB#118020 - All type of IM fields are shown as Google talk fields in the mentioned scenario
+  * Fixes: NB#117404 - Starter button shows account name even if multiple accounts are attached
+  * Fixes: NB#107811 - "Last name First name" option is not present in Display name in settings dialog.
+  * Fixes: NB#115948 - Merging should not delete sim-contacts.
+  * Fixes: NB#120844 - Add field dialog / Edit contact dialog fields are sorted alphabetically
+  * Fixes: NB#115220 - Contacts: Layout: Avatars are not square
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 05 Jun 2009 10:16:51 +0200
+
+libosso-abook (4.20090604) unstable; urgency=low
+
+  * Move parsing of location information embedded in presence status message to OssoABookPresence interface.
+  * Fixes: NB#119005 - Mood messages on two lines are displayed bad on contact list
+  * Fixes: NB#115080 - Wrong gender for "home" in contact editor's address fields
+  * Fixes: NB#107010 - Truncation of Email (work) in Contacts Application
+  * Fixes: NB#119135 - Accounts deleted are still shown in the Me-card view
+  * Fixes: NB#117754 - No infobanner shown on tapping call button, when the SIP account is deleted.
+  * Fixes: NB#120219 - Addressbook - Wrong translation of home in §addr_bd_cont_starter_home_mid§
+  * Fixes: NB#110946 - Sync IOP: Use CELL only instead of CELL;VOICE
+  * Fixes: NB#101425 - Shortcut of contact is deleted if it is merged with another contact
+  * Fixes: NB#115826 - Merged contact with company details, shows the company details in FN.
+  * Fixes: NB#113721 - Fix libosso-abook API documentation
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 04 Jun 2009 10:32:01 +0200
+
+libosso-abook (4.20090602) unstable; urgency=low
+
+  * Fixes: NB#116759 - Account selection dialog has incorrect layout
+  * Fixes: NB#107832 - The contact editor dialog is expanded even though there is no field added
+  * Fixes: NB#110389 - Opening the contact-editor looks ugly
+  * Fixes: NB#119037 - In contacts, logical id is and two avatars are displayed after performing synchronisation
+  * Fixes: NB#119557 - Configured Email account is seen in edit my information dialog
+  * Fixes: NB#118699 - Name field is conflicting when other contact has no name.
+  * Fixes: NB#119076 - today as default birthday for contacts
+  * Fixes: NB#112413 - Modality and transiency problems in OssoABookTemporaryContactDialog
+  * Fixes: NB#119431 - Contacts application crashes when trying to edit the avatar of a contact
+  * Fixes: NB#115972 - Solve merge dialog should contain fields that are common in both the contacts
+  * Fixes: NB#113578 - Birthday details are not shown in the resulting merged contact under certain scenario.
+  * Fixes: NB#118530 - Calendar application opens with default view on tapping Birthday field in the Contact starter view
+  * Fixes: NB#113358 - Not displaying the Address details completely in the summary of Me-card
+  * Fixes: NB#115543 - Status message and location are not displayed in MeCard if personalized status is in use
+  * Avoid warning about missing logical string for photo field.
+  * Require contact argument for osso_abook_contact_action_start() and osso_abook_contact_action_start_with_callback().
+  * More robustly parse custom presence status messages (see NB#115543).
+  * Properly freeze presence related attribute parsing (see NB#115543).
+  * Reset presence_parsed flag when needed (see NB#115543).
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 02 Jun 2009 10:43:18 +0200
+
+libosso-abook (4.20090528) unstable; urgency=low
+
+  * Fixes: NB#109575 - zooming hardkeys are not working in crop avatar dialog
+  * Fixes: NB#110400 - Saving mecard removing the avatar from server
+  * Fixes: NB#110226 - Displaying error message while saving invalid IM chat id
+  * Fixes: NB#113784 - Address book crash on tapping on an IM contact in main view.
+  * Fixes: NB#118659 - Two copies of an IM contact observed after editing it.
+  * Fixes: NB#110776 - Exported vCard file name is having "%20" character when contact is having FName and LName
+  * Fixes: NB#118329 - Address export file names: ri%2C_P in file name
+  * Fixes: NB#118760 - Don't use priv->contact_view before it is created
+  * Fixes: NB#110210 - Contacts Layout: Contact card margins
+  * Restore arrow-key support in avatar editor.
+  * Properly implement osso_abook_contact_get_roster_contacts().
+  * Introduce OssoABookAggregator::temporary-contact-saved signal.
+  * Also set the roster property on temporary master contacts.
+  * Introduce osso_abook_contact_is_temporary().
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 28 May 2009 01:31:52 +0200
+
+libosso-abook (4.20090526) unstable; urgency=low
+
+  * Fixes: NB#114408 - "Availability must be online" banner is not shown when trying to call from offline
+  * Fixes: NB#116984 - Contact disappears after re-authorization because we save a temporary master UID to the database.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 26 May 2009 10:25:45 +0200
+
+libosso-abook (4.20090522) unstable; urgency=low
+
+  * Fixes: NB#106244 - Able to delete the nickname field in the IM contact
+  * Fixes: NB#114408 - "Availability must be online" banner is not shown when trying to call from offline
+  * Fixes: NB#117983 - Web page field is shown empty in the contact editor dialog in the mentioned scenario
+  * Fixes: NB#112195 - Note field text is not shown properly in me-card view.
+  * Fixes: NB#113358 - Not displaying the address details completely in the summary of me-card
+  * Fixes: NB#116759 - Account selection dialog has incorrect layout
+  * Fixes: NB#106733 - Sorting inside different status is not alphabetically
+                       when status message present for few contacts.
+  * Fixes: NB#116145 - When hiding offline contacts, don't show contacts with
+                       presence TP_CONNECTION_PRESENCE_TYPE_UNKNOWN
+  * Fixes: NB#115135 - Error banner should be displayed when user couldn't launch map application
+  * Fixes: NB#116910 - Not able to open Maps application with contacts location as a search string
+  * Fixes: NB#116919 - Phone application get hangs after switching from Portrait to Landscape
+  * Fixes: NB#118273 - Add-field title not shown as per the UI spec
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 22 May 2009 10:46:32 +0200
+
+libosso-abook (4.20090519) unstable; urgency=low
+
+  * Fixes: NB#115975 - System modal dialogs are present in the addressbook application
+  * Fixes: NB#114417 - Merge with contact dialog freezes (missing grab)
+  * Fixes: NB#117241 - Include account type in selfcontact's vcard
+  * Fixes: NB#115419 - Tell IM context that focus is in if treeview already has focu
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 19 May 2009 10:13:28 +0200
+
+libosso-abook (4.20090515) unstable; urgency=low
+
+  * Fixes: NB#116358 - Different contact information shown in Call UI and in notification UI
+  * Fixes: NB#100157 - setting sort_order and starting EBookView is not deterministic
+  * Fixes: NB#116181 - Disconnect on_entry_changed() early during dispose and clear filter text
+  * Fixes: NB#116863 - Invalid warnings about missing diskspace
+  * Fixes: NB#116759 - Account selection dialog has incorrect layout
+  * Remove osso_abook_contact_model_get_default_full()
+  * Introduce "name-order" property for OssoABookRoster.
+  * Introduce osso_abook_get_work_dir().
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 15 May 2009 09:52:43 +0200
+
+libosso-abook (4.20090512) unstable; urgency=low
+
+  * Fixes: NB#116063 - Avatar not set for a contact in the editor dialog and starter view
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 12 May 2009 09:47:58 +0200
+
+libosso-abook (4.20090511) unstable; urgency=low
+
+  * Fixes: NB#113924 - Confirmation dialog before deleting IM contact/contacts missing
+  * Fixes: NB#115308 - OssoABookAvatarImage does not properly reset when setting pixbuf to NULL
+  * Fixes: NB#113869 - Exported IM contacts missing avatar
+  * Fixes: NB#110923 - <coverity> Defects from libosso-abook
+  * Fixes: NB#113210 - Sort chooser contacts by name when alpha bar is used
+  * Fixes: NB#115407 - Contact names are not getting resolved while receving/Making calls
+  * Fixes: NB#115216 - Fix show vfunc for live search widget
+  * Fixes: NB#115867 - Instead of smooth scrolling to a contact, jump to it when using the alpha bar
+  * Fixes: NB#111776 - number of times email field appears in mecard doubles on each edit operation
+  * Fixes: NB#108970 - Automatically imported fields are not displayed in Add My information dialog.
+  * Fixes: NB#111856 - 'Address' UI string getting hid in contact starter view
+  * Only defer avatar rendering when interactively changing an adjustment.
+  * Resize the avatar image widget when changing its size property.
+  * Avoid critical warnings on incomplete IM accounts.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Mon, 11 May 2009 23:17:51 +0200
+
+libosso-abook (4.20090508) unstable; urgency=low
+
+  * Change default value of OssoABookContactChooser::contact-order to "none"
+  * Fixes: NB#114459 - Sort order in main view is changed when merge option selected
+  * Remove obsolete assertion in account manager
+  * Fixes: NB#115308 - OssoABookAvatarImage does not properly reset when setting pixbuf to NULL
+  * Make sure fallback image is rendered when no avatar or pixbuf was set.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 08 May 2009 10:45:05 +0200
+
+libosso-abook (4.20090507) unstable; urgency=low
+
+  * Fixes: NB#113066 - Displaying Chat instead of Text message for unknown cellular number
+  * Fixes: NB#113358 - Not displaying the Address details completely in the summary of Me-card
+  * Fixes: NB#113472 - Contacts- "general" §addr_va_newedit_phone_general§ is
+                       showing in the picker button as value
+  * Fixes: NB#110667 - Changes made in crop image dialog are lost
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 07 May 2009 10:41:35 +0200
+
+libosso-abook (4.20090505.1) unstable; urgency=low
+
+  * Fixes: NB#113021 - Avatar is cropped and set in Edit my information dialog
+  * Fixes: NB#110021 - TEL;TYPE=CELL;TYPE=PREF is shown as "Phone (Other)"
+  * Fixes: NB#111440 - <MemLeak> Memleak in osso-abook-contact-editor.c
+  * Fixes: NB#110873 - <MemLeak> Minor leak in osso abook contact
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 05 May 2009 17:05:40 +0200
+
+libosso-abook (4.20090505) unstable; urgency=low
+
+  * Fixes: NB#108145 - Deprecate osso_abook_live_search_show() and osso_abook_live_search_hide()
+  * Pre-emptive fix related to NB#113902 - addr_nc_notification16 is not shown
+    when deleting one contact. This is not the source of a known problem, but
+    if any external programs use osso_abook_delete_contacts_dialog_run(), this
+    will be necessary.
+  * Fixes: NB#104838 - When the deletion of a chat contact fails no message is shown to the user
+  * Fixes: NB#104718 - Names of GTalk account's roster contacts are not resolved correctly in notifications
+  * Fixes: NB#113055 - Avatar editor wastes memory by allocating overly large image buffers
+  * Fixes: NB#110403 - Avatar cropper has crappy performance
+  * Fixes: NB#113925 - Calling to numbers with one or two numbers selects occasional contact from AB
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 05 May 2009 11:26:31 +0200
+
+libosso-abook (4.20090430) unstable; urgency=low
+
+  * Fixes: NB#112488 - Coverity checks for libosso-abook
+  * Fixes: NB#112034 - Logical error in osso-abook-aggregator.c
+  * Fixes: NB#112795 - Minor leak in osso-abook-contact-field.c
+  * Fixes: NB#96647  - OssoABookContactChooser instantities a default model (and aggregator) on instance init()
+  * Fixes: NB#108677 - Address picker button is too large and causes themeing issues
+  * Fixes: NB#111950 - Birthday field is not shown same in New/Edit Contact dialog
+  * Fixes: NB#112043 - Possible memory leak in osso-abook-avatar-chooser-dialog.c
+  * Fixes: NB#112415 - we probably shouldn't remove the EBook when an IM account is disabled
+  * Fixes: NB#109905 - No name contact is appearing in email select contacts dialog
+  * Fixes: NB#110493 - Calling from an offline account, fail with pres_ib_must_be_online
+  * Fixes: NB#112331 - Don't use LargeSystemFont for live search bar
+  * Fixes: NB#96643  - Don't show offline contacts in contact chooser
+  * Fixes: NB#112807 - <MemLeak>Memory Leak in osso-abook-self-contact.c
+  * Fixes: NB#112438 - Country value is not shown in the country picker
+  * Fixes: NB#112740 - Contacts: Select contact detail dialog: Presence icons missing
+  * Fixes: NB#109655 - portrait dialog with 4 buttons next to each other not a good idea
+  * Fixes: NB#113001 - It should be possible to make a calls/chat/send sms in flash full condition
+  * Fixes: NB#112413 - Modality and transiency problems in OssoABookTemporaryContactDialog
+  * Fixes: NB#113719 - <Logic> setting wrong value to 0 in osso-abook-list-store.c
+  * Fixes: NB#112437 - Unknown presence status “Offline but Call Fwd“
+                       displayed when TSD is offline and call forwarding enabled
+  * Fixes: NB#113717 - <MemLeak> memory leak in osso-abook-merge.c
+  * Report proper error message when loading too large avatar images.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 30 Apr 2009 10:43:53 +0200
+
+libosso-abook (4.20090424) unstable; urgency=low
+
+  * Fixes: NB#112612 - multiselection dialog has pre-selected item
+  * Fixes: NB#107738 - osso-addressbook crashes on contact changes
+  * Fixes: NB#112174 - osso-addressbook is crashing when changing chat account availability
+  * Fixes: NB#101865 - crash while updating the avatar of a contact
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Sat, 25 Apr 2009 22:07:22 +0200
+
+libosso-abook (4.20090422) unstable; urgency=low
+
+  * Fixes: NB#100601 - Don't set contact order by default in the contact chooser
+  * Fixes: NB#107448 - Random crash when i saved the me-card with avatar for the first time
+  * Fixes: NB#110090 - Delay in removing the deleted IM account username from Me card view
+  * Fixes: NB#110761 - Rare crash on tapping a contact in main view
+  * Fixes: NB#112140 - osso-addressbook-11 crash observed after restoring device
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Wed, 22 Apr 2009 09:31:51 +0200
+
+libosso-abook (4.20090416) unstable; urgency=low
+
+  * Update for NB#110149 - Contacts Layout: "No contacts" text harmonized in all applications
+  * Fixes: NB#106733 - Sorting inside different status is not alphabetically when status message present for few contacts.
+  * Fixes: NB#109608 - Delete contact info note is appearing on saving empty edit me-card dialog
+  * Fixes: NB#108748 - OssoABookTemporaryContactDialog considering wrong capabilities for missed VoIP calls
+  * Fixes: NB#109945 - Status message on presence button is not shown properly after reopening the me-card.
+  * Fixes: NB#110422 - Text exceeds 'Availability' button after changing availability mode
+  * Fixes: NB#110622 - Sim-contacts show with number "no name" phone number if they don't actually have a phone number
+  * Fixes: NB#110732 - " No details " should be shown while sending contact details for a contact without any detail.
+  * Fixes: NB#110758 - Crash when tapped on back button of me-card view immediately after opening it
+  * Fixes: NB#110760 - Contacts crashed on saving me-card
+  * Fixes: NB#102503 - Merge new selection when using live search with any existing selection
+  * Fixes: NB#110935 - Crashing when GdkScreen emits "size-changed" after widget destruction
+  * Fixes: NB#110493 - Calling from an offline account, fail with pres_ib_must_be_online
+  * Fixes: NB#109734 - IM fields are displayed with same field name
+  * Fixes: NB#109326 - Newly created shortcut replacing existing shortcut in mentioned scenario
+  * Update the Recent Contacts group name logical string.
+  * Fixes: NB#110895 - Crash when tried to delete all contacts
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu, 16 Apr 2009 11:52:35 +0200
+
+libosso-abook (4.20090409) unstable; urgency=low
+
+  * Fixes: NB#110381 - Set name and display order to the same initial value (first name)
+  * Fixes: NB#110412 - Don't show cropped avatars in treeview
+  * Fixes: NB#110187 - Crash when deleting all contacts from addressbook
+  * Fixes: NB#104064 - Voice mail box number cannot be deleted from mainview
+  * Fixes: NB#109476 - Contacts application crashes everytime contacts is launched after sync.
+  * Fixes: NB#108817 - Deleting 500 contacts taking around 2minutes
+  * Fixes: NB#109168 - Contacts UI freezing on launching it from task launcher
+  * Fixes: NB#109598 - Not displaying any contacts if there is more than 1000 contacts
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu,  9 Apr 2009 11:49:40 +0200
+
+libosso-abook (4.20090408) unstable; urgency=low
+
+  * Fixes: NB#109446 - Spacing between the fields are not proper in send contact detail dialog.
+  * Fixes: NB#108922 - Taping on avatar place holder not launching edit contact dialog
+  * Fixes: NB#107797 - Displaying only a part of the image in Crop avatar dialog
+  * Fixes: NB#109184 - me-card avatar is not set properly when it is retrieved from IM account
+  * Don't show the avatar editor for small pictures.
+  * NB#108970 - Automatically imported fields are not displayed in Add My information dialog.
+  * Fixes: NB#109410 - Two same IM fields are shown in Send-contact details for me-card
+  * Fixes: NB#107442 - Undefined gender value updating irrespective of the value selected in edit dialog
+  * Fixes: NB#109155 - Not able to save the contact/business card received thru SMS
+  * Fixes: NB#106497 - Editted account screen name in not reflected in Me card.
+  * Fixes: NB#108861 - Add field -functionality crashes the contacts application
+  * Fixes: NB#107359 - No option to choose the Gender for the merged contact.
+  * Companion commit to another in osso-addressbook to fix NB#110149
+  * Fixes: NB#109970 - Logical string is shown in mobile field of add-my information dialog.
+  * Fixes: NB#107507 - ROTATION: Add field dialog appearing in portrait mode though edit dialog doesn't support
+  * Fixes: NB#107834 - Contacts Startup is slow in Call-UI
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Wed,  8 Apr 2009 12:59:42 +0200
+
+libosso-abook (4.20090402) unstable; urgency=low
+
+  * Fixes: NB#105585 - VCARD export: file name creation bug from UTF-8 formatted name
+  * Fixes: NB#109399 - Presence icon is shown in the send contact details dialog for IM contact.
+  * Workaround NB#107832 - The contact editor dialog is expanded even though there is no field added
+  * Give proper size to avatar editor dialog.
+  * Significantly refactor the merging code to cut redundancy and individual function complexity.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu,  2 Apr 2009 10:01:00 +0200
+
+libosso-abook (4.20090401) unstable; urgency=low
+
+  * Fixes: NB#108716 - Fix treeview border margins to make 6 contacts fit
+  * Fixes: NB#105497 - Nokia chat field is created when tried to create a contact with invalid Jabber ID
+  * Fixes: NB#107712 - Chat fields and other details are not shown for an attached vcard
+  * Fixes: NB#108319 - Layout: Unnecessary button margins in contact starter view
+  * Fixes: NB#109067 - Call gtk_widget_show() on menu items
+  * Fixes: NB#107612 - Set the row-deleted signal callback at ->constructed() time
+  * Fixes: NB#108738 - Don't select contacts when scrolling using alpha bar
+  * Fix button-height part of NB#108677 (Address picker button is too large and causes themeing issues).
+  * Make osso_abook_pannable_area_add() when the pannable area needs a scroll indicator (see also NB#101794).
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed,  1 Apr 2009 10:31:00 +0200
+
+libosso-abook (4.20090331) unstable; urgency=low
+
+  * Fixes: NB#107720 - Memory leak found while deleting fields of contact.
+  * Fixes: NB#107723 - Memory leak found while deleting some contact fields.
+  * Fixes: NB#106883 - Long text exceeds 'Availability' button in MeCard view
+  * Fixes: NB#104872 - Solve merging conflicts dialog is providing Hildon
+                       Touch Finger Button even when same values are merged.
+  * Fixes: NB#105573 - Blank details can be saved in the fields in resolve
+                       merge conflict.
+  * Fixes: NB#108830 - "Delete contact?" notification is coming after tapping
+                       on the save button in "Add my information" dialog.
+
+  * Update logical strings used by the contact editor.
+  * Use HildonEntrys instead of the outdated GtkEntrys for the merge conflict
+    resolution dialog.
+  * When populating fields in the Resolve Merge Conflicts dialog, prefer
+    fields from master contacts to roster contacts, and fields from master
+    contacts with the most fields total.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 31 Mar 2009 10:10:00 +0200
+
+libosso-abook (4.20090329) unstable; urgency=low
+
+  * Fixes: NB#101794 - Company detail is not shown completely in send contact detail dialog.
+  * Fixes: NB#99859  - Enhancement: osso_abook_aggregator_find_contacts_for_im_contact.
+  * Fixes: NB#108481 - Critical warning when clearing all me-card fields and saving.
+  * Fixes: NB#107256 - Able to save the me card without any details.
+  * Always print "Phone" as window title for phone-type picker dialogs.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Sun, 29 Mar 2009 23:09:00 +0200
+
+libosso-abook (4.20090328) unstable; urgency=low
+
+  * Fixes: NB#108298 - Set empty widget color to SecondaryTextColor in OssoABookTreeView
+  * Fixes: NB#108433 - OssoABookTemporaryContactDialog doesn't provide a way to be notified when contact saved/merged.
+  * Fixes: NB#107746 - IM contact is not edited, from the contact starter view of the attatched vCard in the messaging application.
+  * Fixes: NB#108129 - Unable to save me-card in the mentioned scenario
+  * Fixes: NB#104972 - Possible to create unsuported Nokia chat VoIP call
+  * Fixes: NB#106154 - IM contacts are not getting updated in contact
+    application after deleting and reconfiguring the same Gtalk account
+  * Fixes: NB#108410 - Adding SIP field: IA__g_object_notify: object class `OssoABookContact' has no property named `im-sip'
+  * Refactor the merge dialog code to validate fields in the merge conflict
+    resolution dialog before allowing the user to save it (like the contact
+    editor). This is currently unreachable in the UI, but will be once it's
+    possible to set first name, last name, etc. fields to empty values.
+  * Fixes: NB#104233 - Possible memory leak when deleting 10 Nokia chat contacts
+  * Fixes: NB#106946 - Crash in roster_contacts_removed_cb()
+  * Workaround NB#108470 - Selected items in multiple selection are either having a tick that is cut or not visible at all.
+  * Fixes: NB#107463 - GLIB CRITICAL ** libosso-abook - osso_abook_contact_find_roster_contact_for_attribute: assertion `OSSO_ABOOK_IS_CONTACT (master_contact)' failed
+  * Fixes: NB#106923 - Invalid reads found when saving a new contact
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Sat, 28 Mar 2009 01:56:00 +0100
+
+libosso-abook (4.20090327) unstable; urgency=low
+
+  * Fixes: NB#101993 - Memory leak in OssoAbookContact/EVcard
+  * Fixes: NB#106997 - Button size is varying in the new contact dialog and after deleting default fields.
+  * Fixes: NB#98768  - Avatar is not reflecting in received contact from PC PIM
+  * Fixes: NB#101892 - Contact with an avatar in PC when synchronized to device does not have avatar in device
+  * Fixes: NB#87449  - Not able to search a contact which is default saved as (unnamed)
+  * Fixes: NB#108134 - Grab treeview's focus when hiding the live search bar
+  * Fixes: NB#107395 - Default fields are shown in my-information dialog even after deleting them.
+  * Fixes: NB#105120 - Resolve conflict dialog - Birthday selection dialog is not showing the current device date picker button.
+  * Fixes: NB#105285 - Blank birthday dialog when shown when the birthday is selected second time in Resolve merge conflict dialog.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 27 Mar 2009 11:22:00 +0100
+
+libosso-abook (4.20090326) unstable; urgency=low
+
+  * Fixes: NB#107507 - ROTATION: Add field dialog appearing in portrait mode though edit dialog doesn't support
+  * Fixes: NB#99087  - Avatar is not being saved for an IM contact
+  * Fixes: NB#104624 - [S2] Application crashed while navigating to edit contact dialog.
+  * Set the Service Group sort function, to automatically sort IM groups by status. Complementary to the fix for NB#93855.
+  * Package osso-abook-debugger application.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 26 Mar 2009 10:34:00 +0100
+
+libosso-abook (4.20090325.1) unstable; urgency=low
+
+  * Fixes: NB#107795 - Improper view is shown after editing details of my-information
+  * Fixes: NB#107632 - Contacts not responding on cancelling dialogs launched from get contacts dialog
+  * Fixes: NB#107579 - Don't unparent selector before destroying the birthday selector dialog
+  * Fixes: NB#104001 - Not fetching the avatar from the server for the Me-card
+  * Complementary fixes for NB#107422, NB#107544 and NB#107928.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 25 Mar 2009 15:16:00 +0100
+
+libosso-abook (4.20090325) unstable; urgency=low
+
+  * Fixes: NB#107469 - Don't assert presence of live search and alpha bar widgets.
+  * Fixes: NB#107465 - Only scroll to focus if treeview exists.
+  * Fixes: NB#107400 - Displaying the SIP audio option for the Voice mailbox number
+  * Fixes: NB#102883 - "osso_abook_waitable_call_when_ready()" consumes 1.3 seconds to trigger "check_if_no_contacts()"
+  * Fixes: NB#107605 - Memory leak found while configuring IM-account from UI
+  * Fixes: NB#105514 - Not able to view all contacts after live search fetched no results in SIM card contacts view
+  * Fixes: NB#105438 - when scrolling with over 100 contacts, the scroll bar indicator does not stay in synch
+  * Fixes: NB#102595 - Get your contacts dialog does not come up on opening Contacts application
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 25 Mar 2009 10:32:00 +0100
+
+libosso-abook (4.20090323) unstable; urgency=low
+
+  * Give up the global GDK lock before launching control panel applets.
+  * Fixes: NB#107080 - Delete field is shown even though there are only name fields(FN,LN) present in the contact editor dialog
+  * Fixes: NB#96490 - Contact Starter birthday buttons do not open calendar application
+  * Fixes: NB#107182 - Crash in OssoABookGConfContact vcard_notify_cb()
+  * Fixes: NB#99833 - osso-addressbook created contact displays many fields as unsupported in PC.
+  * Fixes: NB#107327 - Title for Gender field dialog is not proper
+  * Add simple tool for changing debug settings.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Mon, 23 Mar 2009 10:48:00 +0100
+
+libosso-abook (4.20090320) unstable; urgency=low
+
+  * Fixes: NB#100407 - Gender field not present in My information
+  * Fixes: NB#106669 - Addressbook crashes at startup after deleting all contacts
+  * Fixes: NB#105864 - Creating a contact with an Avatar taking 5-6 secs
+  * Fixes: NB#106510 - First item is selected as default in copy selected contacts UI
+  * Fixes: NB#103969 - Contact merging needs to handle out-of-disk errors
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 20 Mar 2009 09:55:00 +0100
+
+libosso-abook (4.20090319.1) unstable; urgency=low
+
+  * Trigger new build.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 19 Mar 2009 11:30:00 +0100
+
+libosso-abook (4.20090319) unstable; urgency=low
+
+  * Fixes: NB#106558 - Focus is not proper when we use hardware arrow keys in the contact editor dialog
+  * Fixes: NB#99585 - OssoABookContactDetailSelector is too high
+  * Fixes: NB#106435 - libosso-abook clutters the console
+  * Fixes: NB#104064 - Voice mail box number cannot be deleted from mainview
+  * Fixes: NB#98133 - Layout issues: Get your contacts dialog
+  * Fixes: NB#106532 - The avatar of an IM contact is shown as default in it's contact editor dialog
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 19 Mar 2009 11:09:00 +0100
+
+libosso-abook (4.20090318.1) unstable; urgency=low
+
+  * Fix the workarround for NB#106365.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 18 Mar 2009 08:09:00 +0100
+
+libosso-abook (4.20090318) unstable; urgency=low
+
+  * Fixes: NB#105057 - Displaying the Me-card summary even when there is no details
+  * Fixes: NB#98831 - osso-addressbook phone no. of contact is appearing as
+    other no in PIM while doing retrieve data sync initiated from PC
+  * Fixes: NB#106377 - Crash when tried to save data to me-card
+  * Fixes: NB#104691 - unable to save me-card
+  * Don't show readonly fields in contact editor.
+  * Provide possible workarround for NB#106365.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 18 Mar 2009 08:09:00 +0100
+
+libosso-abook (4.20090317) unstable; urgency=low
+
+  * Fixes: NB#105998 - osso-abook-account-manager crashed while adding contact to "Call forwarding"
+  * Fixes: NB#98182 - Add OssoABookLiveSearch widget and deprecate OssoABookSearchEntry widget
+  * Fixes: NB#104691 - unable to save me-card
+  * Fixes: NB#104674 - Self avatar not set
+  * Fixes: NB#106089 - Ctrl plus A shortcut not working in Copy Selected contact dialog.
+  * Fixes: NB#87449 - Not able to search a contact which is default saved as (unnamed)
+  * Fixes: NB#101218 - Editing a contact is possible inspite of info banner
+    "Unable to perform operation. Memory full."
+  * Introduce "disk-space" debug flag to simulate low-memory condition.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 17 Mar 2009 10:32:00 +0100
+
+libosso-abook (4.20090316) unstable; urgency=low
+
+  * Set window flag for using zoom keys in avatar editor.
+  * Fixes: NB#105860 - Unable to delete a contact from single starter view menu option.
+  * Fixes: NB#87451 - Addressbook does not verify inputs given by the user
+  * Fixes: NB#104001 - Not fetching the avatar from the server for the Me-card
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Mon, 16 Mar 2009 10:29:00 +0100
+
+libosso-abook (4.20090312) unstable; urgency=low
+
+  * Fixes: NB#105510 - addressbook-factory crash when edited and save the SIM contact
+  * Fixes: NB#105513 - copying contacts from SIM card is not possible after editing a SIM contact
+  * Fixes: NB#105713 - Able to make a VoIP call in memory full condition
+  * Fixes: NB#105023 - ROTATION: New contact dialog is half-cut
+  * Fixes: NB#105031 - ROTATION: Text fields in new contact are enlarged after switching between normal and portrait modes
+  * Let the contact editor assume fields with only spaces as empty.
+  * Fixes: NB#105525 - Delete field/Delete address field confirmation notes are not coming up
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 12 Mar 2009 23:55:00 +0100
+
+libosso-abook (4.20090311) unstable; urgency=low
+
+  * Fixes: NB#104114 - Able to create more than one shortcut for a single contact.
+  * Fixes: NB#105010 - Me card view: Status message shown outside the button.
+  * Fix some contact-info related crashers.
+  * Fixes: NB#105231 - Not possible to set birthday earlier than 1970-01-01.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 12 Mar 2009 00:13:00 +0100
+
+libosso-abook (4.20090310.1) unstable; urgency=low
+
+  * Remove -Werror from AM_CFLAGS in debug builds.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Wed, 11 Mar 2009 10:08:00 +0100
+
+libosso-abook (4.20090310) unstable; urgency=low
+
+  * Fixes: NB#98831 - osso-addressbook phone no. of contact is appearing as other no in
+    PIM while doing retrieve data sync initiated from PC
+  * Expose information retrieved via Telepathy's ContactInfo interface in
+    contact editor and contact detail store.
+  * Fixes: NB#105171 - libsignonui0 shouldn't depend on libhildonhelp0
+  * Fixes: NB#105074 - Default fields are not shown in Add my Information Dialog
+  * Avoid double-free when discarding temporary master contacts.
+  * Fixes: NB#104919 - Hildon status menu uses 100% of CPU power on
+    authorization request.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 10 Mar 2009 23:00:00 +0100
+
+libosso-abook (4.20090309) unstable; urgency=low
+
+  * Open contact editor when clicking avatar in contact starter.
+  * Also consider read-only state of parent field to disable field editors.
+    This is needed to disable compound fields like address.
+  * Introduce OssoABookTouchContactStarter::editor-started signal.
+
+  * Fixes: NB#98262 - Not displaying the delete confirmation note when all fields are empty
+  * Fixes: NB#104286 - Unable to differentiate IM accounts in add field dialog and contact editor
+  * Fixes: NB#104378 - Editing IM contact creates duplicate contacts in main view
+  * Fixes: NB#104573 - Unable to export Selected Contacts
+  * Fixes: NB#104787 - Deleted fields are shown in the Contact editor dialog
+  * Fixes: NB#104881 - Can not able to select recipient from 'select recipient' dialog box
+  * Fixes: NB#104976 - Contact starter doesn't show nickname fields
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 10 Mar 2009 00:24:00 +0100
+
+libosso-abook (4.20090306) unstable; urgency=low
+
+  * Update the live search entry's contact filter when changing
+    the contact view's model. Patch by Artem Garmash; Fixes: NB#101058
+  * Change avatar chooser so that five avatars fit into one row.
+  * In the SIM card view, use the voicemail icon for the voicemail number
+    (Travis); Fixes: NB#102619
+  * Remove obsolete sorting option in the settings dialog (Travis);
+    Fixes: NB#103796
+  * Leave 'w' in phone numbers as 'W' instead of normalizing it to 'X':
+    Telepathy-ring dropped that normalization, so let's do the same; Fixes:
+    NB#104528
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 06 Mar 2009 10:52:00 +0100
+
+libosso-abook (4.20090305.1) unstable; urgency=low
+
+  * Don't dereference NULL pointer when detaching contact photos;
+    Fixes: NB#104483
+  * Only update the contact editor's contact property when saving was
+    successful; Fixes: NB#104378
+  * Redraw when setting a pixbuf; Fixes: NB#101757
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 05 Mar 2009 14:17:00 +0100
+
+libosso-abook (4.20090305) unstable; urgency=low
+
+  * Only detach photo from contact when committing, not when changing the
+    attribute: The contact might get discarded without commit; Fixes:
+    NB#98888, NB#99417, NB#99588, NB#102088, NB#102637
+  * Refactor code to have osso_abook_avatar_button_new(). Make avatar image
+    in mecard view clickable and open contact editor; Fixes: NB#103555
+  * Disable auto capitalization for web address field; Fixes: NB#104115
+  * Repair deletion of multiple contacts; Fixes: NB#104227
+  * Correctly emit "response" signal with GTK_RESPONSE_OK; Fixes: NB#104205
+  * Handle birthday fields in the Merge Resolution dialog and do a bit of code
+    clean-up (Travis); Fixes: NB#96804
+  * Wrap text of address starter button if too long (see NB#103410)
+  * Set fixed width for value labels of contact starter buttons to allow
+    proper wrapping.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 05 Mar 2009 11:00:00 +0100
+
+libosso-abook (4.20090303.2) unstable; urgency=low
+
+  * Add missing linebreak to debian/control
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 03 Mar 2009 12:45:00 +0100
+
+libosso-abook (4.20090303.1) unstable; urgency=low
+
+  * List development packages for libosso-abook-dev and as build dependencies.
+    Seems like dpkg needs this redundancy.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 03 Mar 2009 12:45:00 +0100
+
+libosso-abook (4.20090303) unstable; urgency=low
+
+  * Fix osso_abook_contact_delete_many and use it from
+    osso_abook_delete_contacts_dialog_run; Fixes: NB#101586
+  * Show different label for regular and mobile phone numbers to allow mobile
+    numbers to have (visible) home and work attributes; Fixes: NB#101847
+  * Reset master contacts when contacts-changed is emitted; Fixes: NB#103050,
+    NB#100065, NB#100072, NB#101410, NB#101961
+  * Exclude blocked contacts from the aggregator (Travis); Fixes: NB#96028,
+    NB#103407
+  * Emit OssoABookAccountManager::account-changed on parameter changes; Fixes:
+    NB#95024
+  * More stricly enfore name fields in contact editor; Fixes: NB#92444,
+    NB#94476, NB#98218
+  * Show information banner after saving contacts unless suppressed; Fixes:
+    NB#103809
+  * Don't populate lastname field with 'nickname' or 'company' field details
+    in contact editor; Fixes: NB#93956
+  * Cancel the contact editor when all fields of a new contact are left empty;
+    Fixes: NB#98525, NB#101950
+  * Emit "contacts-removed" signal for roster contacts when their account gets
+    removed or disabled.
+  * Remove the Telepathy EBook when an account gets removed.
+  * Make the aggregator ready if there is no roster manager; Fixes: NB#102595
+  * Select current setting in field-type picker for phone/email/address
+    fields; Fixes: NB#103931
+  * Cleanup package dependencies; Fixes: NB#104022
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Tue, 03 Mar 2009 11:26:00 +0100
+
+libosso-abook (4.20090226.1) unstable; urgency=low
+
+  * Update for recent API breaks in libmcclient.
+  * Add caps on contact for attributes that don't have a roster,
+    but have a profile with enabled accounts using it; Fixes: NB#102937
+  * Add a banner when a contact shortcut is created; Fixes: NB#103343
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 26 Feb 2009 13:35:00 +0100
+
+libosso-abook (4.20090226) unstable; urgency=low
+
+  * Prevent the contact starter details table from getting massively wide
+    under certain conditions (Travis); Fixes: NB#97148
+  * Use field title as window title for picker dialogs of the contact editor.
+  * Make possible to create a tmp contact dialog from a contact; Fixes: NB#102513
+  * Append ".vcf" to filename when sending a vcard; Fixes: NB#102381
+  * Set secondary name as primary if there is no primary; Fixes: NB#102784
+  * Add SIP-chat, SIP-audio and SIP-video buttons for X-SIP fields; Fixes: NB#95953
+  * Create an extra avatar file when merging contacts with avatars to prevent
+    stripping the new contact of its avatar (Travis); Fixes: NB#100301
+  * Implement multi-selection dialog for deleteing fields; Fixes: NB#100541,
+    NB#102226, NB#102841, NB#103032
+  * When account, do not display the presence button; Fixes: NB#96551
+  * Detach all roster contacts when reset the self contact; Fixes: NB#102599
+  * If the presence is UNSET and account is CONNECTED, fallback to
+    requested presence; Fixes: NB#103348
+  * Attach roster contact to temporary contact created via
+    osso_abook_temporary_contact_dialog_new(); Fixes: NB#98532
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 26 Feb 2009 11:16:00 +0100
+
+libosso-abook (4.20090219.1) unstable; urgency=low
+
+  * Introduce osso_abook_contact_get_persistent_uid() to prevent people from
+    storing temporary contact UIDs in databases.
+  * Add live search bar to OssoABookContactChooser; Fixes: NB#98429
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 19 Feb 2009 14:00:00 +0100
+
+libosso-abook (4.20090219) unstable; urgency=low
+
+  * Consider list-store ballon when reporting paths for removed contacts;
+    Fixes: NB#89920
+  * Introducing new name field in OssoABookMenuEntry, useful for context
+    sensitive menus. (Robert)
+  * Remove debug information from error banners; Fixes: NB#97779, NB#98010,
+    NB#99496
+  * Correct the signature of avatar-changed signal; Fixes: NB#101624
+  * Properly release tree-path in OssoABookListStore; Fixes: NB#101862
+  * Consider secondary title in SMS starter buttons; Fixes: NB#101185
+  * Translate result of mc_profile_action_get_name(); Fixes: NB#97603
+  * Provide custom icon for voicemail contact; Fixes: NB#95276
+  * Plug temporary UID leak in OssoABookAggregator; Fixes: NB#101863
+  * Make OssoABookTreeView show empty widget if required upon
+    construction; Fixes: NB#97811, NB#97190
+  * HildonButton instead of HildonDateButton as date editor; Fixes: NB#100850
+  * Reorder rows when a contact changes; Fixes: NB#101524, NB#101655
+  * Don't return the reference count of the pixbuf returned by
+    osso_abook_avatar_get_image(); Fixes: NB#101856
+  * Use gio when loading images for PHOTO fields of URI type.
+  * Don't show image editor when selecting predefined avatar (see NB#98906).
+  * Show default avatar in avatar chooser dialog; Fixes: NB#95214, NB#96504
+  * Avoid a double free of filename when sending by bt; Fixes: NB#101777,
+    NB#101838, NB#101875
+  * Fix rare crash when opening contact editor (see NB#92425, comment 3).
+  * Set a maximum width for the contact starter side panel and wrap the text
+    contained in it (Travis); Fixes: NB#101106
+  * Do not handle error when requesting, the channel handler is responsible of
+    that; Fixes: NB#101796
+  * Introduce osso_abook_weak_ref() and osso_abook_weak_unref().
+  * Plug message map leak in OssoABookContactDetailStore; Fixes: NB#98251
+  * Properly release row arrays in the list-store (Kristian Rietveld);
+    Fixes: NB#102366
+  * Do not fallback to email/account for the fullname; Fixes: NB#97201
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 19 Feb 2009 01:02:03 +0100
+
+libosso-abook (4.20090212) unstable; urgency=low
+
+  * Call osso_abook_contact_attribute_changed() from
+    osso_abook_contact_add/remove_value(); Fixes: NB#93917
+  * Use the proper domain for merge conflict dialog "Save" string (Travis);
+    Fixes: NB#94244
+  * Use the name sorting order in the contact chooser dialog; Fixes: NB#97421
+  * Add dependency on osso-countries-l10n package which is needed for the
+    address fields country editor.
+  * Append region to country field for display in the contact starter when the
+    current locale doesn't support regions in its postal address format string;
+    Fixes: NB#100104
+  * Modify country field's attribute when using fallback value to make sure it
+    gets saved when creating new contacts.
+  * Really use proper msgid on incomplete contacts; Fixes: NB#100424
+  * Consider secondary titles in contact starter buttons; Fixes: NB#100120,
+    NB#100432, NB#100439
+  * Set "empty-text" property of the file chooser invoked by the avatar
+    chooser dialog; Fixes: NB#97833
+  * Add type=cell,voice to TEL field generated in the contact editor when the
+    supplied contact doesn't have a TEL field yet; Fixes: NB#100660
+  * Add OssoABookProfileGroup.
+  * Correctly free data when files are sent via bt; Fixes: NB#101152
+  * Always add TYPE=cell when changing TEL attributes. This should improve
+    compatibility.
+  * Revert invalid padding above first-name in contact editor.
+  * Apply proper size to avatar widget in contact editor; Fixes: NB#98149
+  * Speed dial has dropped, mark related code with OSSO_ABOOK_HAVE_SPEED_DIAL;
+    Fixes: NB#100408
+  * More carefully initialize variables in avatar picture selection dialog;
+    Fixes: NB#99183
+  * Restore label padding in contact editor.
+  * Show SIP field in Add-field-dialog; Fixes: NB#97824
+  * Set the window title for the account chooser; Fixes: NB#97181
+  * Update phone number normalization to better match rtcom-call-ui.
+  * Re-accumulate capabilities after attaching and detaching roster contacts;
+    Fixes: NB#99163
+  * Use the new "hildon-row-tapped" signal to activate contacts;
+    Fixes: NB#93111, NB#98374
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 12 Feb 2009 10:45:32 +0100
+
+libosso-abook (4.20090205.1) unstable; urgency=low
+
+  * Don't show logical strings in IM contact details; Fixes: NB#98229
+  * Compress postal addresses to a single line to fit into a normal
+    finger-height button in the contact starter. Also cut references to a
+    related bug (which has been closed for a while) (Travis).
+  * Introduce osso_abook_contact_reject_for_uid()
+  * Rename osso_abook_contact_accept_with_uid().
+  * Don't remove IM contacts from roster when its field is removed
+    in contacts editor but other contacts still reference it.
+  * Insert padding above first-name in contact editor to achieve consistent
+    field padding; Fixes: NB#98149
+  * Put field type and IM user names into second row for contact editor;
+    Fixes: NB#99151
+  * Use predefined status type string from osso-statusbar-presence catalog
+    if there is no user set status message; See: NB#97946
+  * Always initialize presence labels of touch contact starter.
+  * Show IM contact details in contact starter after editing/adding fields;
+    Fixes: NB#98226
+  * Use appropriate logical ID when editing mecard; Fixes: NB#93745
+  * Close live search if all chars are deleted using backspace;
+    Fixes: NB#96222
+  * Replace the outdated icon size with HILDON_ICON_SIZE_FINGER (Travis);
+    Fixes: NB#97571
+  * Set the secondary text color in contact starter buttons to fit the theme
+    (Travis); Fixes: NB#97665
+  * Launch the new presence applet from mecard view; Fixes: NB#97654
+  * Use SmallSystemFont for attributes in the tree view; Fixes: NB#100298
+  * Do not update the store in an idle cb. Just avoid updates while
+    construction; Fixes: NB#97569.
+  * Chain up to parent in dispose, otherwise gtk_widget_destroy does not
+    work; Fixes: NB#100049.
+  * Don't show logical strings in email button labels; Fixes: NB#99901
+  * Fix refcounting of the book when commit/add a contact. Make sure the
+    book is not unreffed before getting the callback; Fixes: NB#99533
+  * If we create a shortcut for a temporary contact, instead of adding it
+    in the system book then modify and commit it again, we first modify
+    and then add it; Fixes: NB#99822
+  * If mc_account_get_display_name() returns NULL, fallback to
+    mc_profile_get_display_name(); Fixes: NB#100127; NB#94229
+  * libosso-abook/osso-abook-contact-chooser.c: Remove the Done button
+    from the action_area container of the dialog, in case of single
+    contact selection mode; Fixes: NB#96401
+
+ -- Xavier Claessens <xavier.claessens@maemo.org>  Thu,  5 Feb 2009 12:49:49 +0100
+
+libosso-abook (4.20090130.1) unstable; urgency=low
+
+  * Apply better layout to starter buttons with presence icon.
+  * Add libnavigation-dev to dependency list of libosso-abook-dev.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 30 Jan 2009 13:04:24 +0100
+
+libosso-abook (4.20090130) unstable; urgency=low
+
+  * Deprecate osso_abook_aggregator_guess_contact_uid().
+  * Attach roster contacts to the new real master contact when adding a
+    tmp master in the system book. Fixes: NB#95262 and NB#95953.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Fri, 30 Jan 2009 01:02:22 +0100
+
+libosso-abook (4.20090129) unstable; urgency=low
+
+  * Properly update title of service group when display name of the account
+    changes; Fixes: NB#95687
+  * Remove contacts from aggragator tables in run-first stage instead of
+    run-last stage of the contacts-removed signal; Fixes: NB#92601, NB#93126.
+  * Be more careful when removing temporary master contacts to avoid that IM
+    contacts suddenly disappear just because their state changed.
+  * Apply proper input methods to TEL and ZIP fields; Fixes: NB#94698
+  * Normalize TEL and ZIP contact editor fields before saving.
+  * Make sure the current row of the note field remains visible when the note
+    field grows out of its pannable area visible region.
+  * Properly style non-clickable contact starter details like notes.
+  * Use libnavigation to open addresses from vcards.
+  * Don't show logical strings in phone and SMS button labels; Fixes: NB#98531
+  * Don't show logical strings in address button labels; Fixes: NB#98892
+  * Also show icon for IM contact fields when there is no branding icon.
+  * Set the FN when merging contacts and do a little code clean-up (Travis).
+  * Make possible to use without a message map. Fixes: NB#96633
+  * Use a GtkDialog for the merge conflicts dialog, so that the user can
+    cancel it by clicking outside of it, as required by the UI spec (Travis).
+  * Skip ring account in self contact and make it work for accounts that
+    does not have a roster.
+  * Also consider titlebar height when calculating maximum dialog size.
+  * Repair deletion of contact fields; Fixes: NB#98055
+  * Prevent contact editor from being disposed before the contact saving
+    callback is called.
+  * Fix deletion of temporary master contact; Fixes: NB#91452
+  * Properly subscribe IM contacts from contact editor; Fixes: NB#93982
+  * Replace newlines and linefeed characters in vcard values with spaces
+    before displaying them in the GtkEntry widgets; Fixes: NB#98776
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 29 Jan 2009 14:02:22 +0100
+
+libosso-abook (4.20090122) unstable; urgency=low
+
+  * Reimplemented osso_abook_contact_can_block() and
+    osso_abook_contact_can_request_auth() without calling the deprecated
+    osso_abook_contact_get_accounts() function.
+  * Replace deprecated osso_abook_contact_get_accounts() function in
+    osso_abook_contact_get_name_components().
+  * Plug memory leak in _osso_abook_async_get_book_view(); Fixes: NB#98252
+  * Enumerate all possible fields and measure the label widgets to figure out
+    how much space need at minimum; Fixes: NB#98155
+  * Set contact name as the title in contact detail selector dialog;
+    Fixes: NB#94066
+  * Add gio style functions for asynchronous pixbuf loading and use them in
+    the avatar chooser dialog; Fixes: NB#98418
+  * Process postponed but still unclaimed roster contacts when all master
+    contacts are loaded; Fixes: NB#93869
+  * Unref message_map hashtable in OssoABookContactDetailStore during
+    disposal; partially fixes NB#98251
+  * Use generic presence icon when no branded presence icon can be found.
+  * Update contact-view paddings using a compromise between the UI designers
+    wishes and GTK+'s capabilities; Fixes: NB#98166
+  * Remove loading banner and related properties from OssoABookTreeModel;
+    Fixes: NB#98738
+  * Show address extensions and P.O. boxes in address labels; Fixes: NB#90307
+  * Directly attach roster contacts to their temporary master contacts; Fixes:
+    NB#98143
+  * Save the aggregator from creating ghost contacts after editing IM
+    contacts; Fixes: NB#91367
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 22 Jan 2009 10:56:23 +0100
+
+libosso-abook (4.20090115.1) unstable; urgency=low
+
+  * Set empty text in the contacts view; Fixes: NB#97811
+  * Let the aggregator track which rosters completed to avoid that a late
+    ready signal from the roster manager marks them as pending again.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 15 Jan 2009 16:05:50 +0100
+
+libosso-abook (4.20090115) unstable; urgency=low
+
+  * Add convenience API to extract accounts from contact detail selector and
+    contact field: osso_abook_contact_detail_selector_get_selected_field() and
+    osso_abook_contact_field_get_account().
+  * Detach idle handler when disposing contact chooser; Fixes: NB#97527
+  * Use proper textdomain for translating msgids in OssoABookMessageMapping;
+    Fixes: NB#97612, NB#97616
+  * Explicitly focus next row after removing a field in the contact editor;
+    Fixes: NB#97718
+  * Extend the range of characters osso_abook_normalize_phone_number()
+    preserves to better match reality.
+  * Use new avatar icon names as some icons with new name seem to have reached
+    the icon theme. Also don't hard-code the number of avatar icons.
+  * Use real message id when avatar loading fails; Fixes: NB#97779
+  * Rewrite attribute tracking in contact editor to avoid crashing after
+    failed commits; Fixes: NB#96237, NB#97567
+  * Show additional information in error banners in debug mode.
+  * Handle temporary master contacts in contact editor; Fixes: NB#97978
+  * Show specific error message when avatar is too large to fit into memory;
+    Fixes: NB#97814
+  * Introduce OssoABookMenuExtension class.
+  * Add G_GNUC_DEPRECATED attribute to deprecated functions. Add
+    -Wno-deprecated-declarations to your CFLAGS if you want to use
+    -Werror and still need to call such functions.
+  * Print warnings when deprecated functions are called.
+  * Use MC's Request API to start calls/Chats instead of opening URIs.
+
+ -- Mathias Hasselmann <mathias.hasselmann@maemo.org>  Thu, 15 Jan 2009 11:21:25 +0100
+
+libosso-abook (4.20090109) unstable; urgency=low
+
+  * Introduce new convenience functions: osso_abook_normalize_phone_number(),
+    osso_abook_query_phone_number(), osso_abook_aggregator_find_contacts(),
+    osso_abook_aggregator_find_contacts_for_phone_number(),
+    osso_abook_contact_matches_phone_number() and
+    osso_abook_contact_matches_username().
+  * Revert the decision to only store the account in OssoABookContact,
+    and now store the roster again. Remove osso_abook_contact_set_account().
+  * Fix some OssoABookWaitable issues.
+  * Introduce osso_abook_normalize_phone_number() and
+    osso_abook_query_phone_number().
+  * Fix a tricky race condition where a contact's avatar might not be updated 
+    when they change theirs (also known as the avatar/contact mismatch bug)
+    (Travis).
+  * Fix default values in settings dialog (Robert); Fixes: NB#96892
+  * Move avatar rendering from OssoABookAvatarEditorDialog to
+    OssoABookAvatarImage.
+  * Extract avatar dragging code into OssoABookAvatarEditor; Fixes: NB#97455
+  * Don't add contact fields which got canceled when requesting their initial
+    value; Fixes: NB#96032
+  * Properly reset avatar pixbuf and surface when pixbuf property of
+    OssoABookAvatarImage is set, and the avatar property is NULL;
+    Fixes: NB#97548
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Fri, 09 Jan 2009 15:03:55 +0200
+
+libosso-abook (4.20090105) unstable; urgency=low
+
+  * Emit property notification avatar-image or display-name related vcard
+    attributes are removed or added.
+  * New capability flag: OSSO_ABOOK_CAPS_PHONE, indicates that the contact has
+    a phone number. (Robert)
+  * Introduce osso_abook_account_manager_wait_until_ready().
+  * Update "Webpage" logical string and note icon in "add field" contact
+    editor dialog (Travis).
+  * Fix contact field ordering in contact starter, contact shortcut dialog,
+    and contact detail selector (according to the Layout Guide's ordering)
+    (Travis).
+  * Make the actionless contact fields their own separate group in contact
+    starter, contact shortcut dialog, and contact detail selector (put a huge
+    margin between them and the birthday/address/web group) (Travis).
+  * Include a contact's title (vCard field 'TITLE') in the contact starter
+    (Travis).
+  *  Replace the use of the deprecated hildon_uri_action_get_actions() and
+     clean up some related code. Cut out
+     osso_abook_contact_get_uri_for_action() and
+     osso_abook_contact_get_uri_action_for_action(); created
+     osso_abook_contact_open_uri_for_action() to replace them (Travis).
+  * Set an icon for 'Nickname' in the editor's 'add field' dialog (Travis).
+  * Make the default OssoABookMcAccountModel capability filter "none", so now
+    all enabled accounts, including rosterless accounts, show up in the model
+    by default (Travis).
+  * Update master uid attributes when subscribing to roster contacts.
+  * Extract OssoABookWaitable interface from OssoABookAccountManager and
+    add it to OssoABookRosterManager.
+  * Introduce OssoABookAggregator::state property.
+  * Implement OssoABookWaitable interface for OssoABookAggregator.
+  * Update the Resolve Merge Conflicts dialog 8.14 to the latest spec
+    (Travis).
+  * Add a way to exclude specific contacts from an OssoABookContactChooser
+    dialog (Travis).
+  * Fix bugs related to merging roster-only contacts (with each other or
+    master contacts) (Travis).
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Mon, 05 Jan 2009 11:55:55 +0200
+
+libosso-abook (4.20081217) unstable; urgency=low
+
+  * Fix some issues with the new aggregator code.
+  * Improve mouse tracking in the avatar editor.
+  * Improve rendering performance in the avatar editor.
+  * Require OssoABookContact for osso_abook_contact_is_roster_contact().
+  * Request finger size for icons in add-field dialog.
+  * Update Recent group icon name (Travis).
+  * Add buttons to call a phone number using a SIP/Skype account.
+  * Update email icon name (Travis).
+  * Cut out obsolete logical strings for the single-contact delete note
+    (Travis).
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Wed, 17 Dec 2008 16:28:24 +0200
+
+libosso-abook (4.20081212) unstable; urgency=low
+
+  * Allocate callback-closures on the heap; Fixes: NB#95374
+  * Disable fixed height mode for tree-view and make sure that all cell
+    renderers have fixed height set; Fixes: NB90685
+  * Don't try to open the system addressbook book synchroniously when creating
+    aggregators to prevent blocking.
+  * Dramatically simplify the aggregator by only considering the
+    X-OSSO-MASTER-UID attribute for binding roster contacts.
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Fri, 12 Dec 2008 14:22:20 +0200
+
+libosso-abook (4.20081211) unstable; urgency=low
+
+  * Add support to OssoABookTreeView to selectively-aggregate contact presence
+    based on a given McAccount (ie, the "global" presence displayed in the
+    view will only factor in the presence of roster contacts belonging to that
+    account's roster) (Travis).
+  * If an OssoABookTreeView has a selective-aggregation account, also
+    selectively aggregate the avatars (Travis).
+  * Make osso_abook_contact_commit() synchronious again, as suggested by its name.
+  * Make osso_abook_contact_commit() take an OssoABookContact* instead of an
+    EContact*; Fixes: NB#94209
+  * Detach from already known rosters when changing an aggregator's roster
+    manager. Fixes: NB#95042
+  * Use branded presence icons (if available) for the IM subviews (Travis).
+  * Fix a potential crasher if MC can't find a specific presence icon
+    (Travis).
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Thu, 11 Dec 2008 11:16:41 +0200
+
+libosso-abook (4.20081208) unstable; urgency=low
+
+  * Create an OssoABookMcAccountSelector dialog and related
+    OssoABookMcAccountModel to select an account from the enabled accounts in
+    Mission Control (Travis).
+  * In the contact starter, if a chat or VoIP call action can be initiated
+    from more than one account, prompt the user to select the account
+    (Travis).
+  * Store master UID attribute in multiple single-value attributes (instead of
+    one multi-value attribute) to support EBook queries on master UID.
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Mon,  8 Dec 2008 17:28:37 +0200
+
+libosso-abook (4.20081203) unstable; urgency=low
+
+  * Only show debug strings in UI when explicitly requested.
+  * Change default value of OssoABookAccountManager::account-capabilities to
+    only announce accounts with addressbook capability.
+  * Add the OssoABookAccountManager 'allowed-capabilities' property and rename
+    the 'account-capabilities' to 'required-capabilities' (and make it require
+    ALL flags, not just >= 1 of the contained flags) (Travis).
+  * Cut out insensitive widget messages, which are deprecated in Hildon 2.2
+    (Travis).
+  * Update avatar editor to Fremantle style.
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Wed,  3 Dec 2008 18:25:41 +0200
+
+libosso-abook (4.20081128) unstable; urgency=low
+
+  * Make contact starter mailing address buttons appear with auto-height to
+    make the address fit (Travis); Fixes: NB#91253
+  * Add Fremantle style avatar chooser dialog.
+  * Use proper function to initialize text field value; Fixes: NB#92187
+  * Deprecate osso_abook_account_manager_connect_all_with_default_presence().
+  * Use new libmcclient API; Fixes: NB#92362, NB#92365
+  * Properly align labels of horizontal touch buttons. Fixes: NB#93443
+  * Deprecate OssoABookBookViewGroup.
+  * Fix crash when calling from temporary contact starter dialog; Fixes: NB#93767
+  * Properly limit the contact starter width.
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Fri, 28 Nov 2008 15:02:33 +0200
+
+libosso-abook (4.20081121) unstable; urgency=low
+
+  * Remove inappropriate attribute freeing in SpeedDialSettingsDialog (which
+    can lead to a segfault) (Travis).
+  * Reduce number of presence type icons; Fixes: NB#92237
+  * Prevent crash in osso_abook_contact_delete(); Fixes: NB#92592
+  * Make the speed dial settings dialog make better use of the screen and
+    handle screen size changes (Travis).
+  * Make the ContactChooser adjust its height for screen size changes
+    (Travis).
+  * Make the ContactDetailSelector adjust its height for screen size changes
+    (Travis).
+  * Make DEB_BUILD_OPTIONS work again; Fixes: NB#92839
+  * Remove redundant caps, presence and avatar columns from OssoABookGroup,
+    OssoABookListStore, OssoABookContactModel, and the contact-activated
+    signals of OssoABookAvatarView and OssoABookContactView.
+  * Deprecate outdated widgets and classes (Travis).
+  * Reset name caches in osso_abook_contact_reset(); Fixes: NB#91430
+  * Make presence status notifications work again in the main view;
+    Fixes: NB#92442
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Fri, 21 Nov 2008 14:30:29 +0200
+
+libosso-abook (4.20081113) unstable; urgency=low
+
+  * Improve multi-selection mode of OssoABookContactChooser; Fixes: NB#91753
+  * Update the table mapping presence types to icon names; Fixes: NB#91406
+  * Update i18n strings for the contact starter to match UI spec (Travis).
+  * Strip "http://" prefix from any displayed URLs (Travis).
+  * Use the new logical string "addr_ti_view_select_contacts" in the Contact
+    Chooser (Travis).
+  * Make osso_abook_mc_account_get_bound_name() public for osso-addressbook to
+    use (Travis).
+  * Translate English country names in contact-editor.
+  * Support portrait mode in TouchContactStarter (Travis).
+  * Remove inappropriate attribute freeing in SpeedDialSettingsDialog (which
+    can lead to a segfault) (Travis).
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Thu, 13 Nov 2008 17:34:37 +0200
+
+libosso-abook (4.20081110) unstable; urgency=low
+
+  * Replace deprecated widgets with modern ones (Travis).
+  * Make OssoABookContactChooser a regular HildonDialog.
+  * Create custom buttons where we need to include a presence status (Travis).
+  * Always use OssoABookContactChooser for contact selection.
+    Affects speed dial settings and temporary contact merging.
+  * Provide default aggregator for convenient and efficience.
+  * Merge known contacts when attaching running aggregators to contact models;
+    Fixes: NB#91202
+  * Also use company name as display name fallback (see NB#91011).
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Mon, 10 Nov 2008 12:49:59 +0200
+
+libosso-abook (4.20081029) unstable; urgency=low
+
+  * Update to UI Spec changes in versions 1.3 and before (Travis).
+  * Refactor to propagate master contact count for All Contacts window title 
+    requirement (Travis).
+  * Add OssoABookTouchContactStarter::action-started signal to let an external
+    caller know when the user clicks an action button (Travis).
+  * Drop OssoABookAccountManager::used-channel-count property;
+    Fixes: NB#88280, NB#90217
+  * Properly iterate attributes when resetting contacts; Fixes: NB#90647
+  * Use the new logical string for displaying "All Contacts (<number of
+    contacts>)" in the addressbook title (Travis); Fixes: NB#90877
+  * Show error banner instead of saving contacts without name; Fixes: NB#90292
+  * Properly transfer focus to complex editor widgets; Fixes: NB#90290
+  * Save value from note editors; Fixes: NB#90290
+  * Use EContactDate for parsing date attributes; Fixes: NB#90287
+  * Add OssoABookContactShortcutDialog
+  * Explicitly set picker-button value in "value-changed" handler; Fixes: NB#90733
+  * Split OssoABookListStoreSortKey into OssoABookListStoreSortMode and
+    OssoABookNameOrder portion; Fixes: NB#90120
+  * Disable auto-capitalization for e-mail addresses fields in the contact
+    editor; Fixes: NB#91034
+  * Make osso_abook_mc_account_get_display_string() a public function
+    (osso-addressbook already depended on it, but only had access by
+    accident) (Travis).
+  * Make sure service groups get deleted when their corresponding account is
+    removed from the system (Travis).
+  * Fix double-free crasher when initiating a chat or call from the contact
+    starter (Travis).
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Wed, 29 Oct 2008 16:39:45 +0200
+
+libosso-abook (4.20081022) unstable; urgency=low
+
+  * Make contact edits show up in the contact starter (Xavier and Travis)
+  * Use tp_connection_presence_type_cmp_availability() to compare presence
+    status in account manager and contacts; Fixes: NB#88279
+  * Change function names of OssoABookPresence property accessors to fully
+    match the property name.
+  * Also consider memory address to create a strict order for contact fields;
+    Fixes: NB#90313
+  * Factor out a function to display the Select Contact Detail dialog,
+    followed by the Send Contact Detail dialog (Travis).
+  * Enable nickname display method; Fixes: NB#90417
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Wed, 22 Oct 2008 17:08:31 +0300
+
+libosso-abook (4.20081015) unstable; urgency=low
+
+  * Use the same look in detail selector than in contact starter
+  * Fix presence widget in contact starter
+  * Store Voicemail Contact in gconf (Robert)
+  * Update Speed Dial, slot #1 isn't preserved for Voicemail anymore (Robert)
+  * Support MC accounts in add fields dialog
+  * Restore saving of new and edited contacts
+  * Various other small improvements on the contact-editor
+  * Resort to profile caps when a roster contact doesn't have the
+    X-TELEPATHY-CAPABILITIES attribute
+  * Remove deprecated speed-dial mechanism
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Wed, 15 Oct 2008 18:07:32 +0300
+
+libosso-abook (4.20081010.1) unstable; urgency=low
+
+  * Update ServiceGroup to be useful for filtering IM groups in the new IM
+    subview (Travis).
+  * Support NULL contacts in OssoABookContactField (Mathias); Fixes: NB#89565
+  * Some small improvements on contact-editor (Mathias)
+  * Update package dependencies (Mathias)
+  * Remove OssoABookExtension (Mathias)
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Fri, 10 Oct 2008 14:16:00 +0300
+
+libosso-abook (4.20081010) unstable; urgency=low
+
+  * Fields should show up now in contact-editor; Fixes: NB#89565
+  * Renamed osso-addressbook-1.0.pc (and contents) to libosso-abook-1.0.pc
+  * Various improvements on contact-editor (Mathias)
+  * Various improvements on contact-detail selector (Xavier)
+  * Various improvements on bt handsfree settings (Robert)
+  * Create real temporary master contacts instead of reusing unmatched roster
+    contacts for consistency (Mathias)
+  * Require libmcclient-5.0-beta33
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Fri, 10 Oct 2008 11:14:55 +0300
+
+libosso-abook (4.20081003) unstable; urgency=low
+
+  * Change TouchContactStarter into a generic GtkBin that can be packed into
+    any container of the caller's choice (Travis).
+  * Make sure the TouchContactStarter sets itself as transient for its parent
+    window (Travis).
+  * Cut some vestigial code from TouchContactStarter (inherited from
+    ContactStarter) (Travis).
+  * Display the contact's presence icon in the action buttons (Travis).
+  * Actually base the content of the TouchContactStarter IM buttons on the
+    contact, not the associated account (Travis).
+  * First implementation of settings and bt handsfree settings dialogs
+    (Robert)
+  * Various updates on the contact-editor (Mathias)
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Fri,  3 Oct 2008 14:10:37 +0300
+
+libosso-abook (4.20080930) unstable; urgency=low
+
+  * Display mailing address action buttons in TouchContactStarter (Travis).
+  * Set the TouchContactStarter geo-location label based on a location encoded
+    in the contact's status message (Travis).
+  * Display the correct IM icon in TouchContactStarter (Travis).
+  * Fix TouchContactStarter crasher when a BDAY is "" (Travis).
+  * Don't pass NULL in D-Bus strings (Mathias); Fixes: NB#86763.
+  * Extract from osso-addressbook (Mathias)
+
+ -- Joergen Scheibengruber <jorgen.scheibengruber@nokia.com>  Tue, 30 Sep 2008 13:22:09 +0300

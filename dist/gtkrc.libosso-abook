@@ -1,0 +1,87 @@
+# GTK+ theming rules for Contacts application
+# Override by using gtkrc priorities:
+#
+#   class "OssoABookAvatarImage"
+#   style:highest "my-avatar-image-style"
+# ---------------------------------------------------------------------------
+
+# Fine-tune buttons which contain an avatar image
+# ---------------------------------------------------------------------------
+style "osso-abook-avatar-button-style" {
+        # remove any padding
+        GtkButton::inner-border = { 0, 0, 0, 0 }
+
+        xthickness = 2
+        ythickness = 2
+
+        # avoid prelight effect
+        engine "sapwood" {
+                image {
+                        function = BOX
+                        state = PRELIGHT
+                }
+        }
+}
+
+widget "*.osso-abook-avatar-button"
+style "osso-abook-avatar-button-style"
+
+# Apply SecondaryTextColor to avatar image border
+# ---------------------------------------------------------------------------
+style "osso-abook-avatar-image-default-style" = "osso-color-themeing" {
+        OssoABookAvatarImage::border-width = 1
+        fg[NORMAL] = @SecondaryTextColor
+}
+
+class "OssoABookAvatarImage"
+style "osso-abook-avatar-image-default-style"
+
+# Apply DefaultTextColor and drop shadow to avatar images within buttons
+# ---------------------------------------------------------------------------
+style "osso-abook-avatar-image-clickable-style" = "osso-color-themeing" {
+        OssoABookAvatarImage::border-width = 1
+        OssoABookAvatarImage::shadow-size = 5
+        fg[NORMAL] = @ButtonTextColor
+        fg[ACTIVE] = @ButtonTextPressedColor
+}
+
+widget_class "*.<GtkButton>.<OssoABookAvatarImage>"
+style "osso-abook-avatar-image-clickable-style"
+
+# Disable highlighting of tapped row for communication history view
+# ---------------------------------------------------------------------------
+# At first moment it seems rather fragile to simply copy the rules for NORMAL
+# state, but it's expected that any 3rd party themes will use the Theme Maker
+# layout template for gtkrc files. Therefore filenames and such should match.
+# ---------------------------------------------------------------------------
+style "osso-abook-communication-history" = "fremantle-touchlist" {
+        engine "sapwood" {
+                image {
+                        function = FLAT_BOX
+                        detail = "cell_even"
+                        state = SELECTED
+                        file = "../images/TouchListBackgroundNormal.png"
+                        border = { 4, 4, 0, 0}
+                }
+
+                image {
+                        function = FLAT_BOX
+                        detail = "cell_odd"
+                        state = SELECTED
+                        file = "../images/TouchListBackgroundNormal.png"
+                        border = { 4, 4, 0, 0}
+                }
+
+                image {
+                        function = FLAT_BOX
+                        detail = "*ruled"
+                        state = SELECTED
+                        file = "../images/TouchListBackgroundNormal.png"
+                        border = { 4, 4, 0, 0}
+                }
+        }
+}
+
+widget "*.osso-abook-communication-history"
+style "osso-abook-communication-history"
+

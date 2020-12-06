@@ -1,4 +1,4 @@
-SUBDIRS = lib
+SUBDIRS = lib dist pkgconfig
 
 MAINTAINERCLEANFILES = \
 	Makefile.in configure config.h.in config.guess compile depcomp missing \
