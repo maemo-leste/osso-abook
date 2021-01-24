@@ -1447,3 +1447,241 @@ osso_abook_list_store_cancel_loading(OssoABookListStore *store)
   priv->roster_is_running = FALSE;
 
 }
+
+void
+osso_abook_list_store_merge_rows(OssoABookListStore *store, GList *rows)
+{
+  OssoABookListStorePrivate *priv;
+  gint size;
+  gint *new_order;
+  gint new_rows_count;
+  int new_count;
+  int new_order_count;
+  GtkTreePath *path_reordered = NULL;
+  GtkTreePath *path_changed;
+  OssoABookListStoreClass *klass;
+  GtkTreeIter iter;
+
+  g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE(store));
+
+  klass = OSSO_ABOOK_LIST_STORE_GET_CLASS(store);
+
+  g_return_if_fail(NULL != klass->row_added);
+
+  priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
+  new_rows_count = g_list_length(rows);
+
+  if (!new_rows_count)
+    return;
+
+  osso_abook_list_store_move_baloon(store);
+  priv->balloon_size = new_rows_count;
+  priv->balloon_offset = priv->count;
+
+  new_count = priv->count + new_rows_count;
+
+  if (new_count)
+    size = 1 << (8 * sizeof(gint) - __builtin_clz(new_count));
+  else
+    size = 2;
+
+  if (priv->size < size)
+  {
+    priv->rows = g_realloc_n(priv->rows, size, sizeof(priv->rows[0]));
+    priv->size = size;
+  }
+
+  new_order_count = priv->extra + priv->count;
+
+  if (new_order_count < new_count)
+    new_order_count = new_count;
+
+  new_order = g_alloca(new_order_count * sizeof(new_order[0]));
+
+  priv->stamp++;
+  iter.user_data = store;
+  iter.stamp = priv->stamp;
+
+  if (!priv->sort_func && !priv->group_sort_func)
+  {
+    path_changed = gtk_tree_path_new_from_indices(priv->count, -1);
+
+    for (priv->balloon_size = 0; rows; rows = rows->next)
+    {
+      void (*f)(GtkTreeModel *, GtkTreePath *, GtkTreeIter *);
+      gint idx = priv->count;
+
+      priv->rows[idx] = rows->data;
+      ((OssoABookListStoreRow *)(rows->data))->offset = idx;
+
+      priv->count++;
+
+      if (priv->extra > 0)
+      {
+        priv->extra--;
+        f = gtk_tree_model_row_changed;
+      }
+      else
+        f = gtk_tree_model_row_inserted;
+
+      klass->row_added(store, priv->rows[idx]);
+      iter.user_data2 = GINT_TO_POINTER(idx);
+      f(GTK_TREE_MODEL(store), path_changed, &iter);
+      gtk_tree_path_next(path_changed);
+    }
+  }
+  else
+  {
+    GList *l;
+    OssoABookListStoreRow **sorted;
+    OssoABookListStoreRow **p;
+    OssoABookListStoreRow **b;
+    OssoABookListStoreRow **a;
+    OssoABookListStoreRow **dst_iter;
+    gboolean order_changed;
+
+    p = sorted = g_alloca(new_rows_count * sizeof(sorted[0]));
+
+    for (l = rows; l; l = l->next)
+      *p++ = l->data;
+
+    g_qsort_with_data(sorted, new_rows_count, sizeof(sorted[0]),
+                      osso_abook_list_store_sort, store);
+    path_changed = gtk_tree_path_new_from_indices(priv->count, -1);
+
+    a = &sorted[new_rows_count - 1];
+    b = &priv->rows[priv->count - 1];
+    dst_iter = &priv->rows[new_count - 1];
+
+    while (1)
+    {
+      if (a <= sorted)
+      {
+        g_warn_if_fail(priv->balloon_offset >= 0);
+
+        if (path_reordered)
+          gtk_tree_path_free(path_reordered);
+
+        break;
+      }
+
+      g_warn_if_fail(dst_iter >= priv->rows);
+
+      if (b >= priv->rows && osso_abook_list_store_sort(a, b, store) <= 0)
+      {
+        OssoABookListStoreRow **tmp = dst_iter;
+
+        *dst_iter = *b;
+        b--;
+        gtk_tree_path_prev(path_changed);
+        priv->balloon_offset--;
+        (*tmp)->offset = tmp - priv->rows;
+      }
+      else
+      {
+        *dst_iter = *a;
+        a--;
+        priv->balloon_size--;
+        priv->count++;
+
+        if (priv->extra <= 0)
+          order_changed = FALSE;
+        else
+        {
+          gint offset;
+
+          priv->extra--;
+          offset = dst_iter - priv->rows - priv->balloon_size;
+
+          if (offset <= 0)
+            offset = 1;
+          else
+          {
+            for (int i = 0; i < offset; i++)
+              new_order[i] = i;
+
+            offset++;
+          }
+
+          new_order[offset - 1] = priv->count - 1;
+
+          if (priv->count > offset)
+          {
+            gint *t = &new_order[offset];
+
+            do
+            {
+              *t = offset++ - 1;
+              ++t;
+            }
+            while (priv->count > offset);
+          }
+
+          if (new_order_count > offset)
+          {
+            gint *t = &new_order[offset];
+
+            do
+            {
+              *t = offset++;
+              ++t;
+            }
+            while (offset != new_order_count);
+          }
+
+          order_changed = TRUE;
+        }
+
+        (*dst_iter)->offset = dst_iter - priv->rows;
+
+        if (*dst_iter)
+        {
+          iter.user_data2 =
+              GINT_TO_POINTER((*dst_iter)->offset - priv->balloon_size);
+          OSSO_ABOOK_NOTE(
+                LIST_STORE,
+                "%s@%p: merging %s (%s) at %d (count=%d, extra=%d, order-changed=%d)",
+                get_store_book_uri(store),
+                store,
+                "x",
+                "y",
+                (*dst_iter)->offset - priv->balloon_size,
+                priv->count,
+                priv->extra,
+                order_changed);
+
+          klass->row_added(store, *dst_iter);
+
+          if (order_changed)
+          {
+            if (!path_reordered)
+              path_reordered = gtk_tree_path_new();
+
+            gtk_tree_model_rows_reordered((GtkTreeModel *)store, path_reordered,
+                                          0, new_order);
+            gtk_tree_model_row_changed(
+                  (GtkTreeModel *)store, path_changed, &iter);
+          }
+          else
+          {
+            gtk_tree_model_row_inserted(
+                  (GtkTreeModel *)store, path_changed, &iter);
+          }
+        }
+      }
+
+      if (a >= sorted)
+        dst_iter--;
+    }
+  }
+
+  gtk_tree_path_free(path_changed);
+
+  g_warn_if_fail(priv->count <= priv->size);
+  g_warn_if_fail(0 == priv->balloon_size);
+  g_warn_if_fail(NULL != priv->rows);
+
+  priv->balloon_offset = G_MAXINT;
+
+  return;
+}
