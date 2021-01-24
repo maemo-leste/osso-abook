@@ -53,7 +53,7 @@ testam_LDFLAGS = -no-undefined
 lib_LTLIBRARIES = libosso-abook-@API_VERSION_MAJOR@.la
 
 libosso_abook_@API_VERSION_MAJOR@_includedir = \
-		$(includedir)/$(PACKAGE)-$(API_VERSION_MAJOR)/$(PACKAGE)
+		$(includedir)/lib$(PACKAGE)-$(API_VERSION_MAJOR)/lib$(PACKAGE)
 
 libosso_abook_@API_VERSION_MAJOR@_la_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
@@ -111,7 +111,20 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-debug.h \
 		osso-abook-presence.h \
 		osso-abook-contact.h \
-		osso-abook-errors.h
+		osso-abook-errors.h \
+		osso-abook-init.h \
+		osso-abook-contact-model.h \
+		osso-abook-list-store.h \
+		osso-abook-avatar.h \
+		osso-abook-types.h \
+		osso-abook-roster-manager.h \
+		osso-abook-account-manager.h \
+		osso-abook-tree-view.h \
+		osso-abook-filter-model.h \
+		osso-abook-all-group.h \
+		osso-abook-group.h \
+		osso-abook-roster.h \
+		osso-abook-contact-filter.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
 		osso-abook-enums.h
