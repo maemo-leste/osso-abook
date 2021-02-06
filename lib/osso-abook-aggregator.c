@@ -2312,7 +2312,6 @@ osso_abook_aggregator_lookup(OssoABookAggregator *aggregator, const char *uid)
   return NULL;
 }
 
-#if 0
 GList *
 osso_abook_aggregator_find_contacts_for_phone_number(
     OssoABookAggregator *aggregator, const char *phone_number,
@@ -2333,4 +2332,3 @@ osso_abook_aggregator_find_contacts_for_phone_number(
 
   return contacts;
 }
-#endif

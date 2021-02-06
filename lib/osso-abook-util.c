@@ -380,3 +380,133 @@ osso_abook_query_phone_number(const char *phone_number, gboolean fuzzy_match)
 
   return query;
 }
+
+struct phone_sort_data
+{
+  OssoABookContact *contact;
+  int weigth;
+};
+
+static gint
+sort_phone_number_matches(struct phone_sort_data *a, struct phone_sort_data *b)
+{
+  int w1 = a->weigth;
+  int w2 = b->weigth;
+
+  if ( w1 > w2 )
+    return -1;
+
+  if (w1 < w2)
+    return 1;
+
+  return osso_abook_contact_uid_compare(a->contact, b->contact);
+}
+
+GList *
+osso_abook_sort_phone_number_matches(GList *matches, const char *phone_number)
+{
+  char *norm_phone_num;
+  GList *l;
+  char *norm_phone_num_unprefixed;
+
+  g_return_val_if_fail(NULL != phone_number, matches);
+  g_return_val_if_fail(0 != *phone_number, matches);
+
+  norm_phone_num = e_normalize_phone_number(phone_number);
+  norm_phone_num_unprefixed =
+      &norm_phone_num[strcspn(norm_phone_num, "PpWwXx") - 1];
+
+  for (l = matches; l; l = l->next)
+  {
+    struct phone_sort_data *data = g_slice_new0(struct phone_sort_data);
+    const char *val = NULL;
+    GList *attr;
+    gboolean a, b;
+    char *p, *q;
+    char *norm_val;
+    size_t norm_val_len;
+    char *norm_val_unprefixed;
+
+    data->contact = l->data;
+    l->data = data;
+
+    for (attr = e_vcard_get_attributes(E_VCARD(data->contact)); attr;
+                                       attr = attr->next)
+    {
+      if (!strcmp(e_vcard_attribute_get_name(attr->data), "TEL"))
+      {
+        GList *vals = e_vcard_attribute_get_values(attr->data);
+
+        if (vals)
+        {
+          val = vals->data;
+
+          if (val && *val)
+            break;
+        }
+      }
+    }
+
+    if (!val || !*val)
+      continue;
+
+    if (!strcmp(val, phone_number))
+    {
+      data->weigth = G_MAXINT;
+      break;
+    }
+
+    norm_val = e_normalize_phone_number(val);
+    norm_val_len = strcspn(norm_val, "PpWwXx");
+    p = norm_phone_num_unprefixed;
+    norm_val_unprefixed = &norm_val[norm_val_len - 1];
+    q = &norm_val[norm_val_len - 1];
+
+    while (1)
+    {
+      a = q >= norm_val;
+      b = p >= norm_phone_num;
+
+      if (b)
+        b = q >= norm_val;
+
+      if (!b)
+        break;
+
+      if (*(p-- - 1) != *(q-- - 1))
+      {
+        a = norm_val <= q;
+        break;
+      }
+    }
+
+    if (p < norm_phone_num)
+      a = TRUE;
+
+    if (a)
+    {
+      gint w1 = data->weigth;
+      gint w2 = norm_val_unprefixed - q - 1;
+
+      if (w1 < w2)
+        data->weigth = w2;
+      else
+        data->weigth = w1;
+    }
+
+    g_free(norm_val);
+  }
+
+  g_free(norm_phone_num);
+  matches = g_list_sort(matches, (GCompareFunc)sort_phone_number_matches);
+
+  for (l = matches; l; l = l->next)
+  {
+    struct phone_sort_data *data = l->data;
+
+    l->data = data->contact;
+    g_slice_free(struct phone_sort_data, data);
+  }
+
+  return matches;
+}
