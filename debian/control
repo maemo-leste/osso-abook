@@ -13,11 +13,11 @@ Build-Depends:
  libtelepathy-glib-dev,
  librtcom-eventlogger-dev,
  maemo-launcher-dev,
+ libhildonfm2-dev (>= 2.17),
+ libhildonmime-dev,
 Section: libs
 Standards-Version: 4.3.0
 # Packages that could/should go in Build-Depends, but are currently missing:
-#libhildonfm2-dev (>= 2.17),
-#libhildonmime-dev,
 #libgtk2.0-dev,
 #libdbus-glib-1-dev,
 #conbtdialogs-dev,
@@ -56,7 +56,15 @@ Section: libdevel
 Architecture: any
 Multi-arch: same
 Depends:
+ libosso-abook (= ${source:Version}),
  ${misc:Depends},
+ libglib2.0-dev,
+ libgtk2.0-dev,
+ libhildonfm2-dev,
+ libhildonmime-dev,
+ libebook1.2-dev,
+ libtelepathy-glib-dev,
+ libosso-dev,
  pkg-config,
 Description: Library to access addressbook and presence information
  .
