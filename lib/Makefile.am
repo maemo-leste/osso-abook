@@ -102,7 +102,9 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-contact-filter.c \
 		osso-abook-eventlogger.c \
 		osso-abook-quarks.c \
-		osso-abook-account-manager.c
+		osso-abook-account-manager.c \
+		osso-abook-service-group.c \
+		osso-abook-contact-subscriptions.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-aggregator.h \
@@ -124,7 +126,11 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-all-group.h \
 		osso-abook-group.h \
 		osso-abook-roster.h \
-		osso-abook-contact-filter.h
+		osso-abook-contact-filter.h \
+		osso-abook-service-group.h \
+		osso-abook-waitable.h \
+		osso-abook-gconf-contact.h \
+		osso-abook-contact-subscriptions.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
 		osso-abook-enums.h
