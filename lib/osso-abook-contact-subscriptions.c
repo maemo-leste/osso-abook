@@ -177,3 +177,9 @@ osso_abook_contact_subscriptions_remove(
 
   return FALSE;
 }
+
+OssoABookContactSubscriptions *
+osso_abook_contact_subscriptions_new(void)
+{
+  return g_object_new(OSSO_ABOOK_TYPE_CONTACT_SUBSCRIPTIONS, NULL);
+}
