@@ -74,8 +74,8 @@ static void osso_abook_aggregator_osso_abook_waitable_iface_init(
 static void osso_abook_aggregator_real_set_roster_manager(
     OssoABookAggregator *aggregator, OssoABookRosterManager *roster_manager);
 
-#define OSSO_ABOOK_AGGREGATOR_PRIVATE(contact) \
-                ((OssoABookAggregatorPrivate *)osso_abook_aggregator_get_instance_private(contact))
+#define OSSO_ABOOK_AGGREGATOR_PRIVATE(agg) \
+                ((OssoABookAggregatorPrivate *)osso_abook_aggregator_get_instance_private(agg))
 
 G_DEFINE_TYPE_WITH_CODE(
   OssoABookAggregator,
@@ -2250,3 +2250,87 @@ osso_abook_aggregator_set_roster_manager(OssoABookAggregator *aggregator,
                "roster-manager", manager,
                NULL);
 }
+
+GList *
+osso_abook_aggregator_resolve_master_contacts(OssoABookAggregator *aggregator,
+                                              OssoABookContact *contact)
+{
+  OssoABookAggregatorPrivate *priv;
+  gpointer temp_master;
+  GHashTable *tmp;
+  GList *l;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AGGREGATOR(aggregator), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+  temp_master = g_hash_table_lookup(
+        priv->temp_master_contacts,
+        e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID));
+
+  tmp = g_hash_table_new(g_direct_hash, g_direct_equal);
+
+  if (temp_master)
+    g_hash_table_insert(tmp, temp_master, NULL);
+
+  for (l = osso_abook_contact_get_master_uids(contact); l; l = l->next)
+  {
+    gpointer c = g_hash_table_lookup(priv->master_contacts, l->data);
+
+    if (c)
+      g_hash_table_insert(tmp, c, NULL);
+  }
+
+  l = g_hash_table_get_keys(tmp);
+  g_hash_table_destroy(tmp);
+  l = g_list_sort(l, (GCompareFunc)osso_abook_contact_uid_compare);
+
+  return l;
+}
+
+GList *
+osso_abook_aggregator_lookup(OssoABookAggregator *aggregator, const char *uid)
+{
+  OssoABookAggregatorPrivate *priv;
+  OssoABookContact * c;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AGGREGATOR(aggregator), NULL);
+  g_return_val_if_fail(NULL != uid, NULL);
+
+  priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
+
+  c = g_hash_table_lookup(priv->master_contacts, uid);
+
+  if (c)
+    return g_list_prepend(NULL, c);
+
+  c = g_hash_table_lookup(priv->roster_contacts, uid);
+
+  if (c)
+      return osso_abook_aggregator_resolve_master_contacts(aggregator, c);
+
+  return NULL;
+}
+
+#if 0
+GList *
+osso_abook_aggregator_find_contacts_for_phone_number(
+    OssoABookAggregator *aggregator, const char *phone_number,
+    gboolean fuzzy_match)
+{
+  EBookQuery *query;
+  GList *contacts;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AGGREGATOR(aggregator), NULL);
+  g_return_val_if_fail(!IS_EMPTY (phone_number), NULL);
+
+  query = osso_abook_query_phone_number(phone_number, fuzzy_match);
+  contacts = osso_abook_aggregator_find_contacts(aggregator, query);
+  e_book_query_unref(query);
+
+  if (contacts && contacts->next)
+    return osso_abook_sort_phone_number_matches(contacts, phone_number);
+
+  return contacts;
+}
+#endif
