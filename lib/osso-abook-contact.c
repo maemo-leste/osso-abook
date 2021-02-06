@@ -2500,3 +2500,34 @@ osso_abook_contact_get_profile(OssoABookContact *contact)
 
   return NULL;
 }
+
+const char *
+osso_abook_contact_get_persistent_uid(OssoABookContact *contact)
+{
+  OssoABookContactPrivate *priv;
+  const char *uid;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+
+  if (uid && *uid && !osso_abook_is_temporary_uid(uid))
+    return uid;
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  if (priv->roster_contacts)
+  {
+    GHashTableIter iter;
+
+    g_hash_table_iter_init(&iter, priv->roster_contacts);
+
+    while (g_hash_table_iter_next(&iter, (gpointer *)&uid, NULL))
+    {
+      if (uid && *uid)
+        return uid;
+    }
+  }
+
+  return NULL;
+}
