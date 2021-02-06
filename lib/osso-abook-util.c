@@ -243,3 +243,140 @@ osso_abook_tp_account_get_bound_name(TpAccount *account)
 
   return bound_name;
 }
+
+/* move to EDS if needed */
+/**
+ * e_normalize_phone_number:
+ * @phone_number: the phone number
+ *
+ * Normalizes @phone_number. Comma, period, parentheses, hyphen, space,
+ * tab and forward-slash characters are stripped. The characters 'p',
+ * 'w' and 'x' are copied in uppercase. A plus only is valid at the
+ * beginning, or after a number suppression prefix ("*31#", "#31#"). All
+ * other characters are copied verbatim.
+ *
+ * Returns: A newly allocated string containing the normalized phone
+ * number.
+ */
+static char *
+e_normalize_phone_number (const char *phone_number)
+{
+  GString *result;
+  const char *p;
+
+  /* see cui_utils_normalize_number() of rtcom-call-ui for reference */
+  g_return_val_if_fail (NULL != phone_number, NULL);
+
+  result = g_string_new (NULL);
+
+  for (p = phone_number; *p; ++p) {
+    switch (*p) {
+      case 'p': case 'P':
+        /* Normalize this characters to P -
+                         * pause for one second. */
+        g_string_append_c (result, 'P');
+        break;
+
+      case 'w': case 'W':
+        /* Normalize this characters to W -
+                         * wait until confirmation. */
+        g_string_append_c (result, 'W');
+        break;
+
+      case 'x': case 'X':
+        /* Normalize this characters to X -
+                         * alias for 'W' it seems */
+        g_string_append_c (result, 'X');
+        break;
+
+      case '+':
+        /* Plus only is valid on begin of phone numbers and
+                         * after number suppression prefix */
+        if (0 == result->len ||
+            strcmp (result->str, "*31#") ||
+            strcmp (result->str, "#31#"))
+          g_string_append_c (result, *p);
+
+        break;
+
+      case ',': case '.': case '(': case ')':
+      case '-': case ' ': case '\t': case '/':
+        /* Skip commonly used delimiters */
+        break;
+
+      case '#': case '*':
+      case '0': case '1': case '2': case '3': case '4':
+      case '5': case '6': case '7': case '8': case '9':
+      default:
+        /* Directly accept all other characters. */
+        g_string_append_c (result, *p);
+        break;
+
+    }
+  }
+
+  return g_string_free (result, FALSE);
+}
+
+EBookQuery *
+osso_abook_query_phone_number(const char *phone_number, gboolean fuzzy_match)
+{
+  gsize len;
+  EBookQuery *query;
+  gchar *phone_num = NULL;
+  int nqs = 1;
+  EBookQuery *qs[2];
+
+  g_return_val_if_fail(!IS_EMPTY(phone_number), NULL);
+
+  qs[0] = e_book_query_vcard_field_test("TEL", E_BOOK_QUERY_IS, phone_number);
+  len = strcspn(phone_number, "PpWwXx");
+
+  if (len < strlen(phone_number) )
+  {
+    phone_num = g_strndup(phone_number, len);
+
+    if (phone_num)
+    {
+      qs[1] = e_book_query_vcard_field_test("TEL", E_BOOK_QUERY_IS, phone_num);
+      nqs = 2;
+    }
+  }
+
+  if (fuzzy_match)
+  {
+    EBookQueryTest test;
+    char *normalized;
+    size_t normalized_len;
+    const char *phone_num_norm;
+
+    if (phone_num)
+      phone_number = phone_num;
+
+    normalized = e_normalize_phone_number(phone_number);
+    normalized_len = strlen(normalized);
+
+    if (normalized_len <= 6)
+    {
+      phone_num_norm = normalized;
+      test = E_BOOK_QUERY_IS;
+    }
+    else
+    {
+      phone_num_norm = &normalized[normalized_len - 7];
+      test = E_BOOK_QUERY_ENDS_WITH;
+    }
+
+    qs[nqs++] = e_book_query_vcard_field_test("TEL", test, phone_num_norm);
+    g_free(normalized);
+  }
+
+  g_free(phone_num);
+
+  if (nqs == 1)
+    query = qs[0];
+  else
+    query = e_book_query_or(nqs, qs, TRUE);
+
+  return query;
+}
