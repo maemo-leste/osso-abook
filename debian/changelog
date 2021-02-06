@@ -1,3 +1,19 @@
+libosso-abook (4.20210106) unstable; urgency=medium
+
+  * add osso_abook_aggregator_find_contacts_for_phone_number
+  * add osso_abook_contact_get_persistent_uid
+  * add osso_abook_contact_subscriptions_new
+  * make more headers public
+  * add e_normalize_phone_number
+  * add osso_abook_aggregator_lookup
+  * add OssoABookContactSubscriptions
+  * add OssoABookServiceGroup
+  * add some more public headers
+  * fix pkgconfig file
+  * add osso_abook_list_store_merge_rows
+
+ -- Ivan J. <parazyd@dyne.org>  Sat, 06 Feb 2021 17:56:41 +0100
+
 libosso-abook (4.20201206) unstable; urgency=low
 
   * Initial packaging, package still work in progress
