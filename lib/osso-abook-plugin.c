@@ -183,5 +183,5 @@ osso_abook_plugin_new(const char *filename)
 {
   g_return_val_if_fail(filename != NULL, NULL);
 
-  return g_object_new(v1, "filename", filename, NULL);
+  return g_object_new(OSSO_ABOOK_TYPE_PLUGIN, "filename", filename, NULL);
 }
