@@ -8,7 +8,7 @@
 #ifndef __OSSO_ABOOK_PLUGIN_MANAGER_H__
 #define __OSSO_ABOOK_PLUGIN_MANAGER_H__
 
-#include <libosso-abook/osso-abook-menu-extension.h>
+#include "osso-abook-menu-extension.h"
 
 G_BEGIN_DECLS
 

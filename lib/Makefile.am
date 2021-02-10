@@ -105,7 +105,9 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-account-manager.c \
 		osso-abook-service-group.c \
 		osso-abook-contact-subscriptions.c \
-		osso-abook-plugin.c
+		osso-abook-plugin.c \
+		osso-abook-menu-extension.c \
+		osso-abook-plugin-manager.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-aggregator.h \
@@ -135,7 +137,8 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-util.h \
 		osso-abook-contact-view.h \
 		osso-abook-menu-extension.h \
-		osso-abook-plugin.h
+		osso-abook-plugin.h \
+		osso-abook-plugin-manager.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
 		osso-abook-enums.h
