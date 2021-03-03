@@ -121,6 +121,7 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-contact-model.h \
 		osso-abook-list-store.h \
 		osso-abook-avatar.h \
+		osso-abook-avatar-image.h \
 		osso-abook-types.h \
 		osso-abook-roster-manager.h \
 		osso-abook-account-manager.h \
@@ -135,10 +136,12 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-gconf-contact.h \
 		osso-abook-contact-subscriptions.h \
 		osso-abook-util.h \
+		osso-abook-log.h \
 		osso-abook-contact-view.h \
 		osso-abook-menu-extension.h \
 		osso-abook-plugin.h \
-		osso-abook-plugin-manager.h
+		osso-abook-plugin-manager.h \
+		osso-abook-row-model.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
 		osso-abook-enums.h
