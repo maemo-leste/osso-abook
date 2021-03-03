@@ -330,7 +330,7 @@ osso_abook_query_phone_number(const char *phone_number, gboolean fuzzy_match)
   g_return_val_if_fail(!IS_EMPTY(phone_number), NULL);
 
   qs[0] = e_book_query_vcard_field_test("TEL", E_BOOK_QUERY_IS, phone_number);
-  len = strcspn(phone_number, "PpWwXx");
+  len = strcspn(phone_number, OSSO_ABOOK_DTMF_CHARS);
 
   if (len < strlen(phone_number) )
   {
@@ -414,7 +414,7 @@ osso_abook_sort_phone_number_matches(GList *matches, const char *phone_number)
 
   norm_phone_num = e_normalize_phone_number(phone_number);
   norm_phone_num_unprefixed =
-      &norm_phone_num[strcspn(norm_phone_num, "PpWwXx") - 1];
+      &norm_phone_num[strcspn(norm_phone_num, OSSO_ABOOK_DTMF_CHARS) - 1];
 
   for (l = matches; l; l = l->next)
   {
@@ -457,7 +457,7 @@ osso_abook_sort_phone_number_matches(GList *matches, const char *phone_number)
     }
 
     norm_val = e_normalize_phone_number(val);
-    norm_val_len = strcspn(norm_val, "PpWwXx");
+    norm_val_len = strcspn(norm_val, OSSO_ABOOK_DTMF_CHARS);
     p = norm_phone_num_unprefixed;
     norm_val_unprefixed = &norm_val[norm_val_len - 1];
     q = &norm_val[norm_val_len - 1];
