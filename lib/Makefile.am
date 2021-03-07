@@ -107,7 +107,8 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-contact-subscriptions.c \
 		osso-abook-plugin.c \
 		osso-abook-menu-extension.c \
-		osso-abook-plugin-manager.c
+		osso-abook-plugin-manager.c \
+		osso-abook-presence-label.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-aggregator.h \
