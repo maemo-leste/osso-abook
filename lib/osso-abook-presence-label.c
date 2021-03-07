@@ -294,12 +294,17 @@ osso_abook_presence_label_expose_event(GtkWidget *widget, GdkEventExpose *event)
 
     gtk_label_get_layout_offsets(GTK_LABEL(widget), &x, &y);
 
-    x += (pos.x + 512) / PANGO_SCALE;
+#define PANGO_SCALE_2 (PANGO_SCALE / 2)
+    x += (pos.x + PANGO_SCALE_2) / PANGO_SCALE;
 
-    y += (pos.y + 512 + baseline - (height * PANGO_SCALE)) / PANGO_SCALE;
+    y += (pos.y + PANGO_SCALE_2 + baseline - (height * PANGO_SCALE))
+        / PANGO_SCALE;
 
     if (pos.x > 0)
-      x += ((pos.width - (width * PANGO_SCALE)) / 2 + 512) / PANGO_SCALE;
+    {
+      x += ((pos.width - (width * PANGO_SCALE)) / 2 + PANGO_SCALE_2)
+          / PANGO_SCALE;
+    }
 
     gdk_draw_pixbuf(widget->window, 0, priv->icon, 0, 0, x, y, width, height,
                     GDK_RGB_DITHER_NONE, 0, 0);
