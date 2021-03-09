@@ -43,13 +43,19 @@ G_DEFINE_TYPE_WITH_PRIVATE(OssoABookContactDetailStore,
 			   osso_abook_contact_detail_store, G_TYPE_OBJECT);
 
 enum {
-	MESSAGE_MAP = 1,
-	CONTACT = 2,
-	FILTERS = 3,
+	PROP_MESSAGE_MAP = 1,
+	PROP_CONTACT = 2,
+	PROP_FILTERS = 3,
 };
 
-static int changed_signal = 0;
-static int contact_changed_signal = 0;
+
+enum {
+  CHANGED,
+  CONTACT_CHANGED,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = {};
 
 #define OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(store) \
                 ((OssoABookContactDetailStorePrivate *)osso_abook_detail_store_get_instance_private(store))
@@ -67,36 +73,38 @@ osso_abook_contact_detail_store_class_init(OssoABookContactDetailStoreClass
 	    osso_abook_contact_detail_store_get_property;
 	object_class->constructed = osso_abook_contact_detail_store_constructed;
 	object_class->dispose = osso_abook_contact_detail_store_dispose;
+#else
+    g_assert(0);
 #endif
 
 	g_object_class_install_property(object_class,
-					MESSAGE_MAP,
+					PROP_MESSAGE_MAP,
 					g_param_spec_boxed("message-map",
 							   "Message Map",
 							   "Mapping for generic message ids to context ids",
 							   G_TYPE_HASH_TABLE,
 							   GTK_PARAM_READWRITE));
 
-	g_object_class_install_property(object_class, CONTACT,
+	g_object_class_install_property(object_class, PROP_CONTACT,
 					g_param_spec_object("contact",
 							    "Contact",
 							    "The contact of which to show details",
 							    OSSO_ABOOK_TYPE_CONTACT,
 							    GTK_PARAM_READWRITE));
 
-	g_object_class_install_property(object_class, FILTERS,
+	g_object_class_install_property(object_class, PROP_FILTERS,
                     g_param_spec_flags("filters", "Filters",
                         "The contact field filters to use",
                         OSSO_ABOOK_TYPE_CONTACT_DETAIL_FILTERS,
                         0,	/* TODO: check this */
                         GTK_PARAM_READWRITE));
 
-	changed_signal = g_signal_new("changed",
+	signals[CHANGED] = g_signal_new("changed",
             OSSO_ABOOK_TYPE_CONTACT_DETAIL_STORE, G_SIGNAL_RUN_LAST,
             0,	/* XXX: offset? */
             0, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-	contact_changed_signal = g_signal_new("contact-changed",
+	signals[CONTACT_CHANGED] = g_signal_new("contact-changed",
             OSSO_ABOOK_TYPE_CONTACT_DETAIL_STORE, G_SIGNAL_RUN_LAST,
             0, /* XXX: offset? */
             0, NULL, osso_abook_marshal_VOID__OBJECT_OBJECT,
