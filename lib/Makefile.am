@@ -142,6 +142,8 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-menu-extension.h \
 		osso-abook-plugin.h \
 		osso-abook-plugin-manager.h \
+		osso-abook-contact-field.h \
+		osso-abook-contact-detail-store.h \
 		osso-abook-row-model.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
