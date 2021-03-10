@@ -25,6 +25,8 @@
 #include "osso-abook-marshal.h"
 #include "osso-abook-contact.h"
 
+#include "osso-abook-account-manager.h"
+
 #include "osso-abook-contact-detail-store.h"
 
 struct _OssoABookContactDetailStorePrivate {
@@ -58,7 +60,10 @@ enum {
 static guint signals[LAST_SIGNAL] = {};
 
 #define OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(store) \
-                ((OssoABookContactDetailStorePrivate *)osso_abook_detail_store_get_instance_private(store))
+                ((OssoABookContactDetailStorePrivate *)osso_abook_contact_detail_store_get_instance_private(store))
+
+void osso_abook_contact_detail_store_account_changed(OssoABookContactDetailStore *instance) {
+}
 
 void
 osso_abook_contact_detail_store_class_init(OssoABookContactDetailStoreClass
@@ -115,4 +120,24 @@ osso_abook_contact_detail_store_class_init(OssoABookContactDetailStoreClass
 
 void osso_abook_contact_detail_store_init(OssoABookContactDetailStore * store)
 {
+    OssoABookAccountManager *account_manager;
+
+	OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(store)->probably_initialised = 1;
+    account_manager = osso_abook_account_manager_get_default();
+
+    g_signal_connect_swapped(
+        account_manager,
+        "account-created",
+        (GCallback)osso_abook_contact_detail_store_account_changed,
+        store);
+    g_signal_connect_swapped(
+        account_manager,
+        "account-changed::enabled",
+        (GCallback)osso_abook_contact_detail_store_account_changed,
+        store);
+    g_signal_connect_swapped(
+        account_manager,
+        "account-removed",
+        (GCallback)osso_abook_contact_detail_store_account_changed,
+        store);
 }
