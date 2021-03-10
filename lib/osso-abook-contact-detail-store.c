@@ -106,14 +106,14 @@ osso_abook_contact_detail_store_class_init(OssoABookContactDetailStoreClass
 
 	signals[CHANGED] = g_signal_new("changed",
             OSSO_ABOOK_TYPE_CONTACT_DETAIL_STORE, G_SIGNAL_RUN_LAST,
-            0,	/* XXX: offset? */
+            0,
             0, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
 	signals[CONTACT_CHANGED] = g_signal_new("contact-changed",
             OSSO_ABOOK_TYPE_CONTACT_DETAIL_STORE, G_SIGNAL_RUN_LAST,
-            0, /* XXX: offset? */
+            0,
             0, NULL, osso_abook_marshal_VOID__OBJECT_OBJECT,
-            G_TYPE_NONE, 2u,	/* XXX: What is this 2u? two args? */
+            G_TYPE_NONE, 2,
             OSSO_ABOOK_TYPE_CONTACT,
             OSSO_ABOOK_TYPE_CONTACT);
 }
@@ -128,16 +128,16 @@ void osso_abook_contact_detail_store_init(OssoABookContactDetailStore * store)
     g_signal_connect_swapped(
         account_manager,
         "account-created",
-        (GCallback)osso_abook_contact_detail_store_account_changed,
+        G_CALLBACK(osso_abook_contact_detail_store_account_changed),
         store);
     g_signal_connect_swapped(
         account_manager,
         "account-changed::enabled",
-        (GCallback)osso_abook_contact_detail_store_account_changed,
+        G_CALLBACK(osso_abook_contact_detail_store_account_changed),
         store);
     g_signal_connect_swapped(
         account_manager,
         "account-removed",
-        (GCallback)osso_abook_contact_detail_store_account_changed,
+        G_CALLBACK(osso_abook_contact_detail_store_account_changed),
         store);
 }
