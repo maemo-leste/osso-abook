@@ -31,13 +31,13 @@ GQuark osso_abook_quark_vca_##name () \
   return quark; \
 }
 
-QUARK(email, "EMAIL")
-QUARK(tel, "TEL")
-QUARK(nickname, "NICKNAME")
-QUARK(org, "ORG")
-QUARK(fn, "FN")
-QUARK(n, "N")
-QUARK(photo, "PHOTO")
+QUARK(email, EVC_EMAIL)
+QUARK(tel, EVC_TEL)
+QUARK(nickname, EVC_NICKNAME)
+QUARK(org, EVC_ORG)
+QUARK(fn, EVC_FN)
+QUARK(n, EVC_N)
+QUARK(photo, EVC_PHOTO)
 
 QUARK(osso_master_uid, OSSO_ABOOK_VCA_OSSO_MASTER_UID)
 QUARK(telepathy_presence, OSSO_ABOOK_VCA_TELEPATHY_PRESENCE)
