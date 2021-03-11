@@ -1,0 +1,1100 @@
+/*
+ * osso-abook-contact-field.c
+ *
+ * Copyright (C) 2021 Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+ *
+ * This library is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+#include <gtk/gtkprivate.h>
+
+#include <libintl.h>
+
+#include "config.h"
+
+#include "osso-abook-contact-field.h"
+#include "osso-abook-enums.h"
+#include "osso-abook-avatar-image.h"
+#include "osso-abook-message-map.h"
+
+typedef struct _OssoABookContactFieldTemplate OssoABookContactFieldTemplate;
+
+struct _OssoABookContactFieldTemplate
+{
+  const gchar *name;
+  gchar *msgid;
+  gchar *icon_name;
+  int sort_weight;
+  OssoABookContactFieldFlags flags;
+  GtkWidget * (*get_editor_widget)(OssoABookContactField *field);
+  GList * (*children)(OssoABookContactField *field);
+  void (*update)(OssoABookContactField *field);
+  void (*synthesize_attributes)(OssoABookContactField *field);
+  gchar *(*get_attr_value)(EVCardAttribute *attr);
+};
+
+struct _OssoABookContactFieldTemplateGroup
+{
+  OssoABookContactFieldTemplate *template;
+  int count;
+};
+
+typedef struct _OssoABookContactFieldTemplateGroup OssoABookContactFieldTemplateGroup;
+
+struct _OssoABookContactFieldPrivate
+{
+  OssoABookContactFieldTemplate *template;
+  EVCardAttribute *attribute;
+  EVCardAttribute *borrowed_attribute;
+  GHashTable *message_map;
+  OssoABookContact *master_contact;
+  OssoABookContact *roster_contact;
+  gchar *display_title;
+  gchar *secondary_title;
+  gchar *display_value;
+  GtkWidget *label;
+  GtkWidget *editor_widget;
+  GList *secondary_attributes;
+  OssoABookContactField *parent;
+  GList *children;
+  gchar *path;
+  gboolean modified : 1  /* 0x01 0xFE */;
+  gboolean mandatory : 1 /* 0x02 0xFD */;
+};
+
+typedef struct _OssoABookContactFieldPrivate OssoABookContactFieldPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE(
+  OssoABookContactField,
+  osso_abook_contact_field,
+  G_TYPE_OBJECT
+);
+
+enum
+{
+  PROP_NAME = 1,
+  PROP_FLAGS,
+  PROP_ATTRIBUTE,
+  PROP_MESSAGE_MAP,
+  PROP_MASTER_CONTACT,
+  PROP_ROSTER_CONTACT,
+  PROP_DISPLAY_TITLE,
+  PROP_DISPLAY_VALUE,
+  PROP_ICON_NAME,
+  PROP_SORT_WEIGHT,
+  PROP_LABEL_WIDGET,
+  PROP_EDITOR_WIDGET,
+  PROP_MODIFIED
+};
+
+#define OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field) \
+  ((OssoABookContactFieldPrivate *)osso_abook_contact_field_get_instance_private(((OssoABookContactField *)field)))
+
+static OssoABookContactFieldTemplateGroup template_groups[] =
+{
+  {general_templates, G_N_ELEMENTS(general_templates)},
+  {address_templates, G_N_ELEMENTS(address_templates)},
+  {name_templates, G_N_ELEMENTS(name_templates)}
+};
+
+static OssoABookAvatar *
+get_avatar(OssoABookContactField *field)
+{
+  GtkWidget *child = gtk_bin_get_child(
+        GTK_BIN(osso_abook_contact_field_get_editor_widget(field)));
+
+  return osso_abook_avatar_image_get_avatar(OSSO_ABOOK_AVATAR_IMAGE(child));
+}
+
+static void
+avatar_image_changed_cb(OssoABookAvatar *contact, GdkPixbuf *image,
+                        OssoABookContactField *field)
+{
+  osso_abook_contact_set_pixbuf(OSSO_ABOOK_CONTACT(get_avatar(field)),
+                                osso_abook_avatar_get_image(contact), 0, 0);
+}
+
+static void
+osso_abook_contact_field_set_property(GObject *object, guint property_id,
+                                      const GValue *value, GParamSpec *pspec)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(object);
+
+  switch (property_id)
+  {
+    case PROP_ATTRIBUTE:
+    {
+      g_assert(NULL == priv->attribute);
+
+      priv->borrowed_attribute = g_value_get_pointer(value);
+      priv->attribute = e_vcard_attribute_copy(priv->borrowed_attribute);
+
+      if (priv->modified)
+      {
+        priv->modified = FALSE;
+        g_object_notify(object, "modified");
+      }
+
+      break;
+    }
+    case PROP_MESSAGE_MAP:
+    {
+      osso_abook_contact_field_set_message_map(
+            OSSO_ABOOK_CONTACT_FIELD(object), g_value_get_boxed(value));
+      break;
+    }
+    case PROP_MASTER_CONTACT:
+    {
+      g_assert(NULL == priv->master_contact);
+      priv->master_contact = g_value_dup_object(value);
+      break;
+    }
+    case PROP_ROSTER_CONTACT:
+    {
+      g_assert(NULL == priv->roster_contact);
+      priv->roster_contact = g_value_dup_object(value);
+      break;
+    }
+    default:
+    {
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+      break;
+    }
+  }
+}
+
+static void
+osso_abook_contact_field_get_property(GObject *object, guint property_id,
+                                      GValue *value, GParamSpec *pspec)
+{
+  OssoABookContactField *field = OSSO_ABOOK_CONTACT_FIELD(object);
+
+  switch (property_id)
+  {
+    case PROP_NAME:
+    {
+      g_value_set_string(value, osso_abook_contact_field_get_name(field));
+      break;
+    }
+    case PROP_FLAGS:
+    {
+      g_value_set_flags(value, osso_abook_contact_field_get_flags(field));
+      break;
+    }
+    case PROP_ATTRIBUTE:
+    {
+      g_value_set_pointer(value,
+                          OSSO_ABOOK_CONTACT_FIELD_PRIVATE(object)->attribute);
+      break;
+    }
+    case PROP_MESSAGE_MAP:
+    {
+      g_value_set_boxed(value, osso_abook_contact_field_get_message_map(field));
+      break;
+    }
+    case PROP_MASTER_CONTACT:
+    {
+      g_value_set_object(value,
+                         osso_abook_contact_field_get_master_contact(field));
+      break;
+    }
+    case PROP_ROSTER_CONTACT:
+    {
+      g_value_set_object(value,
+                         osso_abook_contact_field_get_roster_contact(field));
+      break;
+    }
+    case PROP_DISPLAY_TITLE:
+    {
+      g_value_set_string(value,
+                         osso_abook_contact_field_get_display_title(field));
+      break;
+    }
+    case PROP_DISPLAY_VALUE:
+    {
+      g_value_set_string(value,
+                         osso_abook_contact_field_get_display_value(field));
+      break;
+    }
+    case PROP_ICON_NAME:
+    {
+      g_value_set_string(value, osso_abook_contact_field_get_icon_name(field));
+      break;
+    }
+    case PROP_SORT_WEIGHT:
+    {
+      g_value_set_int(value, osso_abook_contact_field_get_sort_weight(field));
+      break;
+    }
+    case PROP_LABEL_WIDGET:
+    {
+      g_value_set_object(value,
+                         osso_abook_contact_field_get_label_widget(field));
+      break;
+    }
+    case PROP_EDITOR_WIDGET:
+    {
+      g_value_set_object(value,
+                         osso_abook_contact_field_get_editor_widget(field));
+      break;
+    }
+    case PROP_MODIFIED:
+    {
+      g_value_set_boolean(value, osso_abook_contact_field_is_modified(field));
+      break;
+    }
+    default:
+    {
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+      break;
+    }
+  }
+}
+
+static void
+osso_abook_contact_field_update_dispose(GObject *object)
+{
+  OssoABookContactField *field = OSSO_ABOOK_CONTACT_FIELD(object);
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (priv->parent)
+  {
+    g_object_remove_weak_pointer(G_OBJECT(priv->parent), (gpointer *)&priv->parent);
+    priv->parent = NULL;
+  }
+
+  while (priv->children)
+  {
+    g_object_unref(priv->children->data);
+    priv->children = g_list_delete_link(priv->children, priv->children);
+  }
+
+  if (priv->editor_widget)
+  {
+    g_object_unref(priv->editor_widget);
+    priv->editor_widget = NULL;
+  }
+
+  if (priv->label)
+  {
+    g_object_unref(priv->label);
+    priv->label = NULL;
+  }
+
+  if (priv->roster_contact)
+  {
+    g_object_unref(priv->roster_contact);
+    priv->roster_contact = NULL;
+  }
+
+  if (priv->master_contact)
+  {
+    g_signal_handlers_disconnect_matched(
+          priv->master_contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+          0, 0, NULL, avatar_image_changed_cb, field);
+    g_object_unref(priv->master_contact);
+    priv->master_contact = NULL;
+  }
+
+  G_OBJECT_CLASS(osso_abook_contact_field_parent_class)->dispose(object);
+}
+
+/* FIXME - find a better algo */
+static gboolean
+is_template_builtin(OssoABookContactFieldTemplate *t)
+{
+  OssoABookContactFieldTemplateGroup *group = template_groups;
+
+  while (group->template > t || &group->template[group->count] <= t)
+  {
+    if (++group == &template_groups[G_N_ELEMENTS(template_groups)])
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+free_attributes_list(GList *attributes)
+{
+  GList *l;
+
+  for (l = attributes; l; l = g_list_delete_link(l, l))
+    e_vcard_attribute_free(l->data);
+}
+
+static void
+osso_abook_contact_field_finalize(GObject *object)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(object);
+
+  if (priv->template)
+  {
+    if (!is_template_builtin(priv->template))
+    {
+      g_free(priv->template->msgid);
+      g_free(priv->template->icon_name);
+      g_slice_free(OssoABookContactFieldTemplate, priv->template);
+    }
+  }
+
+  free_attributes_list(priv->secondary_attributes);
+
+  if (priv->attribute)
+    e_vcard_attribute_free(priv->attribute);
+
+  if (priv->message_map)
+    g_hash_table_unref(priv->message_map);
+
+  g_free(priv->secondary_title);
+  g_free(priv->display_title);
+  g_free(priv->display_value);
+  g_free(priv->path);
+
+  G_OBJECT_CLASS(osso_abook_contact_field_parent_class)->finalize(object);
+}
+
+static void
+osso_abook_contact_field_update_label(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (priv->label)
+  {
+    g_object_set(priv->label,
+                 "title", osso_abook_contact_field_get_display_title(field),
+                 "value", osso_abook_contact_field_get_secondary_title(field),
+                 NULL);
+  }
+}
+
+static void
+osso_abook_contact_field_class_init(OssoABookContactFieldClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS(klass);
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS(template_groups); i++)
+  {
+    OssoABookContactFieldTemplateGroup *group = &template_groups[i];
+    int j;
+
+    for (j = 0; j < group->count; j++)
+    {
+      OssoABookContactFieldTemplate *t = &group->template[j];
+
+      if (t->name)
+        t->name = g_intern_static_string(t->name);
+    }
+  }
+
+  object_class->constructed = osso_abook_contact_field_constructed;
+  object_class->set_property = osso_abook_contact_field_set_property;
+  object_class->get_property = osso_abook_contact_field_get_property;
+  object_class->dispose = osso_abook_contact_field_update_dispose;
+  object_class->finalize = osso_abook_contact_field_finalize;
+
+  klass->update_label = osso_abook_contact_field_update_label;
+
+  g_object_class_install_property(
+        object_class, PROP_NAME,
+        g_param_spec_string(
+          "name",
+          "Name",
+          "The name of this field",
+          0,
+          GTK_PARAM_READABLE));
+  g_object_class_install_property(
+        object_class, PROP_FLAGS,
+        g_param_spec_flags(
+          "flags",
+          "Flags",
+          "Flags describing this field",
+          OSSO_ABOOK_TYPE_CONTACT_FIELD_FLAGS,
+          0,
+          GTK_PARAM_READWRITE));
+    g_object_class_install_property(
+        object_class, PROP_ATTRIBUTE,
+        g_param_spec_pointer(
+          "attribute",
+          "Attribute",
+          "The VCard attribute backing this field",
+          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property(
+        object_class, PROP_MESSAGE_MAP,
+        g_param_spec_boxed(
+          "message-map",
+          "Message Map",
+          "Mapping for generic message ids to context ids",
+          G_TYPE_HASH_TABLE,
+          GTK_PARAM_READWRITE));
+  g_object_class_install_property(
+        object_class, PROP_MASTER_CONTACT,
+        g_param_spec_object(
+          "master-contact",
+          "Master Contact",
+          "The master contact if one is associated with this field",
+          OSSO_ABOOK_TYPE_CONTACT,
+          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property(
+        object_class, PROP_ROSTER_CONTACT,
+        g_param_spec_object(
+          "roster-contact",
+          "Roster Contact",
+          "The roster contact if one is associated with this field",
+          OSSO_ABOOK_TYPE_CONTACT,
+          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property(
+        object_class, PROP_DISPLAY_TITLE,
+        g_param_spec_string(
+                  "display-title",
+                  "Display Title",
+                  "The message ID field labels",
+                  NULL,
+                  GTK_PARAM_READABLE));
+  g_object_class_install_property(
+        object_class, PROP_DISPLAY_VALUE,
+        g_param_spec_string(
+          "display-value",
+          "Display Value",
+          "A human friendly string represeting the attribute value",
+          NULL,
+          GTK_PARAM_READABLE));
+  g_object_class_install_property(
+        object_class, PROP_ICON_NAME,
+        g_param_spec_string(
+          "icon-name",
+          "Icon Name",
+          "The name of the icon to use with this field",
+          NULL,
+          GTK_PARAM_READABLE));
+  g_object_class_install_property(
+        object_class, PROP_SORT_WEIGHT,
+        g_param_spec_int(
+          "sort-weight",
+          "Sort Weight",
+          "The weight of this field when sorting them",
+          G_MININT32, G_MAXINT32, G_MININT32,
+          GTK_PARAM_READABLE));
+  g_object_class_install_property(
+        object_class, PROP_LABEL_WIDGET,
+        g_param_spec_object(
+          "label-widget",
+          "Label Widget",
+          "The widget describing this field",
+          GTK_TYPE_WIDGET,
+          GTK_PARAM_READABLE));
+  g_object_class_install_property(
+        object_class, PROP_EDITOR_WIDGET,
+        g_param_spec_object(
+          "editor-widget",
+          "Editor Widget",
+          "The widget for editing this field",
+          GTK_TYPE_WIDGET,
+          GTK_PARAM_READABLE));
+  g_object_class_install_property(
+        object_class, PROP_MODIFIED,
+        g_param_spec_boolean(
+          "modified",
+          "Modified",
+          "Check if the field has been modified",
+          FALSE,
+          GTK_PARAM_READABLE));
+}
+
+static void
+osso_abook_contact_field_init(OssoABookContactField* field)
+{
+}
+
+GtkWidget *
+osso_abook_contact_field_get_editor_widget(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (!priv->editor_widget)
+  {
+    g_return_val_if_fail(NULL != priv->template, NULL);
+
+    if (priv->template->get_editor_widget)
+    {
+      priv->editor_widget = priv->template->get_editor_widget(field);
+
+      if (priv->editor_widget)
+      {
+        gtk_widget_set_sensitive(priv->editor_widget,
+                                 !osso_abook_contact_field_is_readonly(field) &&
+                                 !osso_abook_contact_field_is_bound_im(field));
+        g_object_ref_sink(priv->editor_widget);
+      }
+    }
+  }
+
+  return priv->editor_widget;
+}
+
+gboolean
+osso_abook_contact_field_has_editor_widget(OssoABookContactField *field)
+{
+  OssoABookContactFieldTemplate *t;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), FALSE);
+
+  t = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->template;
+
+  if (t)
+    return t->get_editor_widget != NULL;
+
+  return FALSE;
+}
+
+gboolean
+osso_abook_contact_field_is_readonly(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), TRUE);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (priv->parent && osso_abook_contact_field_is_readonly(priv->parent))
+    return TRUE;
+
+  return osso_abook_contact_attribute_is_readonly(priv->attribute);
+}
+
+gboolean
+osso_abook_contact_field_is_bound_im(OssoABookContactField *field)
+{
+  OssoABookContact *roster_contact;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), TRUE);
+
+  roster_contact = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->roster_contact;
+
+  if (roster_contact)
+    return !osso_abook_contact_has_invalid_username(roster_contact);
+
+  return FALSE;
+}
+
+gboolean
+osso_abook_contact_field_is_modified(OssoABookContactField *field)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), FALSE);
+
+  return OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->modified;
+}
+
+gboolean
+osso_abook_contact_field_is_empty(OssoABookContactField *field)
+{
+  gchar *display_value;
+  gchar *s;
+  gboolean empty;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), TRUE);
+
+  display_value = g_strdup(osso_abook_contact_field_get_display_value(field));
+  s = g_strchomp(display_value);
+
+  empty = !s || !*s;
+
+  g_free(display_value);
+
+  return empty;
+}
+
+gboolean
+osso_abook_contact_field_is_mandatory(OssoABookContactField *field)
+{
+  return osso_abook_contact_field_get_flags(field) &
+      OSSO_ABOOK_CONTACT_FIELD_FLAGS_MANDATORY;
+}
+
+void
+osso_abook_contact_field_set_mandatory(OssoABookContactField *field,
+                                       gboolean mandatory)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field));
+
+  if (osso_abook_contact_field_is_mandatory(field) != mandatory)
+  {
+    OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->mandatory = mandatory;
+    g_object_notify(G_OBJECT(field), "flags");
+  }
+}
+
+gboolean
+osso_abook_contact_field_activate(OssoABookContactField *field)
+{
+  GtkWidget *editor_widget;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), FALSE);
+
+  editor_widget = osso_abook_contact_field_get_editor_widget(field);
+
+  if (GTK_IS_BUTTON(editor_widget))
+  {
+    gtk_button_clicked(GTK_BUTTON(editor_widget));
+    return osso_abook_contact_field_is_modified(field);
+  }
+
+  return TRUE;
+}
+
+TpAccount *
+osso_abook_contact_field_get_account(OssoABookContactField *field)
+{
+  OssoABookContact *contact;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  contact = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->roster_contact;
+
+  if (contact)
+    return osso_abook_contact_get_account(contact);
+
+  return NULL;
+}
+
+const char *
+osso_abook_contact_field_get_icon_name(OssoABookContactField* field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  g_return_val_if_fail(NULL != priv->template, NULL);
+
+  return priv->template->icon_name;
+}
+
+int
+osso_abook_contact_field_get_sort_weight(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), G_MININT32);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  g_return_val_if_fail(NULL != priv->template, G_MININT32);
+
+  return priv->template->sort_weight;
+}
+
+OssoABookContact *
+osso_abook_contact_field_get_roster_contact(OssoABookContactField *field)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  return OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->roster_contact;
+}
+
+OssoABookContact *
+osso_abook_contact_field_get_master_contact(OssoABookContactField *field)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  return OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->master_contact;
+}
+
+const char *
+osso_abook_contact_field_get_display_title(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (!priv->display_title)
+  {
+    OssoABookContactFieldTemplate *t = priv->template;
+
+    g_return_val_if_fail(NULL != priv->template, NULL);
+
+    if (t->msgid)
+    {
+      const char *msgid = t->msgid;
+
+      if (priv->message_map)
+        msgid = osso_abook_message_map_lookup(priv->message_map, msgid);
+
+      priv->display_title = g_strdup(msgid);
+    }
+  }
+
+  return priv->display_title;
+}
+
+const char *
+osso_abook_contact_field_get_secondary_title(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (!priv->secondary_title)
+  {
+    OssoABookContactFieldTemplate *t = priv->template;
+
+    if (t)
+    {
+      if (t->flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED)
+      {
+        gchar *msgid = g_strconcat(t->msgid, "_detail", NULL);
+        const char *s = msgid;
+
+        if (priv->message_map)
+          s = osso_abook_message_map_lookup(priv->message_map, msgid);
+
+        priv->secondary_title = g_strdup(s);
+        g_free(msgid);
+      }
+    }
+  }
+
+  return priv->secondary_title;
+}
+
+static void
+update_if_modified(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (!priv->modified)
+    return;
+
+  if (priv->template && priv->template->update)
+    priv->template->update(field);
+
+  priv->modified = FALSE;
+  g_object_notify(G_OBJECT(field), "modified");
+}
+
+const char *
+osso_abook_contact_field_get_display_value(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  update_if_modified(field);
+
+  if (!priv->display_value)
+  {
+    g_return_val_if_fail(NULL != priv->template, NULL);
+
+    if (priv->template->get_attr_value)
+    {
+      priv->display_value =
+          g_strdup(priv->template->get_attr_value(priv->attribute));
+    }
+  }
+
+  return priv->display_value;
+}
+
+GList *
+osso_abook_contact_field_get_secondary_attributes(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (priv->template)
+  {
+    OssoABookContactFieldTemplate *t = priv->template;
+
+    if (t->update && osso_abook_contact_field_is_modified(field))
+        t->update(field);
+
+    if (t->synthesize_attributes && !priv->secondary_attributes)
+      t->synthesize_attributes(field);
+  }
+
+  return priv->secondary_attributes;
+}
+
+EVCardAttribute *
+osso_abook_contact_field_get_borrowed_attribute(OssoABookContactField *field)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  return OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->borrowed_attribute;
+}
+
+EVCardAttribute *
+osso_abook_contact_field_get_attribute(OssoABookContactField *field)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  update_if_modified(field);
+
+  return OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->attribute;
+}
+
+gboolean
+osso_abook_contact_field_has_children(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), FALSE);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  g_return_val_if_fail(NULL != priv->template, FALSE);
+
+  return priv->template->children != NULL;
+}
+
+static void
+child_modified(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (priv->modified)
+    return;
+
+  g_free(priv->display_value);
+  priv->display_value = NULL;
+  priv->modified = TRUE;
+
+  g_object_notify(G_OBJECT(field), "modified");
+  g_object_notify(G_OBJECT(field), "display-value");
+}
+
+static void
+child_modified_cb(OssoABookContactField *child_field, GParamSpec *pspec,
+                  OssoABookContactField *field)
+{
+  if (osso_abook_contact_field_is_modified(child_field))
+    child_modified(field);
+}
+
+GList *
+osso_abook_contact_field_get_children(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (!priv->children)
+  {
+    if (priv->template && priv->template->children)
+    {
+      GList *l;
+
+      priv->children = priv->template->children(field);
+
+      for (l = priv->children; l; l = l->next)
+      {
+        g_signal_connect(l->data, "notify::modified",
+                         G_CALLBACK(child_modified_cb), field);
+      }
+    }
+  }
+
+  return priv->children;
+}
+
+OssoABookContactField *
+osso_abook_contact_field_get_parent(OssoABookContactField *field)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  return OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->parent;
+}
+
+OssoABookContactFieldFlags
+osso_abook_contact_field_get_flags(OssoABookContactField *field)
+{
+  OssoABookContactFieldFlags flags;
+
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field),
+                       OSSO_ABOOK_CONTACT_FIELD_FLAGS_NONE);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (priv->template)
+    flags = priv->template->flags;
+  else
+    flags = OSSO_ABOOK_CONTACT_FIELD_FLAGS_NONE;
+
+  if (priv->mandatory)
+    flags |= OSSO_ABOOK_CONTACT_FIELD_FLAGS_MANDATORY;
+
+  if (priv->parent && osso_abook_contact_field_is_mandatory(priv->parent))
+    flags |= OSSO_ABOOK_CONTACT_FIELD_FLAGS_MANDATORY;
+
+  return flags;
+}
+
+const char *
+osso_abook_contact_field_get_path(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (!priv->path)
+  {
+    const char *name = osso_abook_contact_field_get_name(field);
+
+    if (priv->parent)
+    {
+      const char *parent_path = osso_abook_contact_field_get_path(priv->parent);
+
+      if (name && *name)
+        priv->path = g_strconcat(parent_path, ".", name, NULL);
+      else
+      {
+        gint idx = g_list_index(osso_abook_contact_field_get_children(
+                                  priv->parent), field);
+
+        priv->path = g_strdup_printf("%s[%d]", parent_path, idx);
+      }
+    }
+    else
+      priv->path = g_strdup(name);
+  }
+
+  return priv->path;
+}
+
+const char *
+osso_abook_contact_field_get_name(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  g_return_val_if_fail(NULL != priv->template, NULL);
+
+  return priv->template->name;
+}
+
+void
+osso_abook_contact_field_set_message_map(OssoABookContactField *field,
+                                         GHashTable *mapping)
+{
+  OssoABookContactFieldPrivate *priv;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field));
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (priv->message_map != mapping)
+  {
+    GList *l;
+    OssoABookContactFieldTemplate *t = priv->template;
+
+    if (priv->message_map)
+      g_hash_table_unref(priv->message_map);
+
+    if (mapping)
+      priv->message_map = g_hash_table_ref(mapping);
+    else
+      priv->message_map = NULL;
+
+    if (t)
+    {
+      if (t->msgid)
+      {
+        g_free(priv->display_title);
+        priv->display_title = NULL;
+      }
+      else if (!(t->flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DYNAMIC))
+      {
+        g_free(priv->secondary_title);
+        priv->secondary_title = NULL;
+      }
+    }
+
+    for (l = priv->children; l; l = l->next)
+      osso_abook_contact_field_set_message_map(l->data, mapping);
+
+    OSSO_ABOOK_CONTACT_FIELD_GET_CLASS(field)->update_label(field);
+  }
+
+  g_object_notify(G_OBJECT(field), "message-map");
+}
+
+GHashTable *
+osso_abook_contact_field_get_message_map(OssoABookContactField *field)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  return OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->message_map;
+}
+
+OssoABookContactField *
+osso_abook_contact_field_new_full(GHashTable *message_map,
+                                  OssoABookContact *master_contact,
+                                  OssoABookContact *roster_contact,
+                                  EVCardAttribute *attribute)
+{
+  OssoABookContactField *field = g_object_new(OSSO_ABOOK_TYPE_CONTACT_FIELD,
+                                              "message-map",
+                                              message_map,
+                                              "master-contact",
+                                              master_contact,
+                                              "roster-contact",
+                                              roster_contact,
+                                              "attribute",
+                                              attribute,
+                                              NULL);
+  if (!OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->template)
+  {
+    g_object_unref(field);
+    field = NULL;
+  }
+
+  return field;
+}
+
+OssoABookContactField *
+osso_abook_contact_field_new(GHashTable *message_map,
+                             OssoABookContact *master_contact,
+                             EVCardAttribute *attribute)
+{
+  g_return_val_if_fail(
+        NULL == master_contact || OSSO_ABOOK_IS_CONTACT (master_contact), NULL);
+  g_return_val_if_fail(NULL != attribute, NULL);
+
+  return osso_abook_contact_field_new_full(message_map, master_contact,
+                                           NULL, attribute);
+}
