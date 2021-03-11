@@ -27,6 +27,7 @@
 #include "osso-abook-enums.h"
 #include "osso-abook-avatar-image.h"
 #include "osso-abook-message-map.h"
+#include "osso-abook-utils-private.h"
 
 typedef struct _OssoABookContactFieldTemplate OssoABookContactFieldTemplate;
 
@@ -34,10 +35,12 @@ struct _OssoABookContactFieldTemplate
 {
   const gchar *name;
   gchar *msgid;
+  gchar *type;
   gchar *icon_name;
   int sort_weight;
   OssoABookContactFieldFlags flags;
-  GtkWidget * (*get_editor_widget)(OssoABookContactField *field);
+  GList * (*actions)(OssoABookContactField *field);
+  GtkWidget * (*editor_widget)(OssoABookContactField *field);
   GList * (*children)(OssoABookContactField *field);
   void (*update)(OssoABookContactField *field);
   void (*synthesize_attributes)(OssoABookContactField *field);
@@ -100,6 +103,459 @@ enum
 
 #define OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field) \
   ((OssoABookContactFieldPrivate *)osso_abook_contact_field_get_instance_private(((OssoABookContactField *)field)))
+
+static GList *
+get_name_children(OssoABookContactField *field);
+
+static void
+free_attributes_list(GList *attributes)
+{
+  GList *l;
+
+  for (l = attributes; l; l = g_list_delete_link(l, l))
+    e_vcard_attribute_free(l->data);
+}
+
+static void
+synthesize_name_attributes(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  EVCardAttribute *attr ;
+
+  g_return_if_fail(NULL != priv->attribute);
+
+  attr = e_vcard_attribute_new(NULL, EVC_FN);
+  e_vcard_attribute_add_value(
+        attr, osso_abook_contact_field_get_display_value(field));
+  free_attributes_list(priv->secondary_attributes);
+  priv->secondary_attributes = g_list_prepend(NULL, attr);
+}
+
+static OssoABookContactFieldTemplate general_templates[] =
+{
+  {
+    EVC_N, NULL, NULL, NULL, 501,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_MANDATORY |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_SINGLETON,
+    NULL,
+    NULL,
+    get_name_children,
+    update_name_attribute,
+    synthesize_name_attributes,
+    get_name_attr_value
+  },
+#if 0
+  {
+    EVC_FN, "name", NULL, NULL, 500,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_MANDATORY |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_SINGLETON,
+    NULL,
+    NULL,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_TEL, "mobile", "phone", "general_call", 412,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_CELL,
+    get_phone_actions,
+    get_tele_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_TEL, "mobile_home", "phone", "general_call", 411,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_CELL |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_HOME,
+    get_phone_actions,
+    get_tele_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_TEL, "mobile_work", "phone", "general_call", 410,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_CELL |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_WORK,
+    get_phone_actions,
+    get_tele_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_TEL, "phone", "phone", "general_call", 404,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE,
+    get_phone_actions,
+    get_tele_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_TEL, "phone_home", "phone", "general_call", 403,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_HOME,
+    get_phone_actions,
+    get_tele_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_TEL, "phone_work", "phone", "general_call", 402,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_WORK,
+    get_phone_actions,
+    get_tele_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_TEL, "phone_other", "phone", "general_call", 401,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER,
+    get_phone_actions,
+    get_tele_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_TEL, "phone_fax", "phone", "general_call", 400,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_FAX,
+    get_phone_actions,
+    get_tele_text_editor_widget,
+    NULL,
+    &update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_EMAIL, "email", NULL, "general_email", 302,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED,
+    get_mail_actions,
+    get_autocap_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_EMAIL, "email_home", NULL, "general_email", 301,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_HOME,
+    get_mail_actions,
+    get_autocap_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_EMAIL, "email_work", NULL, "general_email", 300,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_WORK,
+    get_mail_actions,
+    get_autocap_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_PHOTO, "image", NULL, NULL, 120,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NO_LABEL |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_MANDATORY |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_SINGLETON,
+    NULL,
+    get_image_editor_widget,
+    NULL,
+    update_image_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_BDAY, "birthday", NULL, "general_calendar", 104,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_SINGLETON,
+    get_date_actions,
+    get_date_editor_widget,
+    NULL,
+    update_date_attribute,
+    NULL,
+    get_date_attr_value
+  },
+  {
+    EVC_ADR, "address", NULL, "general_map", 103,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED,
+    get_address_actions,
+    NULL,
+    get_address_children,
+    update_address_attribute,
+    synthesize_address_attributes,
+    get_address_attr_value
+  },
+  {
+    EVC_ADR, "address_home", NULL, "general_map", 102,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_HOME,
+    get_address_actions,
+    NULL,
+    get_address_children,
+    update_address_attribute,
+    synthesize_address_attributes,
+    get_address_attr_value
+  },
+  {
+    EVC_ADR, "address_work", NULL, "general_map", 101,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_DETAILED |
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_WORK,
+    get_address_actions,
+    NULL,
+    get_address_children,
+    update_address_attribute,
+    synthesize_address_attributes,
+    get_address_attr_value
+  },
+  {
+    EVC_URL, "webpage", NULL, "general_web", 100,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NONE,
+    get_url_actions,
+    get_autocap_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    get_text_attr_value
+  },
+  {
+    OSSO_ABOOK_VCA_GENDER, "gender", NULL, "general_business_card", 4,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_SINGLETON,
+    NULL,
+    get_gender_editor_widget,
+    NULL,
+    update_gender_attribute,
+    NULL,
+    get_gender_attr_value
+  },
+  {
+    EVC_NICKNAME, "nickname", NULL, "general_business_card", 3,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_SINGLETON,
+    NULL,
+    get_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_TITLE, "title", NULL, "general_business_card", 2,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_SINGLETON,
+    NULL,
+    get_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_ORG, "company", NULL, "general_business_card", 1,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_SINGLETON,
+    NULL,
+    get_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    EVC_NOTE, "note", NULL, "general_notes", 0,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_SINGLETON,
+    get_note_actions,
+    get_note_editor_widget,
+    NULL,
+    update_note_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  }
+  #endif
+};
+
+static OssoABookContactFieldTemplate address_templates[7] =
+{
+  #if 0
+  {
+    NULL, "address_p_o_box", NULL, NULL, 4,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NONE,
+    NULL,
+    get_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    NULL, "address_extension", NULL, NULL, 6,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NONE,
+    NULL,
+    get_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    NULL, "address_street", NULL, NULL, 5,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NONE,
+    NULL,
+    get_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    NULL, "address_city", NULL, NULL, 2,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NONE,
+    NULL,
+    get_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    NULL, "address_region", NULL, NULL, 1,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NONE,
+    NULL,
+    get_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    NULL, "address_postal", NULL, NULL, 3,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NONE,
+    NULL,
+    get_alpha_num_text_editor_widget,
+    NULL,
+    update_zip_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    NULL, "address_country", NULL, NULL, 0,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NONE,
+    NULL,
+    get_country_editor_widget,
+    NULL,
+    update_country_attribute,
+    NULL,
+    get_country_attr_value
+  }
+  #endif
+};
+
+static OssoABookContactFieldTemplate name_templates[] =
+{
+  #if 0
+  {
+    NULL, "last_name", NULL, NULL, 2,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NO_LABEL,
+    NULL,
+    get_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  },
+  {
+    NULL, "first_name", NULL, NULL, 4,
+    OSSO_ABOOK_CONTACT_FIELD_FLAGS_NO_LABEL,
+    NULL,
+    get_text_editor_widget,
+    NULL,
+    update_text_attribute,
+    NULL,
+    e_vcard_attribute_get_value
+  }
+  #endif
+};
+
+static GList *
+get_children(OssoABookContactField *field, OssoABookContactFieldTemplate *t,
+             int count)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  GList *values = e_vcard_attribute_get_values(priv->attribute);
+  GList *list = NULL;
+
+  while (t < &t[count])
+  {
+    const char *val;
+
+    if (values)
+    {
+      val = values->data;
+      values = values->next;
+    }
+    else
+      val = NULL;
+
+    if (t->msgid)
+    {
+      EVCardAttribute *attr = e_vcard_attribute_new(NULL, NULL);
+      OssoABookContactField *child_field;
+      OssoABookContactFieldPrivate *child_priv;
+
+      if (!IS_EMPTY(val))
+        e_vcard_attribute_add_value(attr, val);
+
+      child_field = g_object_new(OSSO_ABOOK_TYPE_CONTACT_FIELD,
+                                 "message-map", priv->message_map,
+                                 "master-contact", priv->master_contact,
+                                 "attribute", attr,
+                                 NULL);
+      e_vcard_attribute_free(attr);
+      child_priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(child_field);
+      child_priv->parent = field;
+      child_priv->template = t;
+      g_object_add_weak_pointer(&field->parent_instance,
+                                (gpointer *)&child_priv->parent);
+      list = g_list_prepend(list, child_field);
+    }
+
+    t++;
+  }
+
+  return g_list_reverse(list);
+}
+
+static GList *
+get_name_children(OssoABookContactField *field)
+{
+  return get_children(field, &name_templates[0], G_N_ELEMENTS(name_templates));
+}
 
 static OssoABookContactFieldTemplateGroup template_groups[] =
 {
@@ -326,15 +782,6 @@ is_template_builtin(OssoABookContactFieldTemplate *t)
 }
 
 static void
-free_attributes_list(GList *attributes)
-{
-  GList *l;
-
-  for (l = attributes; l; l = g_list_delete_link(l, l))
-    e_vcard_attribute_free(l->data);
-}
-
-static void
 osso_abook_contact_field_finalize(GObject *object)
 {
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(object);
@@ -531,9 +978,9 @@ osso_abook_contact_field_get_editor_widget(OssoABookContactField *field)
   {
     g_return_val_if_fail(NULL != priv->template, NULL);
 
-    if (priv->template->get_editor_widget)
+    if (priv->template->editor_widget)
     {
-      priv->editor_widget = priv->template->get_editor_widget(field);
+      priv->editor_widget = priv->template->editor_widget(field);
 
       if (priv->editor_widget)
       {
@@ -558,7 +1005,7 @@ osso_abook_contact_field_has_editor_widget(OssoABookContactField *field)
   t = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->template;
 
   if (t)
-    return t->get_editor_widget != NULL;
+    return t->editor_widget != NULL;
 
   return FALSE;
 }
