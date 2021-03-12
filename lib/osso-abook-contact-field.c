@@ -237,6 +237,110 @@ update_text_attribute(OssoABookContactField *field)
 }
 
 static void
+update_zip_attribute(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  gchar *val;
+
+  g_return_if_fail(NULL != priv->attribute);
+
+  if (!priv->editor_widget)
+    return;
+
+  g_return_if_fail(GTK_IS_ENTRY(priv->editor_widget));
+
+  val = g_utf8_strup(gtk_entry_get_text(GTK_ENTRY(priv->editor_widget)), -1);
+  e_vcard_attribute_remove_values(priv->attribute);
+
+  e_vcard_attribute_add_value(priv->attribute, g_strchomp(g_strchug(val)));
+  g_free(val);
+}
+
+static void
+update_note_attribute(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  GtkTextIter end;
+  GtkTextIter start;
+  gchar *val;
+
+  g_return_if_fail(NULL != priv->attribute);
+
+  if (!priv->editor_widget)
+    return;
+
+  g_return_if_fail(GTK_IS_TEXT_VIEW(priv->editor_widget));
+
+  buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->editor_widget));
+  gtk_text_buffer_get_bounds(buffer, &start, &end);
+  val = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
+  e_vcard_attribute_remove_values(priv->attribute);
+  e_vcard_attribute_add_value(priv->attribute, g_strchomp(g_strchug(val)));
+  g_free(val);
+}
+
+static void
+update_gender_attribute(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  const char *gender = "undefined";
+  gchar *val;
+
+  g_return_if_fail(NULL != priv->attribute);
+
+  if (!priv->editor_widget)
+    return;
+
+  g_return_if_fail(HILDON_IS_BUTTON(priv->editor_widget));
+
+  val = hildon_button_get_value(HILDON_BUTTON(priv->editor_widget));
+
+  if (val)
+  {
+    if (!strcmp(val, g_dgettext("osso-addressbook", "addr_va_general_male")))
+      gender = "male";
+    else if (!strcmp(val, g_dgettext("osso-addressbook",
+                                     "addr_va_general_female")))
+    {
+      gender = "female";
+    }
+  }
+
+  e_vcard_attribute_remove_values(priv->attribute);
+  e_vcard_attribute_add_value(priv->attribute, gender);
+}
+
+static void
+update_date_attribute(OssoABookContactField *field)
+{
+  GDate *d;
+
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  g_return_if_fail(NULL != priv->attribute);
+
+  if (!priv->editor_widget)
+    return;
+
+  d = g_object_get_data(G_OBJECT(priv->editor_widget), "date-button-value");
+
+  if (d)
+  {
+    EContactDate *date = e_contact_date_new();
+    gchar *string_date;
+
+    date->year = d->year;
+    date->month = d->month;
+    date->day = d->day;
+    string_date = e_contact_date_to_string(date);
+    e_contact_date_free(date);
+    e_vcard_attribute_remove_values(priv->attribute);
+    e_vcard_attribute_add_value(priv->attribute, string_date);
+    g_free(string_date);
+  }
+}
+
+static void
 child_modified(OssoABookContactField *field)
 {
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
@@ -790,7 +894,7 @@ static OssoABookContactFieldTemplate general_templates[] =
   }
 };
 
-static OssoABookContactFieldTemplate address_templates[7] =
+static OssoABookContactFieldTemplate address_templates[] =
 {
   {
     NULL, "address_p_o_box", NULL, NULL, 4,
