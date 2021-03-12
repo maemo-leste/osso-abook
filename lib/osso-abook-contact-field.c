@@ -457,8 +457,7 @@ static gchar *
 get_url_attr_value(EVCardAttribute *attr)
 {
   char *val = e_vcard_attribute_get_value(attr);
-  gchar *s; // r4
-
+  gchar *s;
 
   if (!val || !g_str_has_prefix(val, "http://"))
     return val;
