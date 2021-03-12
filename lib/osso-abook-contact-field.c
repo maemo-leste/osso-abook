@@ -492,6 +492,36 @@ get_gender_attr_value(EVCardAttribute *attr)
   return g_strdup(g_dgettext("osso-addressbook", "addr_va_general_undefined"));
 }
 
+static gchar *
+get_name_attr_value(EVCardAttribute *attr)
+{
+  GList *val;
+  const char *val1 = NULL;
+  const char *val2 = NULL;
+  const char *space = "";
+
+  val = e_vcard_attribute_get_values(attr);
+
+  if (val)
+  {
+    val1 = val->data;
+    val = val->next;
+
+    if (val)
+      val2 = val->data;
+  }
+
+  if (IS_EMPTY(val1))
+    val1 = "";
+
+  if (IS_EMPTY(val2))
+    val2 = "";
+
+  if (!IS_EMPTY(val1) && !IS_EMPTY(val2))
+    space = " ";
+
+  return g_strconcat(val2, space, val1, NULL);
+}
 static OssoABookContactFieldTemplate general_templates[] =
 {
   {
