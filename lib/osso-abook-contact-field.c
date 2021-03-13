@@ -404,6 +404,70 @@ update_country_attribute(OssoABookContactField *field)
 }
 
 static void
+update_attribute_list(OssoABookContactFieldPrivate *priv, guint attr_count)
+{
+  GList *values;
+  GList *child;
+  guint i;
+  GList *l = NULL;
+
+  g_return_if_fail(NULL != priv->attribute);
+
+  values = e_vcard_attribute_get_values(priv->attribute);
+
+  for (child = priv->children; child; child = child->next)
+  {
+    l = g_list_prepend(l, e_vcard_attribute_get_value(
+                         osso_abook_contact_field_get_attribute(child->data)));
+
+    if (values)
+      values = values->next;
+  }
+
+  while (values)
+  {
+    l = g_list_prepend(l, g_strdup(values->data));
+    values = values->next;
+  }
+
+  for (i = g_list_length(l); i < attr_count ; i++)
+    l = g_list_prepend(l, g_strdup(""));
+
+  e_vcard_attribute_remove_values(priv->attribute);
+
+  for (l = g_list_reverse(l); l; l = g_list_delete_link(l, l))
+  {
+    e_vcard_attribute_add_value(priv->attribute, l->data);
+
+    g_free(l->data);
+  }
+}
+
+static void
+update_name_attribute(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  g_return_if_fail(NULL != priv->attribute);
+
+  update_attribute_list(priv, 5);
+  free_attributes_list(priv->secondary_attributes);
+  priv->secondary_attributes = NULL;
+}
+
+static void
+update_address_attribute(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  g_return_if_fail(NULL != priv->attribute);
+
+  update_attribute_list(priv, 7);
+  free_attributes_list(priv->secondary_attributes);
+  priv->secondary_attributes = NULL;
+}
+
+static void
 child_modified(OssoABookContactField *field)
 {
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
@@ -791,7 +855,7 @@ get_formatted_address(EVCardAttribute *attr)
                                         NULL);
   }
 
-  trimmed = g_regex_replace_literal(match_trim_hspace, fmt_addr, -1, 0, NULL, 0,
+  trimmed = g_regex_replace_literal(match_trim_hspace, fmt_addr, -1, 0, "", 0,
                                     NULL);
   g_free(fmt_addr);
   s = g_strchomp(g_regex_replace_literal(match_multiple_hspace, trimmed, -1, 0,
@@ -1218,7 +1282,7 @@ get_children(OssoABookContactField *field, OssoABookContactFieldTemplate *t,
 
     if (t->msgid)
     {
-      EVCardAttribute *attr = e_vcard_attribute_new(NULL, NULL);
+      EVCardAttribute *attr = e_vcard_attribute_new(NULL, "");
       OssoABookContactField *child_field;
       OssoABookContactFieldPrivate *child_priv;
 
@@ -1941,10 +2005,10 @@ osso_abook_contact_field_get_display_value(OssoABookContactField *field)
     g_return_val_if_fail(NULL != priv->template, NULL);
 
     if (priv->template->get_attr_value)
-    {
-      priv->display_value =
-          g_strdup(priv->template->get_attr_value(priv->attribute));
-    }
+      priv->display_value = priv->template->get_attr_value(priv->attribute);
+
+    if (!priv->display_value)
+      priv->display_value = g_strdup("");
   }
 
   return priv->display_value;

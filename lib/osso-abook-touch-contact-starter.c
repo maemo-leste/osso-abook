@@ -287,7 +287,7 @@ G_GNUC_END_IGNORE_DEPRECATIONS
     else
     {
       gtk_widget_hide(priv->status_label);
-      status = NULL;
+      status = "";
     }
 
     gtk_label_set_text(GTK_LABEL(priv->status_label), status);
@@ -297,7 +297,7 @@ G_GNUC_END_IGNORE_DEPRECATIONS
     else
     {
       gtk_widget_hide(priv->align);
-      location = NULL;
+      location = "";
     }
 
     gtk_label_set_text(GTK_LABEL(priv->location_label), location);

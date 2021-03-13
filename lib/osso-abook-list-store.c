@@ -1118,9 +1118,11 @@ contacts_removed_cb(OssoABookRoster *roster, const char **uids,
       {
         OSSO_ABOOK_NOTE(LIST_STORE,
                         "%s@%p: removing row %p with contact %p(%s) for UID %s",
-                        get_store_book_uri(store), store, *rows, (*rows)->contact,
-                        e_contact_get_const(E_CONTACT((*rows)->contact),
-                                            E_CONTACT_UID), *uids);
+                        get_store_book_uri(store), store, *rows,
+                        (*rows)->contact,
+                        e_contact_get_const(
+                          E_CONTACT((*rows)->contact), E_CONTACT_UID) ? : "",
+                        *uids);
 
         g_ptr_array_add(arr, *rows);
         rows++;
