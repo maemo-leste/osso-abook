@@ -25,6 +25,7 @@
 
 #include "config.h"
 
+#include "osso-abook-address-format.h"
 #include "osso-abook-button.h"
 #include "osso-abook-contact-field.h"
 #include "osso-abook-enums.h"
@@ -713,6 +714,118 @@ get_country_attr_value(EVCardAttribute *attr)
     val = g_strdup(nl_langinfo(_NL_ADDRESS_COUNTRY_NAME));
     e_vcard_attribute_add_value(attr, val);
   }
+
+  return val;
+}
+
+static gchar *
+get_formatted_address(EVCardAttribute *attr)
+{
+  static GRegex *match_trim_hspace = NULL;
+  static GRegex *match_multiple_hspace = NULL;
+  GList *val;
+  char *fmt_addr;
+  gchar *s;
+  gchar *trimmed;
+  OssoABookAddress address = {};
+
+  val = e_vcard_attribute_get_values(attr);
+
+  if (val)
+  {
+    address.p_o_box = val->data;
+    val = val->next;
+  }
+
+  if (val)
+  {
+    address.extension = val->data;
+    val = val->next;
+  }
+
+  if (val)
+  {
+    address.street = val->data;
+    val = val->next;
+  }
+
+  if (val)
+  {
+    address.city = val->data;
+    val = val->next;
+  }
+
+  if (val)
+  {
+    address.region = val->data;
+    val = val->next;
+  }
+
+  if (val)
+  {
+    address.postal = val->data;
+    val = val->next;
+  }
+
+  if (val)
+    address.country = val->data;
+
+  fmt_addr = osso_abook_address_format(&address);
+
+  if (!fmt_addr)
+    return NULL;
+
+  if (!match_trim_hspace)
+  {
+    /* matches hspaces at start or at the end */
+    match_trim_hspace = g_regex_new("(^\\h+|\\h+$)",
+                                    G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0,
+                                    NULL);
+  }
+
+  if (!match_multiple_hspace)
+  {
+    /* matches 2 or more hspaces */
+    match_multiple_hspace = g_regex_new("\\h{2,}",
+                                        G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0,
+                                        NULL);
+  }
+
+  trimmed = g_regex_replace_literal(match_trim_hspace, fmt_addr, -1, 0, NULL, 0,
+                                    NULL);
+  g_free(fmt_addr);
+  s = g_strchomp(g_regex_replace_literal(match_multiple_hspace, trimmed, -1, 0,
+                                         "#", 0, NULL));
+  g_free(trimmed);
+
+  return s;
+}
+
+static gchar *
+get_address_attr_value(EVCardAttribute *attr)
+{
+  static GRegex *match_hspace_digit = NULL;
+  static GRegex *match_vspace = NULL;
+  gchar *s1;
+  gchar *val;
+  gchar *s2;
+
+  if (!match_hspace_digit)
+    match_hspace_digit = g_regex_new("\\h+(\\d)", G_REGEX_OPTIMIZE, 0, NULL);
+
+  if (!match_vspace)
+    match_vspace = g_regex_new("\\v+", G_REGEX_OPTIMIZE, 0, NULL);
+
+  s1 = get_formatted_address(attr);
+
+  if (!s1)
+    return NULL;
+
+  /* \xC2\xA0 is UTF-8 for \u00A0 (non-breaking space), \1 is 'first group' */
+  s2 = g_regex_replace(match_hspace_digit, s1, -1, 0, "\xC2\xA0\\1", 0, NULL);
+  g_free(s1);
+  val = g_regex_replace_literal(match_vspace, s2, -1, 0, " ", 0, NULL);
+  g_free(s2);
 
   return val;
 }
