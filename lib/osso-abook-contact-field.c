@@ -33,6 +33,7 @@
 #include "osso-abook-message-map.h"
 #include "osso-abook-utils-private.h"
 #include "osso-abook-msgids.h"
+#include "osso-abook-util.h"
 
 typedef struct _OssoABookContactFieldTemplate OssoABookContactFieldTemplate;
 
@@ -40,7 +41,7 @@ struct _OssoABookContactFieldTemplate
 {
   const gchar *name;
   gchar *msgid;
-  gchar *type;
+  gchar *title;
   gchar *icon_name;
   int sort_weight;
   OssoABookContactFieldFlags flags;
@@ -468,7 +469,7 @@ update_address_attribute(OssoABookContactField *field)
 }
 
 static void
-child_modified(OssoABookContactField *field)
+field_modified(OssoABookContactField *field)
 {
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
 
@@ -546,7 +547,7 @@ get_text_editor_widget(OssoABookContactField *field)
   }
 
   g_signal_connect_swapped(widget, "changed",
-                           G_CALLBACK(child_modified), field);
+                           G_CALLBACK(field_modified), field);
 
   return widget;
 }
@@ -644,7 +645,7 @@ get_note_editor_widget(OssoABookContactField *field)
   hildon_gtk_text_view_set_input_mode(GTK_TEXT_VIEW(widget),
                                       im | HILDON_GTK_INPUT_MODE_MULTILINE);
   g_signal_connect_swapped(text_buffer, "changed",
-                           G_CALLBACK(child_modified), field);
+                           G_CALLBACK(field_modified), field);
   g_signal_connect(text_buffer, "notify::cursor-position",
                    G_CALLBACK(note_editor_notify_cursor_position_cb),widget);
   g_signal_connect(widget, "size-allocate",
@@ -654,6 +655,97 @@ get_note_editor_widget(OssoABookContactField *field)
   hildon_gtk_text_view_set_input_mode(GTK_TEXT_VIEW(widget),
                                       im | HILDON_GTK_INPUT_MODE_MULTILINE);
   return widget;
+}
+
+static void
+set_editor_window_title(GtkWindow *parent, OssoABookContactField *field)
+{
+  const char *title;
+
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (priv->template && priv->template->title)
+  {
+    title = osso_abook_message_map_lookup(priv->message_map,
+                                          priv->template->title);
+  }
+
+  if (!title)
+    title = osso_abook_contact_field_get_display_title(field);
+
+  osso_abook_set_portrait_mode_supported(GTK_WINDOW(parent), FALSE);
+  gtk_window_set_title(parent, title);
+}
+
+static void
+gender_editor_clicked_cb(GtkButton *button, OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  GtkWidget *dialog = hildon_picker_dialog_new(
+        GTK_WINDOW(gtk_widget_get_toplevel(priv->editor_widget)));
+  GtkWidget *selector;
+  const char *display_value;
+  GtkTreeModel *tree_model;
+  int i;
+  static const char *genders[] =
+  {
+    "addr_va_general_undefined",
+    "addr_va_general_male",
+    "addr_va_general_female"
+  };
+
+  set_editor_window_title(GTK_WINDOW(dialog), field);
+  selector = hildon_touch_selector_new_text();
+  hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog),
+                                    HILDON_TOUCH_SELECTOR(selector));
+  tree_model = hildon_touch_selector_get_model(
+        HILDON_TOUCH_SELECTOR(selector), 0);
+  display_value = osso_abook_contact_field_get_display_value(field);
+
+  for (i = 0; i < G_N_ELEMENTS(genders); i++)
+  {
+    const char *gender = dgettext("osso-addressbook", genders[i]);
+
+    hildon_touch_selector_append_text(HILDON_TOUCH_SELECTOR(selector), gender);
+
+    if (!strcmp(display_value, gender))
+    {
+      hildon_touch_selector_set_active(
+            HILDON_TOUCH_SELECTOR(selector), 0,
+            gtk_tree_model_iter_n_children(tree_model, 0) - 1);
+    }
+  }
+
+  if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK)
+  {
+    gchar *text =
+        hildon_touch_selector_get_current_text(HILDON_TOUCH_SELECTOR(selector));
+    hildon_button_set_value(HILDON_BUTTON(priv->editor_widget), text);
+    field_modified(field);
+    g_free(text);
+  }
+
+  gtk_widget_destroy(dialog);
+}
+
+static GtkWidget *
+get_gender_editor_widget(OssoABookContactField *field)
+{
+  GtkWidget *button = hildon_button_new(HILDON_SIZE_FINGER_HEIGHT,
+                                        HILDON_BUTTON_ARRANGEMENT_HORIZONTAL);
+
+  hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.0, 0.5);
+  hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.0, 0.5);
+  gtk_button_set_alignment(GTK_BUTTON(button), 0.0, 0.5);
+  hildon_button_set_style(HILDON_BUTTON(button), HILDON_BUTTON_STYLE_PICKER);
+  hildon_button_set_title(HILDON_BUTTON(button),
+                          osso_abook_contact_field_get_display_title(field));
+  hildon_button_set_value(HILDON_BUTTON(button),
+                          osso_abook_contact_field_get_display_value(field));
+  g_signal_connect(button, "clicked",
+                   G_CALLBACK(gender_editor_clicked_cb), field);
+
+  return button;
 }
 
 static void
@@ -962,6 +1054,58 @@ get_address_attr_value(EVCardAttribute *attr)
   g_free(s2);
 
   return val;
+}
+
+static GDate *
+gdate_from_attribute(EVCardAttribute *attr)
+{
+  GList *val = e_vcard_attribute_get_values(attr);
+  GDate *date = NULL;
+  EContactDate *d;
+
+  if (!val)
+    return NULL;
+
+  if (IS_EMPTY(val->data))
+    return NULL;
+
+  d = e_contact_date_from_string(val->data);
+
+  if (!d)
+    return NULL;
+
+  if (g_date_valid_dmy(d->day, d->month, d->year))
+  {
+    gchar *s;
+
+    date = g_date_new_dmy(d->day, d->month, d->year);
+    s = e_contact_date_to_string(d);
+    e_vcard_attribute_remove_values(attr);
+    e_vcard_attribute_add_value(attr, s);
+    g_free(s);
+  }
+
+  e_contact_date_free(d);
+
+  return date;
+}
+
+static gchar *
+get_date_attr_value(EVCardAttribute *attr)
+{
+  GDate *date = gdate_from_attribute(attr);
+  gchar sdate[100];
+
+  sdate[0] = 0;
+
+  if (date)
+  {
+    g_date_strftime(sdate, sizeof(sdate),
+                    dgettext("hildon-libs", "wdgt_va_date_medium"), date);
+    g_date_free(date);
+  }
+
+  return g_strdup(g_strchomp(g_strchug(sdate)));
 }
 
 static OssoABookContactFieldTemplate general_templates[] =
@@ -2144,7 +2288,7 @@ child_modified_cb(OssoABookContactField *child_field, GParamSpec *pspec,
                   OssoABookContactField *field)
 {
   if (osso_abook_contact_field_is_modified(child_field))
-    child_modified(field);
+    field_modified(field);
 }
 
 GList *
