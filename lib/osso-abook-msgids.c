@@ -113,28 +113,13 @@ osso_abook_msgids_rfind(const char *locale, const char *domain,
                         const char *msgstr)
 {
   GHashTable *hashtable;
-  const char *result;
 
-  if (domain)
-  {
-    if (msgstr)
-    {
-      hashtable = osso_abook_msgids_get_table(locale, domain);
-      if (hashtable)
-        result = g_hash_table_lookup(hashtable, msgstr);
-      else
-        result = NULL;
-    }
-    else
-    {
-      g_return_val_if_fail(NULL != msgstr, NULL);
-      result = msgstr;
-    }
-  }
-  else
-  {
-    g_return_val_if_fail(NULL != domain, NULL);
-    result = NULL;
-  }
-  return result;
+  g_return_val_if_fail(NULL != domain, NULL);
+  g_return_val_if_fail(NULL != msgstr, NULL);
+
+  hashtable = osso_abook_msgids_get_table(locale, domain);
+  if (hashtable)
+    return g_hash_table_lookup(hashtable, msgstr);
+
+  return NULL;
 }
