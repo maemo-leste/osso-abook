@@ -41,51 +41,54 @@ osso_abook_msgids_locate(const char *locale, char *domain)
   gchar *mo_file;
   char *basedir;
 
-  if (domain)
+  g_return_val_if_fail(NULL != domain, NULL);
+
+  if (!locale)
+    locale = setlocale(LC_MESSAGES, NULL);
+
+  locale_name = g_strdup(locale);
+  cmp_locale_name = &locale_name[strlen(locale_name) - 1];
+  mo_file = g_strconcat(domain, ".mo", NULL);
+  basedir = bindtextdomain(domain, NULL);
+
+  if (locale_name >= cmp_locale_name)
   {
-    if (!locale)
-      locale = setlocale(LC_MESSAGES, NULL);
-    locale_name = g_strdup(locale);
-    cmp_locale_name = &locale_name[strlen(locale_name) - 1];
-    mo_file = g_strconcat(domain, ".mo", NULL);
-    basedir = bindtextdomain(domain, NULL);
-    if (locale_name >= cmp_locale_name)
+    domain = NULL;
+  }
+  else
+  {
+    while (1)
     {
-      domain = NULL;
-    }
-    else
-    {
-      while (1)
+      domain = g_build_filename(basedir, locale_name, "LC_MESSAGES", mo_file,
+                                NULL);
+
+      if (g_file_test(domain, G_FILE_TEST_IS_REGULAR))
+        break;
+
+      g_free(domain);
+
+      while (!strchr("@._", *cmp_locale_name))
       {
-        domain = g_build_filename(basedir, locale_name, "LC_MESSAGES", mo_file,
-                                  NULL);
-        if (g_file_test(domain, G_FILE_TEST_IS_REGULAR))
-          break;
-        g_free(domain);
-        while (!strchr("@._", *cmp_locale_name))
-        {
-          if (locale_name >= --cmp_locale_name)
-          {
-            domain = NULL;
-            goto out;
-          }
-        }
-        *cmp_locale_name-- = 0;
-        if (locale_name >= cmp_locale_name)
+        if (locale_name >= --cmp_locale_name)
         {
           domain = NULL;
           goto out;
         }
       }
+
+      *cmp_locale_name-- = 0;
+
+      if (locale_name >= cmp_locale_name)
+      {
+        domain = NULL;
+        goto out;
+      }
     }
+  }
 out:
-    g_free(locale_name);
-    g_free(mo_file);
-  }
-  else
-  {
-    g_return_val_if_fail(NULL != domain, NULL);
-  }
+  g_free(locale_name);
+  g_free(mo_file);
+
   return domain;
 }
 
