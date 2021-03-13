@@ -21,6 +21,7 @@
 #include <hildon/hildon.h>
 
 #include <libintl.h>
+#include <langinfo.h>
 
 #include "config.h"
 
@@ -30,6 +31,7 @@
 #include "osso-abook-avatar-image.h"
 #include "osso-abook-message-map.h"
 #include "osso-abook-utils-private.h"
+#include "osso-abook-msgids.h"
 
 typedef struct _OssoABookContactFieldTemplate OssoABookContactFieldTemplate;
 
@@ -121,6 +123,15 @@ enum
 
 static GList *
 get_name_children(OssoABookContactField *field);
+
+static OssoABookAvatar *
+get_avatar(OssoABookContactField *field)
+{
+  GtkWidget *child = gtk_bin_get_child(
+        GTK_BIN(osso_abook_contact_field_get_editor_widget(field)));
+
+  return osso_abook_avatar_image_get_avatar(OSSO_ABOOK_AVATAR_IMAGE(child));
+}
 
 static gchar *
 create_field_title(OssoABookContactField *field, const char *display_title,
@@ -262,6 +273,7 @@ update_note_attribute(OssoABookContactField *field)
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
   GtkTextIter end;
   GtkTextIter start;
+  GtkTextBuffer *buffer;
   gchar *val;
 
   g_return_if_fail(NULL != priv->attribute);
@@ -284,7 +296,7 @@ update_gender_attribute(OssoABookContactField *field)
 {
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
   const char *gender = "undefined";
-  gchar *val;
+  const gchar *val;
 
   g_return_if_fail(NULL != priv->attribute);
 
@@ -313,9 +325,8 @@ update_gender_attribute(OssoABookContactField *field)
 static void
 update_date_attribute(OssoABookContactField *field)
 {
-  GDate *d;
-
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  GDate *d;
 
   g_return_if_fail(NULL != priv->attribute);
 
@@ -338,6 +349,57 @@ update_date_attribute(OssoABookContactField *field)
     e_vcard_attribute_add_value(priv->attribute, string_date);
     g_free(string_date);
   }
+}
+
+static void
+update_image_attribute(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  EVCardAttribute *photo_attr;
+
+  e_vcard_attribute_remove_values(priv->attribute);
+  e_vcard_attribute_remove_params(priv->attribute);
+
+  photo_attr = e_vcard_get_attribute(
+        E_VCARD(OSSO_ABOOK_CONTACT(get_avatar(field))), EVC_PHOTO);
+
+  if (photo_attr)
+  {
+    GList *val = e_vcard_attribute_get_values(photo_attr);
+    GList *param = e_vcard_attribute_get_params(photo_attr);
+
+    while (val)
+    {
+      e_vcard_attribute_add_value(priv->attribute, val->data);
+      val = val->next;
+    }
+
+    while (param)
+    {
+      e_vcard_attribute_add_param(priv->attribute,
+                                  e_vcard_attribute_param_copy(param->data));
+      param = param->next;
+    }
+  }
+}
+
+static void
+update_country_attribute(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  gchar *val;
+
+  g_return_if_fail(NULL != priv->attribute);
+
+  if (!priv->editor_widget)
+    return;
+
+  g_return_if_fail(HILDON_IS_BUTTON(priv->editor_widget));
+
+  val = g_strdup(hildon_button_get_value(HILDON_BUTTON(priv->editor_widget)));
+  e_vcard_attribute_remove_values(priv->attribute);
+  e_vcard_attribute_add_value(priv->attribute, g_strchomp(g_strchug(val)));
+  g_free(val);
 }
 
 static void
@@ -626,6 +688,35 @@ get_name_attr_value(EVCardAttribute *attr)
 
   return g_strconcat(val2, space, val1, NULL);
 }
+
+static gchar *
+get_country_attr_value(EVCardAttribute *attr)
+{
+  gchar *val = e_vcard_attribute_get_value(attr);
+
+  if (val)
+  {
+    if (!osso_abook_msgids_rfind(NULL, "osso-country", val))
+    {
+      const char *msgid =
+          osso_abook_msgids_rfind("en_GB", "osso-countries", val);
+
+      if (msgid)
+      {
+        g_free(val);
+        val = g_strdup(dgettext("osso-countries", msgid));
+      }
+    }
+  }
+  else
+  {
+    val = g_strdup(nl_langinfo(_NL_ADDRESS_COUNTRY_NAME));
+    e_vcard_attribute_add_value(attr, val);
+  }
+
+  return val;
+}
+
 static OssoABookContactFieldTemplate general_templates[] =
 {
   {
@@ -1053,15 +1144,6 @@ static OssoABookContactFieldTemplateGroup template_groups[] =
   {address_templates, G_N_ELEMENTS(address_templates)},
   {name_templates, G_N_ELEMENTS(name_templates)}
 };
-
-static OssoABookAvatar *
-get_avatar(OssoABookContactField *field)
-{
-  GtkWidget *child = gtk_bin_get_child(
-        GTK_BIN(osso_abook_contact_field_get_editor_widget(field)));
-
-  return osso_abook_avatar_image_get_avatar(OSSO_ABOOK_AVATAR_IMAGE(child));
-}
 
 static void
 avatar_image_changed_cb(OssoABookAvatar *contact, GdkPixbuf *image,
