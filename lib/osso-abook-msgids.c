@@ -16,21 +16,25 @@
  * along with this library. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+#include "config.h"
+
 #include <locale.h>
 #include <libintl.h>
+#include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <glib.h>
 
 #include "osso-abook-msgids.h"
 
+#define _MO_MAGIC1 0x950412DE
+#define _MO_MAGIC2 0xDE120495
 
 static GHashTable *msgids_table;
-static int mo_magic1 = 0x950412DE;
-static int mo_magic2 = 0xDE120495;
 
 const char *
-osso_abook_msgids_locate(const char *locale, const char *domain)
+osso_abook_msgids_locate(const char *locale, char *domain)
 {
   gchar *locale_name;
   gchar *cmp_locale_name;
@@ -80,7 +84,7 @@ out:
   }
   else
   {
-    g_return_if_fail(NULL != domain);
+    g_return_val_if_fail(NULL != domain, NULL);
   }
   return domain;
 }
@@ -98,8 +102,7 @@ free_msgids_table()
 GHashTable *
 osso_abook_msgids_get_table(const char *locale, const char *domain)
 {
-  GHashTable *ret;
-  return ret;
+	return NULL;
 }
 
 const char *
@@ -121,14 +124,14 @@ osso_abook_msgids_rfind(const char *locale, const char *domain,
     }
     else
     {
-      g_return_if_fail(NULL != msgstr);
+      g_return_val_if_fail(NULL != msgstr, NULL);
       result = msgstr;
     }
   }
   else
   {
-    g_return_if_fail(NULL != domain);
-    result = 0;
+    g_return_val_if_fail(NULL != domain, NULL);
+    result = NULL;
   }
   return result;
 }
