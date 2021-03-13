@@ -587,6 +587,76 @@ get_noautocap_text_editor_widget(OssoABookContactField *field)
 }
 
 static void
+note_editor_notify_cursor_position_cb(GtkTextBuffer *text_buffer,
+                                      GParamSpec *pspec, GtkTextView *text_view)
+{
+  GtkWidget *pa;
+  GtkWidget *table;
+  GtkTextIter iter;
+  GdkRectangle location;
+  gint y;
+
+  if (!gtk_widget_has_focus(GTK_WIDGET(text_view)))
+    return;
+
+  pa = gtk_widget_get_ancestor(
+        GTK_WIDGET(text_view), HILDON_TYPE_PANNABLE_AREA);
+  table = gtk_widget_get_ancestor(GTK_WIDGET(text_view), GTK_TYPE_TABLE);
+
+  g_return_if_fail(NULL != pa);
+  g_return_if_fail(NULL != table);
+
+  gtk_text_buffer_get_iter_at_mark(text_buffer, &iter,
+                                   gtk_text_buffer_get_insert(text_buffer));
+  gtk_text_view_get_iter_location(text_view, &iter, &location);
+  gtk_text_view_buffer_to_window_coords(text_view, GTK_TEXT_WINDOW_WIDGET,
+                                        0, location.y, NULL, &y);
+  if (gtk_widget_translate_coordinates(
+        GTK_WIDGET(text_view), table, 0, y, 0, &y))
+  {
+    hildon_pannable_area_jump_to(HILDON_PANNABLE_AREA(pa), -1, y);
+    hildon_pannable_area_jump_to(HILDON_PANNABLE_AREA(pa), -1,
+                                 y + location.height);
+  }
+}
+
+static void
+note_editor_size_allocate_cb(GtkTextView *text_view,
+                             GdkRectangle *allocation, gpointer user_data)
+{
+  note_editor_notify_cursor_position_cb(
+        gtk_text_view_get_buffer(text_view), 0, text_view);
+}
+
+static GtkWidget *
+get_note_editor_widget(OssoABookContactField *field)
+{
+  GtkTextBuffer *text_buffer = gtk_text_buffer_new(NULL);
+  GtkWidget *widget;
+  HildonGtkInputMode im;
+
+  gtk_text_buffer_set_text(
+        text_buffer, osso_abook_contact_field_get_display_value(field), -1);
+  widget = hildon_text_view_new();
+  gtk_text_view_set_buffer(GTK_TEXT_VIEW(widget), text_buffer);
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(widget), GTK_WRAP_WORD_CHAR);
+  im = hildon_gtk_text_view_get_input_mode(GTK_TEXT_VIEW(widget));
+  hildon_gtk_text_view_set_input_mode(GTK_TEXT_VIEW(widget),
+                                      im | HILDON_GTK_INPUT_MODE_MULTILINE);
+  g_signal_connect_swapped(text_buffer, "changed",
+                           G_CALLBACK(child_modified), field);
+  g_signal_connect(text_buffer, "notify::cursor-position",
+                   G_CALLBACK(note_editor_notify_cursor_position_cb),widget);
+  g_signal_connect(widget, "size-allocate",
+                   G_CALLBACK(note_editor_size_allocate_cb), NULL);
+  /* why twice? */
+  im = hildon_gtk_text_view_get_input_mode(GTK_TEXT_VIEW(widget));
+  hildon_gtk_text_view_set_input_mode(GTK_TEXT_VIEW(widget),
+                                      im | HILDON_GTK_INPUT_MODE_MULTILINE);
+  return widget;
+}
+
+static void
 action_widget_destroy_cb(GtkWidget *widget, OssoABookContactFieldAction *action)
 {
   g_object_unref(action->widget);
