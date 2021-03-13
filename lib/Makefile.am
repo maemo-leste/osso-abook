@@ -34,6 +34,7 @@ testam_SOURCES = \
 		osso-abook-roster-manager.c \
 		osso-abook-contact-filter.c \
 		osso-abook-eventlogger.c \
+		osso-abook-msgids.c \
 		osso-abook-quarks.c \
 		osso-abook-account-manager.c
 
@@ -101,6 +102,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-roster-manager.c \
 		osso-abook-contact-filter.c \
 		osso-abook-eventlogger.c \
+		osso-abook-msgids.c \
 		osso-abook-quarks.c \
 		osso-abook-account-manager.c \
 		osso-abook-service-group.c \
