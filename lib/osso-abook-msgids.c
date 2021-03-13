@@ -156,7 +156,7 @@ osso_abook_msgids_get_table(const char *locale, const char *domain)
 
         for (i = 0; i < mo_hdr.nstrings; i++)
         {
-          if (trans_tab[i].length)
+          if (orig_tab[i].length)
           {
             guint32 orig_len = orig_tab[i].length;
             guint32 trans_len = trans_tab[i].length;
