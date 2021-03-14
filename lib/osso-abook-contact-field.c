@@ -34,6 +34,8 @@
 #include "osso-abook-utils-private.h"
 #include "osso-abook-msgids.h"
 #include "osso-abook-util.h"
+#include "osso-abook-avatar-chooser-dialog.h"
+#include "osso-abook-avatar-editor-dialog.h"
 
 typedef struct _OssoABookContactFieldTemplate OssoABookContactFieldTemplate;
 
@@ -886,6 +888,182 @@ get_date_editor_widget(OssoABookContactField *field)
 }
 
 static void
+avatar_image_changed_cb(OssoABookAvatar *contact, GdkPixbuf *image,
+                        OssoABookContactField *field)
+{
+  osso_abook_contact_set_pixbuf(OSSO_ABOOK_CONTACT(get_avatar(field)),
+                                osso_abook_avatar_get_image(contact), 0, 0);
+}
+
+static void
+avatar_editor_response_cb(GtkWidget *dialog, int response_id,
+                          OssoABookContactField *field)
+{
+  if (response_id == GTK_RESPONSE_OK)
+  {
+    GdkPixbuf *pixbuf = osso_abook_avatar_editor_dialog_get_scaled_pixbuf(
+          OSSO_ABOOK_AVATAR_EDITOR_DIALOG(dialog));
+
+    if (pixbuf)
+    {
+      OSSO_ABOOK_NOTE(AVATAR, "updating avatar pixbuf");
+
+      osso_abook_contact_set_pixbuf(OSSO_ABOOK_CONTACT(get_avatar(field)),
+                                    pixbuf, NULL, NULL);
+      field_modified(field);
+      g_object_unref(pixbuf);
+    }
+
+    gtk_widget_destroy(dialog);
+  }
+}
+
+static void
+avatar_chooser_response_cb(GtkWidget *dialog, int response_id,
+                           OssoABookContactField *field)
+{
+  if (response_id == GTK_RESPONSE_OK)
+  {
+    GdkPixbuf *pixbuf = osso_abook_avatar_chooser_dialog_get_pixbuf(
+          OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(dialog));
+    const char *icon_name = osso_abook_avatar_chooser_dialog_get_icon_name(
+          OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(dialog));
+    OssoABookContact *master_contact =
+        osso_abook_contact_field_get_master_contact(field);
+    gboolean pixbuff_small = FALSE;
+
+    if (master_contact)
+    {
+      g_signal_handlers_disconnect_matched(
+        master_contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+        0, 0, NULL, avatar_image_changed_cb, field);
+    }
+
+    if (icon_name)
+      OSSO_ABOOK_NOTE(AVATAR, "preselected avatar selected: %s", icon_name);
+    else if (pixbuf)
+    {
+      int w = gdk_pixbuf_get_width(pixbuf);
+      int h = gdk_pixbuf_get_height(pixbuf);
+
+      if (MAX(w, h) >= 72)
+      {
+        GtkWidget *editor_dialog = osso_abook_avatar_editor_dialog_new(
+              gtk_window_get_transient_for(GTK_WINDOW(dialog)), pixbuf);
+
+        g_signal_connect(editor_dialog, "response",
+                         G_CALLBACK(avatar_editor_response_cb), field);
+        gtk_widget_show(editor_dialog);
+      }
+      else
+      {
+        OSSO_ABOOK_NOTE(AVATAR, "skipping small avatar: %dx%d px", w, h);
+        pixbuff_small = TRUE;
+      }
+    }
+
+    if (icon_name || pixbuff_small)
+    {
+      osso_abook_contact_set_pixbuf(OSSO_ABOOK_CONTACT(get_avatar(field)),
+                                    pixbuf, NULL, NULL);
+      field_modified(field);
+    }
+  }
+
+  gtk_widget_destroy(dialog);
+}
+
+static void
+avatar_button_clicked_cb(GtkWidget *widget, OssoABookContactField *field)
+{
+  GtkWidget *dialog = osso_abook_avatar_chooser_dialog_new(GTK_WINDOW(widget));
+
+  osso_abook_set_portrait_mode_supported(GTK_WINDOW(dialog), FALSE);
+  osso_abook_avatar_chooser_dialog_set_contact(
+        OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(dialog),
+        osso_abook_contact_field_get_master_contact(field));
+  g_signal_connect(dialog, "response",
+                   G_CALLBACK(avatar_chooser_response_cb), field);
+  gtk_widget_show(dialog);
+}
+
+static void
+avatar_button_destroy_cb(OssoABookAvatarImage *avatar_image,
+                         OssoABookContact *master_contact)
+{
+  OssoABookAvatar *avatar = osso_abook_avatar_image_get_avatar(avatar_image);
+
+  g_signal_handlers_disconnect_matched(
+        master_contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+        0, 0, NULL, osso_abook_contact_attach, avatar);
+  g_signal_handlers_disconnect_matched(
+        master_contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+        0, 0, NULL, osso_abook_contact_detach, avatar);
+}
+
+GtkWidget *
+get_image_editor_widget(OssoABookContactField *field)
+{
+  OssoABookContact *master_contact =
+      osso_abook_contact_field_get_master_contact(field);
+  OssoABookContact *contact = osso_abook_contact_new();
+  gchar *uid = osso_abook_create_temporary_uid();
+  GtkWidget *button;
+
+  e_contact_set(E_CONTACT(contact), E_CONTACT_UID, uid);
+  g_free(uid);
+
+  if (master_contact)
+  {
+    GdkPixbuf *avatar_image =
+        osso_abook_avatar_get_image(OSSO_ABOOK_AVATAR(master_contact));
+    EVCardAttribute *attr_photo =
+        e_vcard_get_attribute(E_VCARD(master_contact), EVC_PHOTO);
+    GList *l;
+
+    for (l = osso_abook_contact_get_roster_contacts(master_contact); l;
+         l = g_list_delete_link(l, l))
+    {
+      osso_abook_contact_attach(contact, l->data);
+    }
+
+    g_signal_connect_swapped(master_contact, "contact-attached",
+                             G_CALLBACK(osso_abook_contact_attach), contact);
+    g_signal_connect_swapped(master_contact, "contact-detached",
+                             G_CALLBACK(osso_abook_contact_detach), contact);
+
+    if (avatar_image)
+    {
+      osso_abook_contact_set_pixbuf(contact, avatar_image, NULL, NULL);
+
+      if (!attr_photo)
+      {
+        g_signal_connect(master_contact, "notify::avatar-image",
+          G_CALLBACK(avatar_image_changed_cb), field);
+      }
+    }
+
+    button = osso_abook_avatar_button_new(OSSO_ABOOK_AVATAR(contact), 128);
+    gtk_widget_set_can_focus(GTK_WIDGET(button), FALSE);
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(avatar_button_clicked_cb), field);
+    g_signal_connect_data(gtk_bin_get_child(GTK_BIN(button)), "destroy",
+                          G_CALLBACK(avatar_button_destroy_cb),
+                          g_object_ref(master_contact),
+                          (GClosureNotify)&g_object_unref, 0);
+  }
+  else
+  {
+    button = osso_abook_avatar_button_new(OSSO_ABOOK_AVATAR(contact), 128);
+    gtk_widget_set_can_focus(GTK_WIDGET(button), FALSE);
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(avatar_button_clicked_cb), field);
+  }
+
+  return button;
+}
+
+static void
 action_widget_destroy_cb(GtkWidget *widget, OssoABookContactFieldAction *action)
 {
   g_object_unref(action->widget);
@@ -1645,14 +1823,6 @@ static OssoABookContactFieldTemplateGroup template_groups[] =
   {address_templates, G_N_ELEMENTS(address_templates)},
   {name_templates, G_N_ELEMENTS(name_templates)}
 };
-
-static void
-avatar_image_changed_cb(OssoABookAvatar *contact, GdkPixbuf *image,
-                        OssoABookContactField *field)
-{
-  osso_abook_contact_set_pixbuf(OSSO_ABOOK_CONTACT(get_avatar(field)),
-                                osso_abook_avatar_get_image(contact), 0, 0);
-}
 
 static void
 osso_abook_contact_field_set_property(GObject *object, guint property_id,
