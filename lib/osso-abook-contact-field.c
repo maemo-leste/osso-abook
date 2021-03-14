@@ -126,6 +126,12 @@ enum
 static GList *
 get_name_children(OssoABookContactField *field);
 
+static GList *
+get_address_children(OssoABookContactField *field);
+
+static gchar *
+get_formatted_address(EVCardAttribute *attr);
+
 static OssoABookAvatar *
 get_avatar(OssoABookContactField *field)
 {
@@ -226,6 +232,39 @@ synthesize_name_attributes(OssoABookContactField *field)
         attr, osso_abook_contact_field_get_display_value(field));
   free_attributes_list(priv->secondary_attributes);
   priv->secondary_attributes = g_list_prepend(NULL, attr);
+}
+
+static void
+synthesize_address_attributes(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  gchar *addr;
+
+  g_return_if_fail(NULL != priv->attribute);
+
+  addr = get_formatted_address(osso_abook_contact_field_get_attribute(field));
+
+  if (!IS_EMPTY(addr))
+  {
+    EVCardAttribute *attr_label = e_vcard_attribute_new(NULL, EVC_LABEL);
+    EVCardAttributeParam *attr_type;
+    GList *l;
+
+    e_vcard_attribute_add_value(attr_label, addr);
+    attr_type = e_vcard_attribute_param_new(EVC_TYPE);
+
+    for (l = e_vcard_attribute_get_param(priv->attribute, EVC_TYPE); l;
+         l = l->next)
+    {
+      osso_abook_e_vcard_attribute_param_merge_value(attr_type, l->data, NULL);
+    }
+
+    e_vcard_attribute_add_param(attr_label, attr_type);
+    free_attributes_list(priv->secondary_attributes);
+    priv->secondary_attributes = g_list_prepend(0, attr_label);
+  }
+
+  g_free(addr);
 }
 
 static void
@@ -748,6 +787,104 @@ get_gender_editor_widget(OssoABookContactField *field)
   return button;
 }
 
+static GDate *
+gdate_from_attribute(EVCardAttribute *attr)
+{
+  GList *val = e_vcard_attribute_get_values(attr);
+  GDate *date = NULL;
+  EContactDate *d;
+
+  if (!val)
+    return NULL;
+
+  if (IS_EMPTY(val->data))
+    return NULL;
+
+  d = e_contact_date_from_string(val->data);
+
+  if (!d)
+    return NULL;
+
+  if (g_date_valid_dmy(d->day, d->month, d->year))
+  {
+    gchar *s;
+
+    date = g_date_new_dmy(d->day, d->month, d->year);
+    s = e_contact_date_to_string(d);
+    e_vcard_attribute_remove_values(attr);
+    e_vcard_attribute_add_value(attr, s);
+    g_free(s);
+  }
+
+  e_contact_date_free(d);
+
+  return date;
+}
+
+static void
+date_editor_clicked_cb(GtkWidget *button, OssoABookContactField *field)
+{
+  GtkWidget *selector;
+  GtkWidget *dialog;
+  GDate *gdate;
+
+  gdate = gdate_from_attribute(osso_abook_contact_field_get_attribute(field));
+
+  if (!gdate)
+  {
+    gdate = g_date_new();
+    g_date_set_time_t(gdate, time(NULL));
+    g_date_subtract_years(gdate, 25);
+  }
+
+  selector = hildon_date_selector_new_with_year_range(1900, 2100);
+  hildon_date_selector_select_current_date(
+        HILDON_DATE_SELECTOR(selector), gdate->year, gdate->month, gdate->day);
+  g_date_free(gdate);
+
+  dialog = hildon_picker_dialog_new(
+        GTK_WINDOW(gtk_widget_get_ancestor(button, GTK_TYPE_WINDOW)));
+  set_editor_window_title(GTK_WINDOW(dialog), field);
+  hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog),
+                                    HILDON_TOUCH_SELECTOR(selector));
+
+  if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK)
+  {
+    gchar sdate[100];
+    guint day;
+    guint month;
+    guint year;
+
+    hildon_date_selector_get_date(
+          HILDON_DATE_SELECTOR(selector), &year, &month, &day);
+    gdate = g_date_new_dmy(day, month + 1, year);
+    g_date_strftime(sdate, sizeof(sdate),
+                    dgettext("hildon-libs", "wdgt_va_date_medium"), gdate);
+    hildon_button_set_value(HILDON_BUTTON(button), sdate);
+    g_object_set_data_full(G_OBJECT(button), "date-button-value", gdate,
+                           (GDestroyNotify)g_date_free);
+    field_modified(field);
+  }
+
+  gtk_widget_destroy(dialog);
+}
+
+static GtkWidget *
+get_date_editor_widget(OssoABookContactField *field)
+{
+  GtkWidget *widget = hildon_button_new(HILDON_SIZE_FINGER_HEIGHT,
+                                        HILDON_BUTTON_ARRANGEMENT_HORIZONTAL);
+
+  _osso_abook_button_set_date_style(HILDON_BUTTON(widget));
+  hildon_button_set_title(HILDON_BUTTON(widget),
+                          osso_abook_contact_field_get_display_title(field));
+  hildon_button_set_value(HILDON_BUTTON(widget),
+                          osso_abook_contact_field_get_display_value(field));
+  g_signal_connect(widget, "clicked",
+                   G_CALLBACK(date_editor_clicked_cb), field);
+  return widget;
+}
+
 static void
 action_widget_destroy_cb(GtkWidget *widget, OssoABookContactFieldAction *action)
 {
@@ -1054,40 +1191,6 @@ get_address_attr_value(EVCardAttribute *attr)
   g_free(s2);
 
   return val;
-}
-
-static GDate *
-gdate_from_attribute(EVCardAttribute *attr)
-{
-  GList *val = e_vcard_attribute_get_values(attr);
-  GDate *date = NULL;
-  EContactDate *d;
-
-  if (!val)
-    return NULL;
-
-  if (IS_EMPTY(val->data))
-    return NULL;
-
-  d = e_contact_date_from_string(val->data);
-
-  if (!d)
-    return NULL;
-
-  if (g_date_valid_dmy(d->day, d->month, d->year))
-  {
-    gchar *s;
-
-    date = g_date_new_dmy(d->day, d->month, d->year);
-    s = e_contact_date_to_string(d);
-    e_vcard_attribute_remove_values(attr);
-    e_vcard_attribute_add_value(attr, s);
-    g_free(s);
-  }
-
-  e_contact_date_free(d);
-
-  return date;
 }
 
 static gchar *
@@ -1527,6 +1630,13 @@ static GList *
 get_name_children(OssoABookContactField *field)
 {
   return get_children(field, &name_templates[0], G_N_ELEMENTS(name_templates));
+}
+
+static GList *
+get_address_children(OssoABookContactField *field)
+{
+  return get_children(field, &address_templates[0],
+                      G_N_ELEMENTS(address_templates));
 }
 
 static OssoABookContactFieldTemplateGroup template_groups[] =

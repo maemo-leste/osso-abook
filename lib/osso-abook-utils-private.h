@@ -4,6 +4,8 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 #include <telepathy-glib/telepathy-glib.h>
+#include <libebook/libebook.h>
+#include <hildon/hildon.h>
 
 G_BEGIN_DECLS
 
@@ -36,6 +38,14 @@ _osso_abook_is_addressbook(void);
 
 TpConnectionPresenceType
 default_presence_convert(TpConnectionPresenceType presence_type);
+
+void
+osso_abook_e_vcard_attribute_param_merge_value(EVCardAttributeParam *param,
+                                               const char *value,
+                                               GCompareFunc cmp_func);
+
+void
+_osso_abook_button_set_date_style(HildonButton *button);
 
 G_END_DECLS
 

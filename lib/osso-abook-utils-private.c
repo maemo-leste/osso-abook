@@ -406,3 +406,57 @@ default_presence_convert(TpConnectionPresenceType presence_type)
       return TP_CONNECTION_PRESENCE_TYPE_UNKNOWN;
   }
 }
+
+/**
+ * e_vcard_attribute_param_merge_value:
+ * @param: an #EVCardAttributeParam
+ * @value: a string value to add
+ * @cmp_func: a #GCompareFunc or %NULL
+ *
+ * Adds @value to @param's list of values if value is not already there.
+ * (Eg. doesn't allow duplicate values).
+ *
+ * To decide whether @value is already present or not @cmp_func is called
+ * with the two strings to compare as arguments. If @cmp_func is %NULL then
+ * g_ascii_strcasecmp() is used.
+ *
+ * Note that if param is ENCODING then its value gets overwritten.
+ *
+ * Function copied from Fremantle EDS
+ **/
+void
+osso_abook_e_vcard_attribute_param_merge_value(EVCardAttributeParam *param,
+                                               const char *value,
+                                               GCompareFunc cmp_func)
+{
+  g_return_if_fail(param != NULL);
+
+  if (!cmp_func)
+    cmp_func = (GCompareFunc)g_ascii_strcasecmp;
+
+  if (!strcmp(e_vcard_attribute_param_get_name(param), EVC_ENCODING))
+  {
+    /* replace the value */
+    e_vcard_attribute_param_remove_values(param);
+    e_vcard_attribute_param_add_value(param, value);
+  }
+  else
+  {
+    GList *tmp = g_list_find_custom(e_vcard_attribute_param_get_values(param),
+                                    value, cmp_func);
+
+    if (!tmp)
+      e_vcard_attribute_param_add_value(param, value);
+  }
+}
+
+void
+_osso_abook_button_set_date_style(HildonButton *button)
+{
+  g_return_if_fail(HILDON_IS_BUTTON(button));
+
+  hildon_button_set_title_alignment(button, 0.0, 0.5);
+  hildon_button_set_value_alignment(button, 0.0, 0.5);
+  gtk_button_set_alignment(GTK_BUTTON(button), 0.0, 0.5);
+  hildon_button_set_style(button, HILDON_BUTTON_STYLE_PICKER);
+}
