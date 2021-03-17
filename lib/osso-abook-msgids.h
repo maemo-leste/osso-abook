@@ -24,4 +24,7 @@ const char *
 osso_abook_msgids_rfind(const char *locale, const char *domain,
                         const char *msgstr);
 
+GStrv
+osso_abook_msgids_get_countries();
+
 #endif // OSSOABOOKMSGIDS_H

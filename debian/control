@@ -36,7 +36,7 @@ Depends:
  ${misc:Depends},
  gconf2,
  hildon-common-strings-l10n-mr0,
- osso-countries-l10n-mr0,
+ iso-codes
 # Packages that could/should go in Depends, but are currently missing:
 #libmcclient6,
 #libmodest-dbus-client,

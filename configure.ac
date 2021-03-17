@@ -57,6 +57,10 @@ PKG_CHECK_MODULES(RTCOM, rtcom-eventlogger)
 AC_SUBST(RTCOM_CFLAGS)
 AC_SUBST(RTCOM_LIBS)
 
+PKG_CHECK_MODULES(XML, [libxml-2.0 iso-codes])
+AC_SUBST(XML_CFLAGS)
+AC_SUBST(XML_LIBS)
+
 AC_ARG_ENABLE([maemo-launcher],
               [AS_HELP_STRING([--enable-maemo-launcher],
                               [build with maemo-launcher support])],
@@ -92,6 +96,9 @@ AC_SUBST(DGETTEXT)
 
 CFLAGS="-Wall -Werror -DG_LOG_DOMAIN=GETTEXT_PACKAGE"
 AC_SUBST(CFLAGS)
+
+ISO_CODES_PREFIX=`pkg-config iso-codes --variable=prefix`
+AC_SUBST(ISO_CODES_PREFIX)
 
 AC_OUTPUT([
 Makefile

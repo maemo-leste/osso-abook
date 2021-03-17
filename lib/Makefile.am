@@ -43,11 +43,12 @@ testam_CFLAGS = \
 		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
 		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
 		$(RTCOM_CFLAGS) -DOSSOLOG_COMPILE=1 -Wno-format-extra-args \
-		$(DGETTEXT) -g -DTEST
+		$(DGETTEXT) $(XML_CFLAGS) \
+		-DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" -g -DTEST
 
 testam_LDADD = \
 		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
-		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) -lm
+		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) -lm
 
 testam_LDFLAGS = -no-undefined
 
@@ -60,13 +61,14 @@ libosso_abook_@API_VERSION_MAJOR@_la_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
 		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
 		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
-		$(RTCOM_CFLAGS) -DOSSOLOG_COMPILE=1 -Wno-format-extra-args \
-		$(DGETTEXT)
+		$(RTCOM_CFLAGS) $(XML_CFLAGS) -DOSSOLOG_COMPILE=1 \
+		-DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" \
+		-Wno-format-extra-args $(DGETTEXT)
 
 libosso_abook_@API_VERSION_MAJOR@_la_LDFLAGS = -Wl,--no-undefined
 libosso_abook_@API_VERSION_MAJOR@_la_LIBADD = \
 		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
-		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) -lm
+		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) -lm
 
 libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-enums.c \
