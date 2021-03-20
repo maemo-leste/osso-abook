@@ -1063,6 +1063,53 @@ get_image_editor_widget(OssoABookContactField *field)
   return button;
 }
 
+static GtkWidget *
+get_country_editor_widget(OssoABookContactField *field)
+{
+  static GtkTreeModel *model = NULL;
+  const char *title = osso_abook_contact_field_get_display_title(field);
+  const char *value = osso_abook_contact_field_get_display_value(field);
+  GtkWidget *sel = hildon_touch_selector_entry_new_text();
+  HildonEntry *entry;
+  GtkWidget *button;
+
+  if (!model)
+  {
+    GStrv countries = osso_abook_msgids_get_countries();
+    GStrv country = countries;
+
+    model = hildon_touch_selector_get_model(HILDON_TOUCH_SELECTOR(sel), 0);
+    g_object_ref(model);
+
+    while(*country)
+    {
+      hildon_touch_selector_append_text(HILDON_TOUCH_SELECTOR(sel), *country);
+      country++;
+    }
+
+    g_strfreev(countries);
+  }
+  else
+    hildon_touch_selector_set_model(HILDON_TOUCH_SELECTOR(sel), 0, model);
+
+  entry = hildon_touch_selector_entry_get_entry(
+        HILDON_TOUCH_SELECTOR_ENTRY(sel));
+  gtk_entry_set_text(GTK_ENTRY(entry), value);
+  button = hildon_picker_button_new(HILDON_SIZE_FINGER_HEIGHT,
+                                    HILDON_BUTTON_ARRANGEMENT_HORIZONTAL);
+  hildon_picker_button_set_selector(HILDON_PICKER_BUTTON(button),
+                                    HILDON_TOUCH_SELECTOR(sel));
+  hildon_button_set_title(HILDON_BUTTON(button), title);
+  hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.0, 0.5);
+  hildon_button_set_value(HILDON_BUTTON(button), value);
+  hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.0, 0.5);
+  gtk_button_set_alignment(GTK_BUTTON(button), 0.0, 0.5);
+  g_signal_connect_swapped(button, "value-changed",
+                           G_CALLBACK(field_modified), field);
+
+  return button;
+}
+
 static void
 action_widget_destroy_cb(GtkWidget *widget, OssoABookContactFieldAction *action)
 {
@@ -1236,18 +1283,19 @@ get_country_attr_value(EVCardAttribute *attr)
 {
   gchar *val = e_vcard_attribute_get_value(attr);
 
+  /* If I get it correctly, we have to return dgettext's msgid of the localised
+     country, which, on Leste, happens to be its English name, On Fremantle
+     there is "osso-countries" package, but we use iso-codes here */
+
+  /* FIXME - check if we do that correctly, once we have UI working */
   if (val)
   {
-    if (!osso_abook_msgids_rfind(NULL, "osso-country", val))
-    {
-      const char *msgid =
-          osso_abook_msgids_rfind("en_GB", "osso-countries", val);
+    const char *msgid = osso_abook_msgids_rfind(NULL, "iso_3166", val);
 
-      if (msgid)
-      {
-        g_free(val);
-        val = g_strdup(dgettext("osso-countries", msgid));
-      }
+    if (msgid)
+    {
+      g_free(val);
+      val = g_strdup(msgid);
     }
   }
   else
