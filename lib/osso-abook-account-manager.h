@@ -158,9 +158,10 @@ G_GNUC_WARN_UNUSED_RESULT GList *
 osso_abook_account_manager_list_enabled_accounts
                                             (OssoABookAccountManager *manager);
 
+/* replaces osso_abook_account_manager_list_by_profile */
 G_GNUC_WARN_UNUSED_RESULT GList *
-osso_abook_account_manager_list_by_profile  (OssoABookAccountManager *manager,
-                                             const char              *profile_id);
+osso_abook_account_manager_list_by_protocol  (OssoABookAccountManager *manager,
+                                              const char              *protocol);
 
 G_GNUC_WARN_UNUSED_RESULT GList *
 osso_abook_account_manager_list_by_vcard_field

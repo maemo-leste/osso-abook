@@ -91,7 +91,7 @@ struct _OssoABookAccountManagerPrivate
   gboolean is_ready : 1;             /* priv->flags & 1 */
   gboolean is_running : 1;           /* priv->flags & 2 */
   gboolean rosters_completed : 1;    /* priv->flags & 4 */
-  gboolean active_accounts_only : 1; /* priv->flags & 4 */
+  gboolean active_accounts_only : 1; /* priv->flags & 8 */
 };
 
 typedef struct _OssoABookAccountManagerPrivate OssoABookAccountManagerPrivate;
@@ -1845,4 +1845,35 @@ osso_abook_account_manager_get_account_protocol_object(
 
   return g_hash_table_lookup(priv->protocols,
                              tp_account_get_protocol_name(account));
+}
+
+GList *
+osso_abook_account_manager_list_by_protocol(OssoABookAccountManager *manager,
+                                            const char *protocol)
+{
+  OssoABookAccountManagerPrivate *priv;
+  GList *accounts;
+  GList *l;
+
+  g_return_val_if_fail(NULL != protocol, NULL);
+
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+
+  priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+
+  g_return_val_if_fail(priv->is_ready, NULL);
+
+  accounts = g_list_copy(g_hash_table_lookup(priv->protocol_rosters, protocol));
+
+  for (l = accounts; l; l = l->next)
+  {
+    struct account_info *info = l->data;
+
+    l->data = info->account;
+  }
+
+  return accounts;
 }

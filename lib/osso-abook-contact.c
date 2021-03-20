@@ -2487,7 +2487,7 @@ osso_abook_contact_osso_abook_caps_iface_init(OssoABookCapsIface *iface,
 }
 
 TpProtocol *
-osso_abook_contact_get_profile(OssoABookContact *contact)
+osso_abook_contact_get_protocol(OssoABookContact *contact)
 {
   OssoABookRoster *roster;
 

@@ -436,6 +436,7 @@ osso_abook_contact_get_roster              (OssoABookContact         *contact);
 TpAccount *
 osso_abook_contact_get_account             (OssoABookContact         *contact);
 
+/*replaces osso_abook_contact_get_profile */
 TpProtocol *
 osso_abook_contact_get_protocol            (OssoABookContact         *contact);
 
