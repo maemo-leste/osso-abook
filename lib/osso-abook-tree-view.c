@@ -599,7 +599,7 @@ style_set(GtkWidget *widget, GtkStyle *previous_style, gpointer user_data)
     }
     else
     {
-      GdkColor *fg = &widget->style->fg[0];
+      GdkColor *fg = &widget->style->fg[GTK_STATE_NORMAL];
 
       border_color[0] = fg->red;
       border_color[1] = fg->green;

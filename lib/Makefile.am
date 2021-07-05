@@ -113,6 +113,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-menu-extension.c \
 		osso-abook-plugin-manager.c \
 		osso-abook-presence-label.c \
+		osso-abook-button.c \
 		osso-abook-contact-detail-store.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
@@ -147,6 +148,7 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-menu-extension.h \
 		osso-abook-plugin.h \
 		osso-abook-plugin-manager.h \
+		osso-abook-button.h \
 		osso-abook-contact-field.h \
 		osso-abook-contact-detail-store.h \
 		osso-abook-row-model.h

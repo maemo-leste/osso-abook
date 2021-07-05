@@ -449,9 +449,9 @@ fcp_expose_event_cb(GtkWidget *widget, GdkEvent *event,
   GtkStyle *style = widget->style;
   cairo_t *cr;
   cairo_pattern_t *pattern;
-  double blue = (double)style->fg[0].blue / 65535.0;
-  double red = (double)style->fg[0].red / 65535.0;
-  double green = (double)style->fg[0].green / 65535.0;
+  double blue = (double)style->fg[GTK_STATE_NORMAL].blue / 65535.0;
+  double red = (double)style->fg[GTK_STATE_NORMAL].red / 65535.0;
+  double green = (double)style->fg[GTK_STATE_NORMAL].green / 65535.0;
 
   if (!data->layout)
   {
