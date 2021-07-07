@@ -183,3 +183,17 @@ osso_abook_avatar_is_user_selected(OssoABookAvatar *avatar)
 
   return user_selected;
 }
+
+gboolean
+osso_abook_avatar_is_done_loading(OssoABookAvatar *avatar)
+{
+  gboolean done_loading = FALSE;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR(avatar), FALSE);
+
+  g_object_get(G_OBJECT(avatar),
+               "done-loading", &done_loading,
+               NULL);
+
+  return done_loading;
+}

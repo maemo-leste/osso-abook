@@ -61,6 +61,10 @@ PKG_CHECK_MODULES(XML, [libxml-2.0 iso-codes])
 AC_SUBST(XML_CFLAGS)
 AC_SUBST(XML_LIBS)
 
+PKG_CHECK_MODULES(CAIRO, [cairo])
+AC_SUBST(CAIRO_CFLAGS)
+AC_SUBST(CAIRO_LIBS)
+
 AC_ARG_ENABLE([maemo-launcher],
               [AS_HELP_STRING([--enable-maemo-launcher],
                               [build with maemo-launcher support])],

@@ -151,3 +151,57 @@ _osso_abook_dump_vcard_string(const char *domain, const char *strloc,
 
   g_free(msg);
 }
+
+void
+_osso_abook_timer_start(const char *domain, const char *strfunc,
+                        const char *strtype, OssoABookDebugFlags type,
+                        GTimer *timer, const char *name)
+{
+  gchar *timer_name;
+  GDestroyNotify destroy;
+
+  if (!timer)
+    return;
+
+  if (!(type & _osso_abook_debug_flags))
+    return;
+
+  if (type == OSSO_ABOOK_DEBUG_ALL)
+    strtype = NULL;
+
+  if (!name)
+    name = strfunc;
+
+  g_dataset_id_set_data_full(timer, _osso_debug_timer_domain, g_strdup(name),
+                             (GDestroyNotify)&g_free);
+
+  timer_name = g_strconcat(domain, strtype, NULL);
+
+  if (timer_name)
+    destroy = g_free;
+  else
+    destroy = NULL;
+
+  g_dataset_id_set_data_full(
+        timer, _osso_debug_timer_name, timer_name, destroy);
+}
+
+void
+_osso_abook_timer_mark(const char *strloc, const char *strfunc, GTimer *timer)
+{
+  if (timer)
+  {
+    const gchar *domain = g_dataset_id_get_data(timer,
+                                                _osso_debug_timer_domain);
+
+    if (domain)
+    {
+      const gchar *name = g_dataset_id_get_data(timer, _osso_debug_timer_name);
+
+      g_log(name, G_LOG_LEVEL_DEBUG,
+            "%.3f s:\n---- %s(%s):\n---- %s: %.3f s elapsed",
+            _osso_abook_debug_timestamp(), strfunc, strloc, domain,
+            g_timer_elapsed(timer, NULL));
+    }
+  }
+}
