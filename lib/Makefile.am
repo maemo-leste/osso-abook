@@ -36,7 +36,7 @@ testam_SOURCES = \
 		osso-abook-eventlogger.c \
 		osso-abook-msgids.c \
 		osso-abook-quarks.c \
-		osso-abook-account-manager.c
+		osso-abook-account-manager.c \
 		osso-abook-avatar-image.c \
 		osso-abook-icon-sizes.c \
 		osso-abook-avatar-chooser-dialog.c
