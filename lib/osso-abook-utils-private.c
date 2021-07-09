@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "osso-abook-utils-private.h"
+#include "osso-abook-log.h"
 
 #include "config.h"
 
@@ -459,4 +460,70 @@ _osso_abook_button_set_date_style(HildonButton *button)
   hildon_button_set_value_alignment(button, 0.0, 0.5);
   gtk_button_set_alignment(GTK_BUTTON(button), 0.0, 0.5);
   hildon_button_set_style(button, HILDON_BUTTON_STYLE_PICKER);
+}
+
+GdkPixbuf *
+_osso_abook_get_cached_icon(gpointer widget, const gchar *icon_name, gint size)
+{
+  GHashTable *icon_cache =
+      g_object_get_data(G_OBJECT(widget), "osso-abook-icon-cache");
+  GdkPixbuf *icon;
+
+  if (!icon_cache)
+  {
+    icon_cache = g_hash_table_new_full(
+                   g_str_hash,
+                   g_str_equal,
+                   (GDestroyNotify)g_free,
+                   (GDestroyNotify)g_object_unref);
+
+    g_object_set_data_full(G_OBJECT(widget), "osso-abook-icon-cache",
+                           icon_cache, (GDestroyNotify)g_hash_table_unref);
+  }
+
+  icon = g_hash_table_lookup(icon_cache, icon_name);
+
+  if (!icon)
+  {
+    GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(widget));
+    GtkIconTheme *theme = gtk_icon_theme_get_for_screen(screen);
+
+    icon = gtk_icon_theme_load_icon(theme, icon_name, size, 0, NULL);
+
+    if (!icon)
+      return icon;
+
+    g_hash_table_insert(icon_cache, g_strdup(icon_name), icon);
+  }
+
+  g_object_ref(icon);
+
+  return icon;
+}
+
+gchar *
+_osso_abook_get_safe_folder(const char *folder)
+{
+  gchar *mydocs_path = g_strdup(g_getenv("MYDOCSDIR"));
+  gchar *path;
+
+  /* whatever NB#93536 bug is */
+  OSSO_ABOOK_WARN("drop this function when NB#93536 is fixed");
+
+  if (mydocs_path)
+    path = g_build_filename(mydocs_path, folder, NULL);
+  else
+  {
+    const gchar *dir = g_getenv("HOME");
+
+    if (!dir)
+      dir = g_get_home_dir();
+
+    mydocs_path = g_build_filename(dir, "MyDocs", NULL);
+    path = g_build_filename(mydocs_path, folder, NULL);
+  }
+
+  g_free(mydocs_path);
+
+  return path;
 }

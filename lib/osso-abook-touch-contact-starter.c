@@ -32,6 +32,7 @@
 #include "osso-abook-util.h"
 #include "osso-abook-button.h"
 #include "osso-abook-errors.h"
+#include "osso-abook-icon-sizes.h"
 
 struct _OssoABookTouchContactStarterPrivate
 {
@@ -387,14 +388,16 @@ update_avatar(OssoABookTouchContactStarter *starter)
       ((priv->full_view && priv->flag1) || !priv->flag1))
   {
     priv->avatar = osso_abook_avatar_button_new(
-          OSSO_ABOOK_AVATAR(get_details_contact(priv)), 144);
+          OSSO_ABOOK_AVATAR(get_details_contact(priv)),
+          OSSO_ABOOK_PIXEL_SIZE_AVATAR_DEFAULT);
     g_signal_connect_swapped(priv->avatar, "clicked",
                              G_CALLBACK(toggle_full_starter_view), starter);
   }
   else if (editable)
   {
     priv->avatar = osso_abook_avatar_button_new(
-          OSSO_ABOOK_AVATAR(get_details_contact(priv)), 144);
+          OSSO_ABOOK_AVATAR(get_details_contact(priv)),
+          OSSO_ABOOK_PIXEL_SIZE_AVATAR_DEFAULT);
     g_signal_connect_swapped(
           priv->avatar, "clicked",
           G_CALLBACK(osso_abook_touch_contact_starter_start_editor), starter);
@@ -402,7 +405,8 @@ update_avatar(OssoABookTouchContactStarter *starter)
   else
   {
     priv->avatar = osso_abook_avatar_image_new_with_avatar(
-          OSSO_ABOOK_AVATAR(get_details_contact(priv)), 144);
+          OSSO_ABOOK_AVATAR(get_details_contact(priv)),
+          OSSO_ABOOK_PIXEL_SIZE_AVATAR_DEFAULT);
   }
 
   gtk_widget_show(priv->avatar);

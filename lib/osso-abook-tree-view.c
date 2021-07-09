@@ -212,45 +212,6 @@ get_icon_finger_size(OssoABookTreeViewPrivate *priv, gint *hildon_size)
   return HILDON_ICON_SIZE_FINGER;
 }
 
-static GdkPixbuf *
-get_cached_icon(OssoABookTreeView *view, const gchar *icon_name, gint size)
-{
-  GHashTable *icon_cache =
-      g_object_get_data(G_OBJECT(view), "osso-abook-icon-cache");
-  GdkPixbuf *icon;
-
-  if (!icon_cache)
-  {
-    icon_cache = g_hash_table_new_full(
-                   g_str_hash,
-                   g_str_equal,
-                   (GDestroyNotify)g_free,
-                   (GDestroyNotify)g_object_unref);
-
-    g_object_set_data_full(G_OBJECT(view), "osso-abook-icon-cache",
-                           icon_cache, (GDestroyNotify)g_hash_table_unref);
-  }
-
-  icon = g_hash_table_lookup(icon_cache, icon_name);
-
-  if (!icon)
-  {
-    GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(view));
-    GtkIconTheme *theme = gtk_icon_theme_get_for_screen(screen);
-
-    icon = gtk_icon_theme_load_icon(theme, icon_name, size, 0, NULL);
-
-    if (!icon)
-      return icon;
-
-    g_hash_table_insert(icon_cache, g_strdup(icon_name), icon);
-  }
-
-  g_object_ref(icon);
-
-  return icon;
-}
-
 static const guint8 *
 get_avatar_border_color(OssoABookTreeViewPrivate *priv)
 {
@@ -263,7 +224,7 @@ get_avatar_border_color(OssoABookTreeViewPrivate *priv)
 static GdkPixbuf *
 get_avatar_fallback_image(OssoABookTreeView *view, OssoABookAvatar *avatar)
 {
-  return get_cached_icon(
+  return _osso_abook_get_cached_icon(
         view, osso_abook_avatar_get_fallback_icon_name(avatar),
         hildon_get_icon_pixel_size(HILDON_ICON_SIZE_FINGER));
 }
@@ -307,7 +268,7 @@ create_avatar_image(OssoABookTreeView *view, OssoABookContact *contact)
 
     get_icon_finger_size(priv, &size);
 
-    avatar_image = get_cached_icon(view, icon_name, size);
+    avatar_image = _osso_abook_get_cached_icon(view, icon_name, size);
   }
   else
   {
@@ -1129,8 +1090,8 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
 
   if (icon_name)
   {
-    icon = get_cached_icon(view, icon_name,
-                           hildon_get_icon_pixel_size(HILDON_ICON_SIZE_XSMALL));
+    icon = _osso_abook_get_cached_icon(
+          view, icon_name, hildon_get_icon_pixel_size(HILDON_ICON_SIZE_XSMALL));
   }
 
   g_object_set(cell,

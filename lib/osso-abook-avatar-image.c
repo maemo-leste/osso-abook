@@ -27,6 +27,7 @@
 #include "osso-abook-avatar-image.h"
 #include "osso-abook-avatar.h"
 #include "osso-abook-debug.h"
+#include "osso-abook-icon-sizes.h"
 
 struct _OssoABookAvatarImagePrivate
 {
@@ -86,7 +87,7 @@ osso_abook_avatar_image_init(OssoABookAvatarImage *image)
   OssoABookAvatarImagePrivate *priv = OSSO_ABOOK_AVATAR_IMAGE_PRIVATE(image);
 
   priv->maximum_zoom = 2.0f;
-  priv->size = 144;
+  priv->size = OSSO_ABOOK_PIXEL_SIZE_AVATAR_DEFAULT;
   priv->minimum_zoom = 1.0f;
   gtk_widget_set_events(GTK_WIDGET(image),
                         GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_HINT_MASK |
@@ -1114,7 +1115,8 @@ osso_abook_avatar_image_set_size(OssoABookAvatarImage *image, int size)
 int
 osso_abook_avatar_image_get_size(OssoABookAvatarImage *image)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_IMAGE(image), 144);
+  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_IMAGE(image),
+                       OSSO_ABOOK_PIXEL_SIZE_AVATAR_DEFAULT);
 
   return OSSO_ABOOK_AVATAR_IMAGE_PRIVATE(image)->size;
 }
@@ -1122,7 +1124,8 @@ osso_abook_avatar_image_get_size(OssoABookAvatarImage *image)
 double
 osso_abook_avatar_image_get_minimum_zoom(OssoABookAvatarImage *image)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_IMAGE(image), 144.0f);
+  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_IMAGE(image),
+                       OSSO_ABOOK_PIXEL_SIZE_AVATAR_DEFAULT);
 
   return OSSO_ABOOK_AVATAR_IMAGE_PRIVATE(image)->minimum_zoom;
 }
@@ -1130,7 +1133,8 @@ osso_abook_avatar_image_get_minimum_zoom(OssoABookAvatarImage *image)
 double
 osso_abook_avatar_image_get_current_zoom(OssoABookAvatarImage *image)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_IMAGE(image), 144.0f);
+  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_IMAGE(image),
+                       OSSO_ABOOK_PIXEL_SIZE_AVATAR_DEFAULT);
 
   return get_current_zoom(OSSO_ABOOK_AVATAR_IMAGE_PRIVATE(image));
 }
@@ -1147,7 +1151,8 @@ osso_abook_avatar_image_set_maximum_zoom(OssoABookAvatarImage *image,
 double
 osso_abook_avatar_image_get_maximum_zoom(OssoABookAvatarImage *image)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_IMAGE(image), 144.0f);
+  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_IMAGE(image),
+                       OSSO_ABOOK_PIXEL_SIZE_AVATAR_DEFAULT);
 
   return OSSO_ABOOK_AVATAR_IMAGE_PRIVATE(image)->maximum_zoom;
 }

@@ -47,6 +47,12 @@ osso_abook_e_vcard_attribute_param_merge_value(EVCardAttributeParam *param,
 void
 _osso_abook_button_set_date_style(HildonButton *button);
 
+GdkPixbuf *
+_osso_abook_get_cached_icon(gpointer widget, const gchar *icon_name, gint size);
+
+gchar *
+_osso_abook_get_safe_folder(const char *folder);
+
 G_END_DECLS
 
 #endif /* __OSSO_ABOOK_UTILS_PRIVATE_H_INCLUDED__ */

@@ -1,8 +1,24 @@
+#include <math.h>
+
 #include "config.h"
 
 #include "osso-abook-util.h"
 #include "osso-abook-filter-model.h"
 #include "osso-abook-utils-private.h"
+#include "osso-abook-avatar-image.h"
+
+struct OssoABookAsyncPixbufData
+{
+  int width;
+  int height;
+  gboolean preserve_aspect_ratio;
+  gsize maximum_size;
+  int io_priority;
+  GCancellable *cancellable;
+  guint8 buf[8192];
+  GdkPixbufLoader *pixbuf_loader;
+  GSimpleAsyncResult *async_result;
+};
 
 gboolean
 osso_abook_screen_is_landscape_mode(GdkScreen *screen)
@@ -509,4 +525,279 @@ osso_abook_sort_phone_number_matches(GList *matches, const char *phone_number)
   }
 
   return matches;
+}
+
+GtkWidget *
+osso_abook_avatar_button_new(OssoABookAvatar *avatar, int size)
+{
+  GtkWidget *avatar_image = osso_abook_avatar_image_new_with_avatar(avatar, size);
+  GtkWidget *button = hildon_gtk_button_new(HILDON_SIZE_AUTO_WIDTH);
+
+  gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+  gtk_widget_set_name(button, "osso-abook-avatar-button");
+  gtk_container_add(GTK_CONTAINER(button), avatar_image);
+  gtk_widget_show(avatar_image);
+
+  return button;
+}
+
+/*
+   fmg - GSimpleAsyncResult is deprecated in favor of GTask, but I have better
+   things to do now
+ */
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+static void
+_size_prepared_cb(GdkPixbufLoader *loader, gint width, gint height,
+                  gpointer user_data)
+{
+  struct OssoABookAsyncPixbufData *data = user_data;
+  int req_width = data->width;
+  int req_height = data->height;
+
+
+  if (req_width > 0 && req_height > 0)
+  {
+    if (data->preserve_aspect_ratio)
+    {
+      double ratio = MIN((double)req_width / (double)width,
+                         (double)req_height / (double)height);
+
+      height = ratio * (double)height;
+      width = ratio * (double)width;
+    }
+    else
+    {
+      width = req_width;
+      width = req_height;
+    }
+
+    gdk_pixbuf_loader_set_size(loader, width, height);
+  }
+
+
+  if (!data->maximum_size)
+    return;
+
+  if (width * height > data->maximum_size)
+  {
+    GdkPixbufFormat *format = gdk_pixbuf_loader_get_format(data->pixbuf_loader);
+
+    if (format && gdk_pixbuf_format_is_scalable(format))
+    {
+      double coeff =
+          sqrt((double)(width * height) / (double)data->maximum_size);
+
+      gdk_pixbuf_loader_set_size(loader, coeff * (double)width,
+                                 coeff * (double)height);
+    }
+    else
+    {
+      g_simple_async_result_set_handle_cancellation(data->async_result, FALSE);
+      g_simple_async_result_set_error(
+            data->async_result,
+            gdk_pixbuf_error_quark(),
+            gdk_pixbuf_error_quark(),
+            "Image exceeds arbitary size limit of %.1f mebipixels",
+            (((double)data->maximum_size) / 1024.f) / 1024.f);
+      g_cancellable_cancel(data->cancellable);
+    }
+  }
+}
+
+static void
+async_pixbuf_data_destroy(struct OssoABookAsyncPixbufData *data)
+{
+  if (data->async_result)
+  {
+    g_simple_async_result_complete(data->async_result);
+    g_object_unref(data->async_result);
+  }
+
+  if (data->cancellable)
+    g_object_unref(data->cancellable);
+
+  if (data->pixbuf_loader)
+  {
+    g_signal_handlers_disconnect_matched(
+          data->pixbuf_loader, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0,
+          NULL, _size_prepared_cb, data);
+    gdk_pixbuf_loader_close(data->pixbuf_loader, NULL);
+    g_object_unref(data->pixbuf_loader);
+  }
+
+  g_free(data);
+}
+
+static void
+_async_pixbuf_stream_closed_cb(GObject *source_object, GAsyncResult *res,
+                               gpointer user_data)
+{
+  struct OssoABookAsyncPixbufData *data = user_data;
+  GError *error = NULL;
+
+  if (g_input_stream_close_finish(G_INPUT_STREAM(source_object), res, &error))
+  {
+    if (gdk_pixbuf_loader_close(data->pixbuf_loader, &error))
+    {
+      GdkPixbuf *pixbuf = gdk_pixbuf_loader_get_pixbuf(data->pixbuf_loader);
+
+      if (pixbuf)
+      {
+        g_simple_async_result_set_op_res_gpointer(
+              data->async_result,  g_object_ref(pixbuf),
+              (GDestroyNotify)&g_object_unref);
+      }
+    }
+  }
+
+  if (error)
+  {
+    if (!g_cancellable_is_cancelled(data->cancellable))
+    {
+      if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        g_simple_async_result_set_from_error(data->async_result, error);
+    }
+
+    g_clear_error(&error);
+  }
+
+  async_pixbuf_data_destroy(data);
+}
+
+static void
+async_pixbuf_finish(struct OssoABookAsyncPixbufData *data, GInputStream *is,
+                    GError *error)
+{
+  if (error)
+  {
+    if (!g_cancellable_is_cancelled(data->cancellable))
+    {
+      if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        g_simple_async_result_set_from_error(data->async_result, error);
+    }
+
+    g_clear_error(&error);
+  }
+
+  g_input_stream_close_async(is, data->io_priority, data->cancellable,
+                             _async_pixbuf_stream_closed_cb, data);
+}
+
+static void
+_async_pixbuf_bytes_read_cb(GObject *source_object, GAsyncResult *res,
+                            gpointer user_data)
+{
+  struct OssoABookAsyncPixbufData *data = user_data;
+  GInputStream *in = G_INPUT_STREAM(source_object);
+  GError *error = NULL;
+  gssize size = g_input_stream_read_finish(in, res, &error);
+
+  if (size > 0 &&
+      gdk_pixbuf_loader_write(data->pixbuf_loader, data->buf, size, &error))
+  {
+    g_input_stream_read_async(in, data->buf, sizeof(data->buf),
+                              data->io_priority, data->cancellable,
+                              _async_pixbuf_bytes_read_cb, data);
+  }
+  else
+    async_pixbuf_finish(data, in, error);
+}
+
+static void
+_ready_cb(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+  struct OssoABookAsyncPixbufData *data = user_data;
+  GError *error = NULL;
+  GFileInputStream *in = g_file_read_finish(G_FILE(source_object), res, &error);
+
+  if (in)
+  {
+    g_input_stream_read_async(G_INPUT_STREAM(in), data->buf, sizeof(data->buf),
+                              data->io_priority, data->cancellable,
+                              _async_pixbuf_bytes_read_cb, data);
+  }
+  else
+  {
+    if (!g_cancellable_is_cancelled(data->cancellable))
+    {
+      if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        g_simple_async_result_set_from_error(data->async_result, error);
+    }
+
+    g_clear_error(&error);
+    async_pixbuf_data_destroy(data);
+  }
+}
+
+void
+osso_abook_load_pixbuf_at_scale_async(GFile *file, int width, int height,
+                                      gboolean preserve_aspect_ratio,
+                                      gsize maximum_size, int io_priority,
+                                      GCancellable *cancellable,
+                                      GAsyncReadyCallback callback,
+                                      gpointer user_data)
+{
+  struct OssoABookAsyncPixbufData *data =
+      g_new0(struct OssoABookAsyncPixbufData, 1);
+
+  g_return_if_fail(G_IS_FILE(file));
+  g_return_if_fail(!cancellable || G_IS_CANCELLABLE (cancellable));
+  g_return_if_fail(callback);
+
+  data->maximum_size = maximum_size;
+  data->width = width;
+  data->io_priority = io_priority;
+  data->height = height;
+  data->preserve_aspect_ratio = preserve_aspect_ratio;
+  data->async_result = g_simple_async_result_new(G_OBJECT(file), callback,
+                                                 user_data,
+                                                 osso_abook_load_pixbuf_async);
+  data->pixbuf_loader = gdk_pixbuf_loader_new();
+  g_signal_connect(data->pixbuf_loader, "size-prepared",
+                   G_CALLBACK(_size_prepared_cb), data);
+
+  if (cancellable)
+    data->cancellable = g_object_ref(cancellable);
+  else
+    data->cancellable = g_cancellable_new();
+
+  g_file_read_async(file, io_priority, cancellable, _ready_cb, data);
+}
+
+GdkPixbuf *
+osso_abook_load_pixbuf_finish(GFile *file, GAsyncResult *result, GError **error)
+{
+  GdkPixbuf *pixbuf = NULL;
+  gpointer source_tag;
+
+  g_return_val_if_fail(G_IS_FILE(file), NULL);
+
+  source_tag = g_simple_async_result_get_source_tag(
+        G_SIMPLE_ASYNC_RESULT(result));
+
+  g_return_val_if_fail(osso_abook_load_pixbuf_async == source_tag, NULL);
+
+  if (!g_simple_async_result_propagate_error(G_SIMPLE_ASYNC_RESULT(result),
+                                             error))
+  {
+    pixbuf = g_simple_async_result_get_op_res_gpointer(
+          G_SIMPLE_ASYNC_RESULT(result));
+  }
+
+  if (pixbuf)
+    pixbuf = g_object_ref(pixbuf);
+
+  return pixbuf;
+}
+
+G_GNUC_END_IGNORE_DEPRECATIONS
+
+void
+osso_abook_load_pixbuf_async(GFile *file, gsize maximum_size, int io_priority,
+                             GCancellable *cancellable,
+                             GAsyncReadyCallback callback, gpointer user_data)
+{
+  osso_abook_load_pixbuf_at_scale_async(file, -1, -1, TRUE, maximum_size,
+                                        io_priority, cancellable, callback,
+                                        user_data);
 }

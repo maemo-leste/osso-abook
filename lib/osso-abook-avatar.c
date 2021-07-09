@@ -197,3 +197,46 @@ osso_abook_avatar_is_done_loading(OssoABookAvatar *avatar)
 
   return done_loading;
 }
+
+GdkPixbuf *
+osso_abook_avatar_get_server_image_scaled(OssoABookAvatar *avatar, int width,
+                                          int height, gboolean crop)
+{
+  OssoABookAvatarIface *iface;
+  GdkPixbuf *pixbuf;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR(avatar), NULL);
+
+  iface = OSSO_ABOOK_AVATAR_GET_IFACE(avatar);
+
+  if (iface->get_server_image_scaled)
+    return iface->get_server_image_scaled(avatar, width, height, crop);
+
+  pixbuf = osso_abook_avatar_get_server_image(avatar);
+
+  if (pixbuf)
+    pixbuf = _osso_abook_scale_pixbuf_and_crop(pixbuf, width, height, crop, 0);
+
+  return pixbuf;
+}
+
+GdkPixbuf *
+osso_abook_avatar_get_server_image(OssoABookAvatar *avatar)
+{
+  GdkPixbuf *pixbuf;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR(avatar), NULL);
+
+  g_object_get(avatar, "server-image", &pixbuf, NULL);
+
+  if (pixbuf)
+  {
+    guint image_ref_count = G_OBJECT(pixbuf)->ref_count;
+
+    g_return_val_if_fail(image_ref_count > 1, NULL);
+
+    g_object_unref(pixbuf);
+  }
+
+  return pixbuf;
+}

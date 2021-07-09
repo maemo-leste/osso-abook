@@ -37,6 +37,9 @@ testam_SOURCES = \
 		osso-abook-msgids.c \
 		osso-abook-quarks.c \
 		osso-abook-account-manager.c
+		osso-abook-avatar-image.c \
+		osso-abook-icon-sizes.c \
+		osso-abook-avatar-chooser-dialog.c
 
 testam_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
@@ -116,6 +119,8 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-presence-label.c \
 		osso-abook-button.c \
 		osso-abook-avatar-image.c \
+		osso-abook-icon-sizes.c \
+		osso-abook-avatar-chooser-dialog.c \
 		osso-abook-contact-detail-store.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
@@ -131,6 +136,8 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-list-store.h \
 		osso-abook-avatar.h \
 		osso-abook-avatar-image.h \
+		osso-abook-avatar-chooser-dialog.h \
+		osso-abook-icon-sizes.h \
 		osso-abook-types.h \
 		osso-abook-roster-manager.h \
 		osso-abook-account-manager.h \
