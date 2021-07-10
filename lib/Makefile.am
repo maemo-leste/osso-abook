@@ -117,6 +117,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-menu-extension.c \
 		osso-abook-plugin-manager.c \
 		osso-abook-presence-label.c \
+		osso-abook-message-map.c \
 		osso-abook-button.c \
 		osso-abook-avatar-image.c \
 		osso-abook-icon-sizes.c \
