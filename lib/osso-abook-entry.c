@@ -133,6 +133,24 @@ _osso_abook_entry_add_icon(GtkEntry *entry, gchar *icon_name)
 }
 
 void
+_osso_abook_entry_remove_icon(GtkEntry *entry)
+{
+  gpointer data = g_object_get_data(G_OBJECT(entry), "icon-data");
+
+  if (!data)
+    return;
+
+  g_signal_handlers_disconnect_matched(
+        entry, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+        _expose_event_cb, data);
+  g_signal_handlers_disconnect_matched(
+        entry, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+        _style_set_cb, data);
+  gtk_entry_set_inner_border(GTK_ENTRY(entry), NULL);
+  g_object_set_data(G_OBJECT(entry), "icon-data", NULL);
+}
+
+void
 _osso_abook_entry_set_error_style(GtkEntry *entry)
 {
   _osso_abook_entry_add_icon(entry, "app_install_error");
@@ -140,3 +158,10 @@ _osso_abook_entry_set_error_style(GtkEntry *entry)
                                   GTK_STATE_NORMAL, "AttentionColor");
 }
 
+void
+_osso_abook_entry_set_normal_style(GtkEntry *entry)
+{
+  _osso_abook_entry_remove_icon(entry);
+  hildon_helper_set_logical_color(GTK_WIDGET(entry), GTK_RC_TEXT,
+                                  GTK_STATE_NORMAL, "ReversedTextColor");
+}

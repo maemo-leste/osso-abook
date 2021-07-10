@@ -21,6 +21,9 @@
 #define __OSSO_ABOOK_ENTRY_H_INCLUDED__
 
 void _osso_abook_entry_set_error_style(GtkEntry *entry);
+void _osso_abook_entry_set_normal_style(GtkEntry *entry);
+
 void _osso_abook_entry_add_icon(GtkEntry *entry, gchar *icon_name);
+void _osso_abook_entry_remove_icon(GtkEntry *entry);
 
 #endif /* __OSSO_ABOOK_ENTRY_H_INCLUDED__ */

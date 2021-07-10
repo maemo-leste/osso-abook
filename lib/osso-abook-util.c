@@ -1,3 +1,26 @@
+/*
+ * osso-abook-util.c
+ *
+ * Copyright (C) 2020 Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+ *
+ * This library is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
 #include <math.h>
 
 #include "config.h"
@@ -800,4 +823,78 @@ osso_abook_load_pixbuf_async(GFile *file, gsize maximum_size, int io_priority,
   osso_abook_load_pixbuf_at_scale_async(file, -1, -1, TRUE, maximum_size,
                                         io_priority, cancellable, callback,
                                         user_data);
+}
+
+static void
+osso_abook_apply_window_flag(GtkWidget *window, Atom type, const gchar *name,
+                             const gchar *flag)
+{
+  GdkAtom name_atom;
+  const gchar *flag_value;
+
+  g_return_if_fail(GTK_IS_WINDOW(window));
+
+  name_atom = gdk_atom_intern_static_string(name);
+  flag_value = g_object_get_data(G_OBJECT(window), flag);
+
+  if (flag_value)
+  {
+    long val = strcmp(flag_value, "0") ? 1 : 0;
+
+    gdk_property_change(GTK_WIDGET(window)->window, name_atom,
+                        gdk_x11_xatom_to_atom(type), 32, GDK_PROP_MODE_REPLACE,
+                        (const guchar *)&val, 1);
+  }
+  else
+    gdk_property_delete(GTK_WIDGET(window)->window, name_atom);
+}
+
+static void
+realized_cb(GtkWidget *widget, gpointer user_data)
+{
+  osso_abook_apply_window_flag(widget, XA_CARDINAL,
+                               "_HILDON_PORTRAIT_MODE_SUPPORT",
+                               "osso-abook-portrait-mode-supported");
+  osso_abook_apply_window_flag(widget, XA_CARDINAL,
+                               "_HILDON_PORTRAIT_MODE_REQUEST",
+                               "osso-abook-portrait-mode-requested");
+  osso_abook_apply_window_flag(widget, 19u,
+                               "_HILDON_ZOOM_KEY_ATOM",
+                               "osso-abook-zoom-key-used");
+}
+
+static void
+osso_abook_set_window_flag(GtkWindow *window, const char *flag, gboolean value)
+{
+  g_return_if_fail(GTK_IS_WINDOW(window));
+
+  g_object_set_data(G_OBJECT(window), flag, value ? "1" : "0");
+  g_signal_handlers_disconnect_matched(
+        window, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+        realized_cb, NULL);
+  g_signal_connect_after(window, "realize",
+                         G_CALLBACK(realized_cb), NULL);
+
+  if (gtk_widget_get_realized(GTK_WIDGET(window)))
+    realized_cb(NULL, 0);
+}
+
+void
+osso_abook_set_portrait_mode_supported(GtkWindow *window, gboolean flag)
+{
+  osso_abook_set_window_flag(window, "osso-abook-portrait-mode-supported",
+                             flag);
+}
+
+void
+osso_abook_set_portrait_mode_requested(GtkWindow *window, gboolean flag)
+{
+  osso_abook_set_window_flag(window, "osso-abook-portrait-mode-requested",
+                             flag);
+}
+
+void
+osso_abook_set_zoom_key_used(GtkWindow *window, gboolean flag)
+{
+  osso_abook_set_window_flag(window, "osso-abook-zoom-key-used", flag);
 }

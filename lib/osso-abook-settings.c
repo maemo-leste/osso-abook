@@ -56,6 +56,13 @@ osso_abook_settings_get_sms_button()
                                OSSO_ABOOK_SETTINGS_KEY_SMS_BUTTON, FALSE);
 }
 
+gboolean
+osso_abook_settings_get_video_button()
+{
+  return gconf_client_get_bool(osso_abook_get_gconf_client(),
+                               OSSO_ABOOK_SETTINGS_KEY_VIDEO_BUTTON, FALSE);
+}
+
 const char *
 osso_abook_settings_get_picture_folder()
 {
