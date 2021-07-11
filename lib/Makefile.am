@@ -118,6 +118,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-plugin-manager.c \
 		osso-abook-presence-label.c \
 		osso-abook-message-map.c \
+		osso-abook-avatar-editor.c \
 		osso-abook-entry.c \
 		osso-abook-button.c \
 		osso-abook-avatar-image.c \
@@ -139,6 +140,7 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-avatar.h \
 		osso-abook-avatar-image.h \
 		osso-abook-avatar-chooser-dialog.h \
+		osso-abook-avatar-editor.h \
 		osso-abook-icon-sizes.h \
 		osso-abook-types.h \
 		osso-abook-roster-manager.h \
