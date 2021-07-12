@@ -413,8 +413,8 @@ _load_icon(OssoABookAvatarChooserDialog *dialog, GFile *file)
   data.progress_timeout =
       gdk_threads_add_timeout(1000, _icon_load_timeout_cb, &data);
   data.cancellable = g_cancellable_new();
-  osso_abook_load_pixbuf_async(file, 6 * 1024 * 1024, 0, data.cancellable,
-                               _icon_load_ready_cb, &data);
+  osso_abook_load_pixbuf_async(file, OSSO_ABOOK_DEFAULT_MAXIMUM_PIXBUF_SIZE, 0,
+                               data.cancellable, _icon_load_ready_cb, &data);
 
   GDK_THREADS_LEAVE();
   g_main_loop_run(data.mainloop);
@@ -615,7 +615,7 @@ osso_abook_avatar_chooser_dialog_init(OssoABookAvatarChooserDialog *dialog)
   int i = 1;
 
   gtk_dialog_add_button(GTK_DIALOG(dialog),
-                        g_dgettext("osso-addressbook", "addr_bd_browse"), TRUE);
+                        g_dgettext("osso-addressbook", "addr_bd_browse"), 1);
   icon_theme = gtk_icon_theme_get_for_screen(
         gtk_widget_get_screen(GTK_WIDGET(dialog)));
 

@@ -50,6 +50,19 @@ avatar_chooser_response_cb(GtkWidget *dialog, int response_id,
   gtk_widget_destroy(user_data);
 }
 
+static gboolean
+idle_run_dialog(gpointer user_data)
+{
+  GtkWidget *dialog =
+      osso_abook_avatar_chooser_dialog_new(GTK_WINDOW(user_data));
+
+  g_signal_connect(dialog, "response",
+                   G_CALLBACK(avatar_chooser_response_cb), user_data);
+  gtk_dialog_run(GTK_DIALOG(dialog));
+
+  return FALSE;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -62,14 +75,11 @@ main(int argc, char **argv)
   osso_abook_debug_init();
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  GtkWidget *dialog = osso_abook_avatar_chooser_dialog_new(GTK_WINDOW(window));
 
   g_signal_connect(window, "destroy", G_CALLBACK(loop_quit), main_loop);
-  g_signal_connect(dialog, "response",
-                   G_CALLBACK(avatar_chooser_response_cb), window);
 
+  g_idle_add(idle_run_dialog, window);
   gtk_widget_show_all(window);
-  gtk_dialog_run(GTK_DIALOG(dialog));
   g_main_loop_run(main_loop);
   g_main_loop_unref(main_loop);
 }
