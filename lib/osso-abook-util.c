@@ -898,3 +898,47 @@ osso_abook_set_zoom_key_used(GtkWindow *window, gboolean flag)
 {
   osso_abook_set_window_flag(window, "osso-abook-zoom-key-used", flag);
 }
+
+static void
+screen_size_changed_cb(GdkScreen *screen, gpointer user_data)
+{
+  gint screen_height = gdk_screen_get_height(screen);
+  gint height;
+
+  gtk_widget_get_size_request(user_data, NULL, &height);
+
+  if (screen_height != height)
+  {
+    gtk_widget_set_size_request(user_data, -1, screen_height);
+    gtk_window_resize(GTK_WINDOW(user_data), gdk_screen_get_width(screen),
+                      screen_height);
+  }
+}
+
+static void
+destroyed_cb(GtkWidget *widget, gpointer user_data)
+{
+  g_signal_handlers_disconnect_matched(
+        user_data, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+        screen_size_changed_cb, widget);
+}
+
+void
+osso_abook_attach_screen_size_handler(GtkWindow *window)
+{
+  GtkWidget *widget;
+  GdkScreen *screen;
+
+  g_return_if_fail(GTK_IS_WINDOW(window));
+
+  widget = GTK_WIDGET(window);
+  screen = gtk_widget_get_screen(widget);
+
+  if (screen)
+  {
+    g_signal_connect(screen, "size-changed",
+                     G_CALLBACK(screen_size_changed_cb), widget);
+    g_signal_connect(widget, "destroy", G_CALLBACK(destroyed_cb), screen);
+    screen_size_changed_cb(screen, widget);
+  }
+}
