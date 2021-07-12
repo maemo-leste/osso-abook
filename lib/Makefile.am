@@ -1,49 +1,49 @@
-bin_PROGRAMS = testam
-testam_SOURCES = \
-		testam.c \
-		osso-abook-enums.c \
-		osso-abook-marshal.c \
-		tp-glib-enums.c \
-		osso-abook-init.c \
+bin_PROGRAMS = \
+		test_avatar_editor_dialog \
+		test_avatar_chooser_dialog \
+		test_contact_chooser
+
+# this shall be removed once we are able to build the whole library
+COMMON_SOURCES = \
+		$(BUILT_SOURCES) \
 		osso-abook-debug.c \
+		osso-abook-util.c \
 		osso-abook-errors.c \
 		osso-abook-string-list.c \
-		osso-abook-contact-chooser.c \
-		osso-abook-filter-model.c \
-		osso-abook-row-model.c \
+		osso-abook-utils-private.c \
 		osso-abook-list-store.c \
-		osso-abook-waitable.c \
-		osso-abook-util.c \
-		osso-abook-contact-view.c \
-		osso-abook-tree-view.c \
-		osso-abook-contact-model.c \
+		osso-abook-row-model.c \
+		eds.c \
+		osso-abook-contact-filter.c \
+		osso-abook-filter-model.c \
+		osso-abook-gconf-contact.c \
+		osso-abook-voicemail-contact.c \
+		osso-abook-group.c \
+		osso-abook-all-group.c \
 		osso-abook-presence.c \
 		osso-abook-caps.c \
 		osso-abook-settings.c \
-		osso-abook-avatar.c \
-		osso-abook-group.c \
-		osso-abook-all-group.c \
-		osso-abook-avatar-cache.c \
-		eds.c \
 		osso-abook-roster.c \
-		osso-abook-gconf-contact.c \
-		osso-abook-voicemail-contact.c \
-		osso-abook-aggregator.c \
-		osso-abook-contact.c \
-		osso-abook-utils-private.c \
 		osso-abook-roster-manager.c \
-		osso-abook-contact-filter.c \
-		osso-abook-eventlogger.c \
 		osso-abook-msgids.c \
 		osso-abook-quarks.c \
 		osso-abook-account-manager.c \
+		osso-abook-waitable.c \
+		osso-abook-aggregator.c \
+		osso-abook-contact.c \
+		osso-abook-eventlogger.c \
 		osso-abook-avatar-image.c \
-		osso-abook-icon-sizes.c \
-		osso-abook-avatar-chooser-dialog.c \
+		osso-abook-avatar.c \
+		osso-abook-avatar-cache.c \
+		osso-abook-icon-sizes.c
+
+test_avatar_editor_dialog_SOURCES = \
+		$(COMMON_SOURCES) \
+		test-avatar-editor-dialog.c \
 		osso-abook-avatar-editor.c \
 		osso-abook-avatar-editor-dialog.c
 
-testam_CFLAGS = \
+test_avatar_editor_dialog_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
 		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
 		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
@@ -51,11 +51,43 @@ testam_CFLAGS = \
 		$(DGETTEXT) $(XML_CFLAGS) \
 		-DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" -g -DTEST
 
-testam_LDADD = \
+test_avatar_editor_dialog_LDADD = \
 		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
 		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) -lm
 
-testam_LDFLAGS = -no-undefined
+test_avatar_chooser_dialog_SOURCES = \
+		$(COMMON_SOURCES) \
+		test-avatar-chooser-dialog.c \
+		osso-abook-avatar-chooser-dialog.c
+
+test_avatar_chooser_dialog_CFLAGS = \
+		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
+		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
+		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
+		$(RTCOM_CFLAGS) -DOSSOLOG_COMPILE=1 -Wno-format-extra-args \
+		$(DGETTEXT) $(XML_CFLAGS) \
+		-DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" -g -DTEST
+
+test_avatar_chooser_dialog_LDADD = \
+		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
+		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) -lm
+
+test_contact_chooser_SOURCES = \
+		$(COMMON_SOURCES) \
+		test-contact-chooser.c \
+		osso-abook-contact-chooser.c
+
+test_contact_chooser_CFLAGS = \
+		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
+		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
+		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
+		$(RTCOM_CFLAGS) -DOSSOLOG_COMPILE=1 -Wno-format-extra-args \
+		$(DGETTEXT) $(XML_CFLAGS) \
+		-DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" -g -DTEST
+
+test_contact_chooser_LDADD = \
+		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
+		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) -lm
 
 lib_LTLIBRARIES = libosso-abook-@API_VERSION_MAJOR@.la
 
