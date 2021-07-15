@@ -360,12 +360,11 @@ osso_abook_contact_attribute_is_readonly   (EVCardAttribute          *attribute)
 void
 osso_abook_contact_attribute_set_profile   (EVCardAttribute          *attribute,
                                             const char               *profile_name);
-#if 0
-McProfile *
-osso_abook_contact_attribute_get_profile   (EVCardAttribute          *attribute);
-#else
-#pragma message("FIXME!!! - replace McAccout (with TpAccount?)")
-#endif
+
+/* replaces osso_abook_contact_attribute_get_profile */
+TpProtocol *
+osso_abook_contact_attribute_get_protocol (EVCardAttribute          *attribute);
+
 /**********************************************************************
  * Roster Contact List Handling
  **********************************************************************/

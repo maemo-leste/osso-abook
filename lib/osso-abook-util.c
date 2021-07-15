@@ -988,6 +988,8 @@ osso_abook_file_set_contents(const char *filename, const void *contents,
   else
     SET_ERROR("Failed to create");
 
+#undef SET_ERROR
+
   if (fd != -1)
     close(fd);
 

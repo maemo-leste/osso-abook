@@ -253,6 +253,7 @@ osso_abook_contact_field_action_get_field         (OssoABookContactFieldAction *
 GtkWidget *
 osso_abook_contact_field_action_get_widget        (OssoABookContactFieldAction *action);
 
+/* replaces osso_abook_contact_field_action_get_profile */
 TpProtocol *
 osso_abook_contact_field_action_get_protocol      (OssoABookContactFieldAction *action);
 

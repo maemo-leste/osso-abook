@@ -77,7 +77,7 @@ struct _OssoABookAccountManagerPrivate
   gulong account_ready_id;
   gulong account_removed_id;
   gulong account_enabled_id;
-  /* protocol_name -> vcard field */
+  /* protocol_name -> protocol_object */
   GHashTable *protocols;
   GList *uri_schemes;
   int presence;
@@ -1834,17 +1834,10 @@ TpProtocol *
 osso_abook_account_manager_get_account_protocol_object(
     OssoABookAccountManager *manager, TpAccount *account)
 {
-  OssoABookAccountManagerPrivate *priv;
+  g_return_val_if_fail(account != NULL, NULL);
 
-  if (!manager)
-    manager = osso_abook_account_manager_get_default();
-
-  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
-
-  priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
-
-  return g_hash_table_lookup(priv->protocols,
-                             tp_account_get_protocol_name(account));
+  return osso_abook_account_manager_get_protocol_object(
+        manager, tp_account_get_protocol_name(account));
 }
 
 GList *
@@ -1876,4 +1869,43 @@ osso_abook_account_manager_list_by_protocol(OssoABookAccountManager *manager,
   }
 
   return accounts;
+}
+
+TpProtocol *
+osso_abook_account_manager_get_protocol_object(OssoABookAccountManager *manager,
+                                               const char *protocol)
+{
+  OssoABookAccountManagerPrivate *priv;
+
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+
+  priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+
+  return g_hash_table_lookup(priv->protocols, protocol);
+}
+
+TpProtocol *
+osso_abook_account_manager_get_protocol_object_by_vcard_field(
+    OssoABookAccountManager *manager, const char *vcard_field)
+{
+  TpProtocol *protocol;
+
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+  g_return_val_if_fail(NULL != vcard_field, NULL);
+
+  protocol =
+      g_hash_table_find(
+        OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols,
+        match_vcard_field, (gpointer)vcard_field);
+
+  if (protocol)
+    g_object_ref(protocol);
+
+  return protocol;
 }

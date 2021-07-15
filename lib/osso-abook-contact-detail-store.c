@@ -62,10 +62,14 @@ static guint signals[LAST_SIGNAL] = {};
 #define OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(store) \
                 ((OssoABookContactDetailStorePrivate *)osso_abook_contact_detail_store_get_instance_private(store))
 
-void osso_abook_contact_detail_store_account_changed(OssoABookContactDetailStore *instance) {
+static void
+osso_abook_contact_detail_store_account_changed(
+    OssoABookContactDetailStore *store)
+{
+  g_assert(0);
 }
 
-void
+static void
 osso_abook_contact_detail_store_class_init(OssoABookContactDetailStoreClass
 					   * klass)
 {
@@ -82,43 +86,49 @@ osso_abook_contact_detail_store_class_init(OssoABookContactDetailStoreClass
     g_assert(0);
 #endif
 
-	g_object_class_install_property(object_class,
-					PROP_MESSAGE_MAP,
-					g_param_spec_boxed("message-map",
-							   "Message Map",
-							   "Mapping for generic message ids to context ids",
-							   G_TYPE_HASH_TABLE,
-							   GTK_PARAM_READWRITE));
+    g_object_class_install_property(
+          object_class,
+          PROP_MESSAGE_MAP,
+          g_param_spec_boxed(
+            "message-map", "Message Map",
+            "Mapping for generic message ids to context ids",
+            G_TYPE_HASH_TABLE,
+            GTK_PARAM_READWRITE));
 
-	g_object_class_install_property(object_class, PROP_CONTACT,
-					g_param_spec_object("contact",
-							    "Contact",
-							    "The contact of which to show details",
-							    OSSO_ABOOK_TYPE_CONTACT,
-							    GTK_PARAM_READWRITE));
-
-	g_object_class_install_property(object_class, PROP_FILTERS,
-                    g_param_spec_flags("filters", "Filters",
-                        "The contact field filters to use",
-                        OSSO_ABOOK_TYPE_CONTACT_DETAIL_FILTERS,
-                        0,	/* TODO: check this */
-                        GTK_PARAM_READWRITE));
-
-	signals[CHANGED] = g_signal_new("changed",
-            OSSO_ABOOK_TYPE_CONTACT_DETAIL_STORE, G_SIGNAL_RUN_LAST,
-            0,
-            0, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
-	signals[CONTACT_CHANGED] = g_signal_new("contact-changed",
-            OSSO_ABOOK_TYPE_CONTACT_DETAIL_STORE, G_SIGNAL_RUN_LAST,
-            0,
-            0, NULL, osso_abook_marshal_VOID__OBJECT_OBJECT,
-            G_TYPE_NONE, 2,
+    g_object_class_install_property(
+          object_class, PROP_CONTACT,
+          g_param_spec_object(
+            "contact", "Contact",
+            "The contact of which to show details",
             OSSO_ABOOK_TYPE_CONTACT,
-            OSSO_ABOOK_TYPE_CONTACT);
+            GTK_PARAM_READWRITE));
+
+    g_object_class_install_property(
+          object_class, PROP_FILTERS,
+          g_param_spec_flags(
+            "filters", "Filters",
+            "The contact field filters to use",
+            OSSO_ABOOK_TYPE_CONTACT_DETAIL_FILTERS,
+            OSSO_ABOOK_CONTACT_DETAIL_NONE,
+            GTK_PARAM_READWRITE));
+
+    signals[CHANGED] =
+        g_signal_new(
+          "changed", OSSO_ABOOK_TYPE_CONTACT_DETAIL_STORE, G_SIGNAL_RUN_LAST,
+          0, 0, NULL, g_cclosure_marshal_VOID__VOID,
+          G_TYPE_NONE, 0);
+
+    signals[CONTACT_CHANGED] =
+        g_signal_new(
+          "contact-changed", OSSO_ABOOK_TYPE_CONTACT_DETAIL_STORE, G_SIGNAL_RUN_LAST,
+          0, 0, NULL, osso_abook_marshal_VOID__OBJECT_OBJECT,
+          G_TYPE_NONE, 2,
+          OSSO_ABOOK_TYPE_CONTACT,
+          OSSO_ABOOK_TYPE_CONTACT);
 }
 
-void osso_abook_contact_detail_store_init(OssoABookContactDetailStore * store)
+static void
+osso_abook_contact_detail_store_init(OssoABookContactDetailStore * store)
 {
     OssoABookAccountManager *account_manager;
 
@@ -140,4 +150,12 @@ void osso_abook_contact_detail_store_init(OssoABookContactDetailStore * store)
         "account-removed",
         G_CALLBACK(osso_abook_contact_detail_store_account_changed),
         store);
+}
+
+GSequence *
+osso_abook_contact_detail_store_get_fields(OssoABookContactDetailStore *self)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_DETAIL_STORE(self), NULL);
+
+  return OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(self)->fields;
 }

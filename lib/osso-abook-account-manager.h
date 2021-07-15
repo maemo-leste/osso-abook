@@ -216,6 +216,16 @@ void
 osso_abook_account_manager_set_roster_query (OssoABookAccountManager *manager,
                                              EBookQuery              *query);
 
+TpProtocol *
+osso_abook_account_manager_get_protocol_object
+                                            (OssoABookAccountManager *manager,
+                                             const char              *protocol);
+
+TpProtocol *
+osso_abook_account_manager_get_protocol_object_by_vcard_field
+                                            (OssoABookAccountManager *manager,
+                                             const char              *vcard_field);
+
 G_END_DECLS
 
 #endif /* __OSSO_ABOOK_ACCOUNT_MANAGER_H__ */
