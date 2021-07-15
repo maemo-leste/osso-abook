@@ -6,6 +6,7 @@ bin_PROGRAMS = \
 # this shall be removed once we are able to build the whole library
 COMMON_SOURCES = \
 		$(BUILT_SOURCES) \
+		osso-abook-init.c \
 		osso-abook-debug.c \
 		osso-abook-util.c \
 		osso-abook-errors.c \
@@ -75,6 +76,9 @@ test_avatar_chooser_dialog_LDADD = \
 test_contact_chooser_SOURCES = \
 		$(COMMON_SOURCES) \
 		test-contact-chooser.c \
+		osso-abook-contact-view.c \
+		osso-abook-tree-view.c \
+		osso-abook-contact-model.c \
 		osso-abook-contact-chooser.c
 
 test_contact_chooser_CFLAGS = \
