@@ -1447,7 +1447,6 @@ osso_abook_list_store_cancel_loading(OssoABookListStore *store)
   }
 
   priv->roster_is_running = FALSE;
-
 }
 
 void
@@ -1555,34 +1554,22 @@ osso_abook_list_store_merge_rows(OssoABookListStore *store, GList *rows)
     b = &priv->rows[priv->count - 1];
     dst_iter = &priv->rows[new_count - 1];
 
-    while (1)
+    while (sorted <= a)
     {
-      if (a <= sorted)
-      {
-        g_warn_if_fail(priv->balloon_offset >= 0);
-
-        if (path_reordered)
-          gtk_tree_path_free(path_reordered);
-
-        break;
-      }
-
       g_warn_if_fail(dst_iter >= priv->rows);
 
       if (b >= priv->rows && osso_abook_list_store_sort(a, b, store) <= 0)
       {
         OssoABookListStoreRow **tmp = dst_iter;
 
-        *dst_iter = *b;
-        b--;
+        *dst_iter = *b--;
         gtk_tree_path_prev(path_changed);
         priv->balloon_offset--;
         (*tmp)->offset = tmp - priv->rows;
       }
       else
       {
-        *dst_iter = *a;
-        a--;
+        *dst_iter = *a--;
         priv->balloon_size--;
         priv->count++;
 
@@ -1590,10 +1577,9 @@ osso_abook_list_store_merge_rows(OssoABookListStore *store, GList *rows)
           order_changed = FALSE;
         else
         {
-          gint offset;
+          gint offset = dst_iter - priv->rows - priv->balloon_size;
 
           priv->extra--;
-          offset = dst_iter - priv->rows - priv->balloon_size;
 
           if (offset <= 0)
             offset = 1;
@@ -1607,28 +1593,18 @@ osso_abook_list_store_merge_rows(OssoABookListStore *store, GList *rows)
 
           new_order[offset - 1] = priv->count - 1;
 
-          if (priv->count > offset)
+          while (offset < priv->count)
           {
-            gint *t = &new_order[offset];
+            int off = offset;
 
-            do
-            {
-              *t = offset++ - 1;
-              ++t;
-            }
-            while (priv->count > offset);
+            new_order[off] = off - 1;
+            offset++;
           }
 
-          if (new_order_count > offset)
+          while (new_order_count > offset)
           {
-            gint *t = &new_order[offset];
-
-            do
-            {
-              *t = offset++;
-              ++t;
-            }
-            while (offset != new_order_count);
+            new_order[offset] = offset;
+            offset++;
           }
 
           order_changed = TRUE;
@@ -1643,14 +1619,9 @@ osso_abook_list_store_merge_rows(OssoABookListStore *store, GList *rows)
           OSSO_ABOOK_NOTE(
                 LIST_STORE,
                 "%s@%p: merging %s (%s) at %d (count=%d, extra=%d, order-changed=%d)",
-                get_store_book_uri(store),
-                store,
-                "x",
-                "y",
-                (*dst_iter)->offset - priv->balloon_size,
-                priv->count,
-                priv->extra,
-                order_changed);
+                get_store_book_uri(store), store, "x", "y",
+                (*dst_iter)->offset - priv->balloon_size, priv->count,
+                priv->extra, order_changed);
 
           klass->row_added(store, *dst_iter);
 
@@ -1661,29 +1632,29 @@ osso_abook_list_store_merge_rows(OssoABookListStore *store, GList *rows)
 
             gtk_tree_model_rows_reordered((GtkTreeModel *)store, path_reordered,
                                           0, new_order);
-            gtk_tree_model_row_changed(
-                  (GtkTreeModel *)store, path_changed, &iter);
+            gtk_tree_model_row_changed((GtkTreeModel *)store, path_changed,
+                                       &iter);
           }
           else
           {
-            gtk_tree_model_row_inserted(
-                  (GtkTreeModel *)store, path_changed, &iter);
+            gtk_tree_model_row_inserted((GtkTreeModel *)store, path_changed,
+                                        &iter);
           }
         }
       }
 
-      if (a >= sorted)
-        dst_iter--;
+      dst_iter--;
     }
+
+    g_warn_if_fail(priv->balloon_offset >= 0);
+
+    if (path_reordered)
+      gtk_tree_path_free(path_reordered);
   }
 
   gtk_tree_path_free(path_changed);
-
   g_warn_if_fail(priv->count <= priv->size);
   g_warn_if_fail(0 == priv->balloon_size);
   g_warn_if_fail(NULL != priv->rows);
-
   priv->balloon_offset = G_MAXINT;
-
-  return;
 }
