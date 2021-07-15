@@ -2,6 +2,7 @@
 #include <telepathy-glib/enums.h>
 
 #include <string.h>
+#include <errno.h>
 
 #include "osso-abook-contact.h"
 #include "osso-abook-presence.h"
@@ -12,6 +13,8 @@
 #include "osso-abook-contact-private.h"
 #include "osso-abook-utils-private.h"
 #include "osso-abook-quarks.h"
+#include "osso-abook-icon-sizes.h"
+#include "osso-abook-log.h"
 #include "tp-glib-enums.h"
 
 #include "config.h"
@@ -2530,4 +2533,551 @@ osso_abook_contact_get_persistent_uid(OssoABookContact *contact)
   }
 
   return NULL;
+}
+
+static void
+append_last_photo_uri(OssoABookContact *contact)
+{
+
+  EContactPhoto *photo =
+      osso_abook_contact_get_contact_photo(E_CONTACT(contact));
+
+  if (!photo)
+    return;
+
+  if (photo->type == E_CONTACT_PHOTO_TYPE_URI && photo->data.uri)
+  {
+    GList *uris = g_object_steal_data(G_OBJECT(contact), "last-photo-uri");
+
+    g_object_set_data_full(
+          G_OBJECT(contact),
+          "last-photo-uri", g_list_prepend(uris, g_strdup(photo->data.uri)),
+          (GDestroyNotify)osso_abook_string_list_free);
+  }
+
+  e_contact_photo_free(photo);
+}
+
+static gboolean
+pixbuf_save_cb(const gchar *buf, gsize count, GError **error, gpointer data)
+{
+  return g_output_stream_write(data, buf, count, NULL, error);
+}
+
+void
+osso_abook_contact_set_pixbuf(OssoABookContact *contact, GdkPixbuf *pixbuf,
+                              EBook *book, GtkWindow *window)
+{
+  OssoABookContactPrivate *priv;
+  GError *error = NULL;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+  g_return_if_fail(pixbuf == NULL || GDK_IS_PIXBUF(pixbuf));
+  g_return_if_fail(window == NULL || GTK_IS_WINDOW(window));
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  if (!pixbuf || priv->avatar_image != pixbuf)
+  {
+    append_last_photo_uri(contact);
+    e_contact_set(E_CONTACT(contact), E_CONTACT_PHOTO, NULL);
+
+    if (priv->avatar_image)
+    {
+      g_object_unref(priv->avatar_image);
+      priv->avatar_image = NULL;
+    }
+  }
+
+  if (!pixbuf || priv->avatar_image == pixbuf)
+    osso_abook_contact_notify(contact, "avatar-image");
+  else
+  {
+    EContactPhoto *photo = NULL;
+    GOutputStream *os = g_memory_output_stream_new(0, 0, g_realloc, g_free);
+
+    pixbuf = gdk_pixbuf_apply_embedded_orientation(pixbuf);
+
+    if (gdk_pixbuf_get_width(pixbuf) > OSSO_ABOOK_PIXEL_SIZE_AVATAR_LARGE ||
+        gdk_pixbuf_get_height(pixbuf) > OSSO_ABOOK_PIXEL_SIZE_AVATAR_LARGE)
+    {
+      GdkPixbuf *cropped = _osso_abook_scale_pixbuf_and_crop(
+            pixbuf, OSSO_ABOOK_PIXEL_SIZE_AVATAR_LARGE,
+            OSSO_ABOOK_PIXEL_SIZE_AVATAR_LARGE, 0, 0);
+
+      g_object_unref(pixbuf);
+      pixbuf = cropped;
+    }
+
+    if (gdk_pixbuf_save_to_callback(
+          pixbuf, pixbuf_save_cb, os, "png", &error, NULL) &&
+        g_output_stream_close(os, NULL, &error))
+    {
+      photo = g_new(EContactPhoto, 1);
+      photo->type = E_CONTACT_PHOTO_TYPE_INLINED;
+      photo->data.inlined.length = g_memory_output_stream_get_data_size(
+            G_MEMORY_OUTPUT_STREAM(os));
+      photo->data.inlined.data = g_new(guchar, photo->data.inlined.length);
+      photo->data.inlined.mime_type = g_strdup("image/png");
+      memcpy(photo->data.inlined.data,
+             g_memory_output_stream_get_data(G_MEMORY_OUTPUT_STREAM(os)),
+             photo->data.inlined.length);
+      e_contact_set(E_CONTACT(contact), E_CONTACT_PHOTO, photo);
+    }
+
+    priv->avatar_image = pixbuf;
+
+    if (book)
+      osso_abook_contact_commit(contact, 0, book, window);
+
+    osso_abook_contact_notify(contact, "avatar-image");
+
+    if (photo)
+      e_contact_photo_free(photo);
+
+    if (os)
+      g_object_unref(os);
+  }
+}
+
+static void
+_commit_async_add_cb(EBook *book, EBookStatus status, const gchar *id,
+                     gpointer closure)
+{
+  if (status)
+    osso_abook_handle_estatus(closure, status, book);
+}
+
+static void
+_commit_async_commit_cb(EBook *book, EBookStatus status, gpointer closure)
+{
+  if (status)
+    osso_abook_handle_estatus(closure, status, book);
+}
+
+void
+osso_abook_contact_commit(OssoABookContact *contact, gboolean create,
+                          EBook *book, GtkWindow *window)
+{
+  const char *uid;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+  g_return_if_fail(!window || GTK_IS_WINDOW(window));
+  g_return_if_fail(!book || E_IS_BOOK(book));
+
+  uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+
+  if (!uid || osso_abook_is_temporary_uid(uid) || create)
+    osso_abook_contact_async_add(contact, book, _commit_async_add_cb, window);
+  else
+  {
+    osso_abook_contact_async_commit(contact, book, _commit_async_commit_cb,
+                                    window);
+  }
+}
+
+gboolean
+osso_abook_contact_is_temporary(OssoABookContact *contact)
+{
+  return osso_abook_is_temporary_uid(e_contact_get_const(E_CONTACT(contact),
+                                                         E_CONTACT_UID));
+}
+
+static void
+_async_accept_cb(EBook *book, EBookStatus status, const gchar *id,
+                 gpointer closure)
+{
+  if (status != E_BOOK_ERROR_OK /* && status != E_BOOK_ERROR_INVALID_FIELD */)
+    osso_abook_handle_estatus(closure, status, book);
+}
+
+void
+osso_abook_contact_accept_for_uid(OssoABookContact *contact,
+                                  const char *master_uid, GtkWindow *parent)
+{
+  g_return_if_fail(!parent || GTK_IS_WINDOW(parent));
+
+  osso_abook_contact_async_accept(
+        contact, master_uid, _async_accept_cb, parent);
+}
+
+void
+osso_abook_contact_async_accept(OssoABookContact *contact,
+                                const char *master_uid,
+                                EBookIdCallback callback, gpointer user_data)
+{
+  EBook *book;
+  const char *vcard_field;
+  const char *bound_name;
+  OssoABookContact *new_contact;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+
+  book = get_contact_book(contact);
+  g_return_if_fail(E_IS_BOOK(book));
+
+  vcard_field = osso_abook_contact_get_vcard_field(contact);
+  g_return_if_fail(!IS_EMPTY(vcard_field));
+
+  bound_name = osso_abook_contact_get_bound_name(contact);
+  g_return_if_fail(!IS_EMPTY(bound_name));
+
+  new_contact = osso_abook_contact_new();
+  e_vcard_add_attribute_with_value(E_VCARD(new_contact),
+                                   e_vcard_attribute_new(NULL, vcard_field),
+                                   bound_name);
+
+  if (master_uid && !osso_abook_is_temporary_uid(master_uid))
+  {
+    e_vcard_add_attribute_with_value(
+          E_VCARD(new_contact),
+          e_vcard_attribute_new(NULL, OSSO_ABOOK_VCA_OSSO_MASTER_UID),
+          master_uid);
+  }
+
+  e_vcard_add_attribute_with_value(
+        E_VCARD(new_contact),
+        e_vcard_attribute_new(NULL, OSSO_ABOOK_VCA_TELEPATHY_PUBLISHED), "yes");
+  e_vcard_add_attribute_with_value(
+        E_VCARD(new_contact),
+        e_vcard_attribute_new(NULL, OSSO_ABOOK_VCA_TELEPATHY_SUBSCRIBED), "yes");
+  osso_abook_contact_async_add(new_contact, book, callback, user_data);
+  g_object_unref(book);
+}
+
+struct contact_async_data
+{
+  OssoABookContact *contact;
+  gpointer callback;
+  gpointer user_data;
+};
+
+static void
+_add_async_add_cb(EBook *book, EBookStatus status, const gchar *id,
+                  gpointer closure)
+{
+  struct contact_async_data *data = closure;
+  GList *contact;
+
+  if (status == E_BOOK_ERROR_OK)
+  {
+    contact = osso_abook_contact_get_roster_contacts(data->contact);
+    OSSO_ABOOK_NOTE(EDS, "updating %d roster contacts for %s",
+                    g_list_length(contact), id);
+
+    for (; contact; contact = g_list_delete_link(contact, contact))
+      osso_abook_contact_accept_for_uid(contact->data, id, NULL);
+  }
+
+  if (data->callback)
+    ((EBookIdCallback)(data->callback))(book, status, id, data->user_data);
+
+  g_object_unref(data->contact);
+  g_slice_free(struct contact_async_data, data);
+  g_object_unref(book);
+}
+
+static const char *
+_get_photos_dir()
+{
+  static gchar *photos_dir = NULL;
+
+  if (!photos_dir)
+    photos_dir = g_build_filename(osso_abook_get_work_dir(), "photos", NULL);
+
+  return photos_dir;
+}
+
+static EBookStatus
+_e_book_status_from_gerror_file_code(gint code)
+{
+  EBookStatus status;
+
+  switch (code)
+  {
+    case 0:
+    {
+      status = E_BOOK_ERROR_CONTACT_ID_ALREADY_EXISTS;
+      break;
+    }
+    case EPERM:
+    case ESRCH:
+    case EIO:
+    case ENXIO:
+    case E2BIG:
+    case ECHILD:
+    case EAGAIN:
+    case EBUSY:
+    case EEXIST:
+    {
+      status = E_BOOK_ERROR_INVALID_ARG;
+      break;
+    }
+    case ENOENT:
+    case ENOEXEC:
+    case EINVAL:
+    {
+      status = E_BOOK_ERROR_PERMISSION_DENIED;
+      break;
+    }
+    case EINTR:
+    {
+      status = E_BOOK_ERROR_CONTACT_NOT_FOUND;
+      break;
+    }
+    case EBADF:
+    {
+      status = E_BOOK_ERROR_BUSY;
+      break;
+    }
+    case ENOMEM:
+    {
+      status = E_BOOK_ERROR_NO_SPACE;
+      break;
+    }
+    default:
+    {
+      status = E_BOOK_ERROR_OTHER_ERROR;
+      break;
+    }
+  }
+
+  return status;
+}
+
+static EBookStatus
+_osso_abook_e_book_status_from_errno(int _errno)
+{
+  g_return_val_if_fail(_errno, E_BOOK_ERROR_OK);
+
+  return _e_book_status_from_gerror_file_code(g_file_error_from_errno(_errno));
+}
+
+static EBookStatus
+_osso_abook_e_book_status_from_gerror(GError *error)
+{
+  g_return_val_if_fail(error, E_BOOK_ERROR_OK);
+
+  if (G_FILE_ERROR == error->domain)
+    return _e_book_status_from_gerror_file_code(error->code);
+
+  return E_BOOK_ERROR_OTHER_ERROR;
+}
+
+static EBookStatus
+osso_abook_contact_detach_photo(OssoABookContact *contact)
+{
+  gchar *filename = NULL;
+  gint fd = -1;
+  EBookStatus rv = E_BOOK_ERROR_OK;
+  const char *photos_dir;
+  EContactPhoto *photo =
+      osso_abook_contact_get_contact_photo(E_CONTACT(contact));
+  GError *error = NULL;
+
+  if (photo)
+  {
+    if (photo->type == E_CONTACT_PHOTO_TYPE_URI)
+    {
+      photos_dir = _get_photos_dir();
+      g_mkdir_with_parents(photos_dir, 0755);
+      filename = g_build_filename(photos_dir, "XXXXXX", NULL);
+      fd = g_mkstemp(filename);
+
+      if (fd == -1)
+      {
+        int _errno = errno;
+
+        OSSO_ABOOK_WARN("Cannot create avatar file: %s", g_strerror(_errno));
+        rv = _osso_abook_e_book_status_from_errno(_errno);
+      }
+      else if (osso_abook_file_set_contents(filename, photo->data.inlined.data,
+                                            photo->data.inlined.length, &error))
+      {
+        e_contact_photo_free(photo);
+        photo = g_new(EContactPhoto, 1);
+        photo->type = E_CONTACT_PHOTO_TYPE_URI;
+        photo->data.uri = g_filename_to_uri(filename, NULL, NULL);
+        e_contact_set(E_CONTACT(contact), E_CONTACT_PHOTO, photo);
+      }
+      else
+      {
+        OSSO_ABOOK_WARN("Cannot write avatar file '%s': %s", filename,
+                        error->message);
+        rv = _osso_abook_e_book_status_from_gerror(error);
+      }
+    }
+    else
+      rv = E_BOOK_ERROR_INVALID_ARG;
+  }
+
+  if (error)
+    g_error_free(error);
+
+  if (photo)
+    e_contact_photo_free(photo);
+
+  if (fd != -1)
+    close(fd);
+
+  g_free(filename);
+  return rv;
+}
+
+static void
+delete_temporary_photo_files(OssoABookContact *contact)
+{
+  GFile *photo_prefix = g_file_new_for_path(_get_photos_dir());
+  GList *uri;
+
+  for (uri = g_object_get_data(G_OBJECT(contact), "last-photo-uri"); uri;
+       uri = uri->next )
+  {
+    GFile *file = g_file_new_for_uri(uri->data);
+
+    if (g_file_has_prefix(file, photo_prefix))
+      g_file_delete(file, NULL, NULL);
+
+    g_object_unref(file);
+  }
+
+  g_object_unref(photo_prefix);
+  g_object_set_data(G_OBJECT(contact), "last-photo-uri", NULL);
+}
+
+guint
+osso_abook_contact_async_add(OssoABookContact *contact, EBook *book,
+                             EBookIdCallback callback, gpointer user_data)
+{
+  EBookStatus status;
+  guint (*async_add)(OssoABookContact *, EBook *, EBookIdCallback, gpointer);
+  struct contact_async_data *data;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), 0);
+
+  status = osso_abook_contact_detach_photo(contact);
+
+  if (status)
+  {
+    if (callback)
+      callback(book, status, 0, user_data);
+
+    g_object_unref(book);
+    return 0;
+  }
+
+  delete_temporary_photo_files(contact);
+  async_add = OSSO_ABOOK_CONTACT_GET_CLASS(contact)->async_add;
+
+  if (async_add)
+    return async_add(contact, book, callback, user_data);
+
+  if (book)
+    g_object_ref(book);
+  else
+    book = get_contact_book(contact);
+
+  g_return_val_if_fail(E_IS_BOOK(book), 0);
+
+  OSSO_ABOOK_DUMP_VCARD(EDS, contact, "adding");
+  data = g_slice_new0(struct contact_async_data );
+  data->contact = g_object_ref(contact);
+  data->callback = callback;
+  data->user_data = user_data;
+
+  return e_book_async_add_contact(book, E_CONTACT(contact), _add_async_add_cb,
+                                  data);
+}
+
+static void
+async_commit_contact_cb(EBook *book, EBookStatus status, gpointer closure)
+{
+  struct contact_async_data *data = closure;
+
+  if (data->callback)
+    ((EBookCallback)(data->callback))(book, status, data->user_data);
+
+  g_object_unref(data->contact);
+  g_slice_free(struct contact_async_data, data);
+  g_object_unref(book);
+}
+
+static void
+async_commit_temporary_master_cb(EBook *book, EBookStatus status,
+                                 const gchar *id, gpointer closure)
+{
+  GList *l;
+  struct contact_async_data *data = closure;
+
+  for (l = osso_abook_contact_get_roster_contacts(data->contact); l;
+       l = g_list_delete_link(l, l))
+  {
+    OSSO_ABOOK_NOTE(VCARD, "accepting %s for %s\n",
+                    e_contact_get_const(E_CONTACT(l->data), E_CONTACT_UID), id);
+    osso_abook_contact_accept_for_uid(l->data, id, NULL);
+  }
+
+  async_commit_contact_cb(book, status, closure);
+}
+
+guint
+osso_abook_contact_async_commit(OssoABookContact *contact, EBook *book,
+                                EBookCallback callback, gpointer user_data)
+{
+  guint rv;
+  EBookStatus detach_status;
+  guint (*async_commit)(OssoABookContact *contact, EBook *book,
+                        EBookCallback callback, gpointer user_data);
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), 0);
+
+  if (book)
+    g_object_ref(book);
+  else
+    book = get_contact_book(contact);
+
+  g_return_val_if_fail(E_IS_BOOK(book), 0);
+
+  detach_status = osso_abook_contact_detach_photo(contact);
+
+  if (detach_status)
+  {
+    if (callback)
+      callback(book, detach_status, user_data);
+
+    g_object_unref(book);
+    return 0;
+  }
+
+  delete_temporary_photo_files(contact);
+  OSSO_ABOOK_DUMP_VCARD(EDS, contact, "commiting");
+
+  async_commit = OSSO_ABOOK_CONTACT_GET_CLASS(contact)->async_commit;
+
+  if (async_commit)
+  {
+    rv = async_commit(contact, book, callback, user_data);
+    g_object_unref(book);
+  }
+  else
+  {
+    struct contact_async_data *data = g_slice_new0(struct contact_async_data);
+
+    data->contact = g_object_ref(contact);
+    data->callback = callback;
+    data->user_data = user_data;
+
+    if (osso_abook_contact_is_temporary(contact))
+    {
+      rv = e_book_async_add_contact(book, E_CONTACT(contact),
+                                    async_commit_temporary_master_cb, data);
+    }
+    else
+    {
+      rv = e_book_async_commit_contact(book, E_CONTACT(contact),
+                                       async_commit_contact_cb, data);
+    }
+  }
+
+  return rv;
 }

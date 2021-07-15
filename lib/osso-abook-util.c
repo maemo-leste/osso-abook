@@ -22,6 +22,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <math.h>
+#include <errno.h>
+#include <glib/gstdio.h>
 
 #include "config.h"
 
@@ -941,4 +943,58 @@ osso_abook_attach_screen_size_handler(GtkWindow *window)
     g_signal_connect(widget, "destroy", G_CALLBACK(destroyed_cb), screen);
     screen_size_changed_cb(screen, widget);
   }
+}
+
+
+gboolean
+osso_abook_file_set_contents(const char *filename, const void *contents,
+                             gssize length, GError **error)
+{
+  gboolean rv = FALSE;
+  gchar *tmp_name = g_strdup_printf("%s.XXXXXX", filename);
+  gint fd = g_mkstemp(tmp_name);
+
+#define SET_ERROR(msg) \
+  { \
+    int _errno = errno; \
+    g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(_errno), \
+    msg " '%s': %s", tmp_name, g_strerror(_errno)); \
+  }
+
+  if (fd != -1)
+  {
+    if (write(fd, contents, length) == length)
+    {
+      if (fdatasync(fd) != -1)
+      {
+        if (close(fd) != -1)
+        {
+          fd = -1;
+
+          if (rename(tmp_name, filename) != -1)
+            rv = TRUE;
+          else
+            SET_ERROR("Failed to rename");
+        }
+        else
+          SET_ERROR("Failed to close");
+      }
+      else
+        SET_ERROR("Failed to sync");
+    }
+    else
+      SET_ERROR("Failed to write");
+  }
+  else
+    SET_ERROR("Failed to create");
+
+  if (fd != -1)
+    close(fd);
+
+  if (rv)
+    g_unlink(tmp_name);
+
+  g_free(tmp_name);
+
+  return rv;
 }

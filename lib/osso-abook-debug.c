@@ -153,6 +153,19 @@ _osso_abook_dump_vcard_string(const char *domain, const char *strloc,
 }
 
 void
+_osso_abook_dump_vcard(const char *domain, const char *strloc,
+                       const char *strfunc, const char *strtype,
+                       OssoABookDebugFlags type, const char *note,
+                       EVCard *vcard)
+{
+  gchar *vcard_string = e_vcard_to_string(vcard, EVC_FORMAT_VCARD_30);
+
+  _osso_abook_dump_vcard_string(domain, strloc, strfunc, strtype, type, note,
+                                vcard_string);
+  g_free(vcard_string);
+}
+
+void
 _osso_abook_timer_start(const char *domain, const char *strfunc,
                         const char *strtype, OssoABookDebugFlags type,
                         GTimer *timer, const char *name)
