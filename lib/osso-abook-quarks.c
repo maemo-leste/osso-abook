@@ -21,7 +21,7 @@
 #include "osso-abook-contact.h"
 
 #define QUARK(name, string) \
-GQuark osso_abook_quark_vca_##name () \
+GQuark osso_abook_quark_vca_##name (void) \
 { \
   static GQuark quark = 0; \
   \
@@ -38,7 +38,13 @@ QUARK(org, EVC_ORG)
 QUARK(fn, EVC_FN)
 QUARK(n, EVC_N)
 QUARK(photo, EVC_PHOTO)
+QUARK(note, EVC_NOTE)
+QUARK(bday, EVC_BDAY)
+QUARK(title, EVC_TITLE)
+QUARK(url, EVC_URL)
+QUARK(adr, EVC_ADR)
 
 QUARK(osso_master_uid, OSSO_ABOOK_VCA_OSSO_MASTER_UID)
 QUARK(telepathy_presence, OSSO_ABOOK_VCA_TELEPATHY_PRESENCE)
 QUARK(telepathy_capabilities, OSSO_ABOOK_VCA_TELEPATHY_CAPABILITIES)
+QUARK(gender, OSSO_ABOOK_VCA_GENDER)

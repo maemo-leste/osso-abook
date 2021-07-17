@@ -1207,7 +1207,7 @@ osso_abook_list_store_set_roster(OssoABookListStore *store,
     priv->roster = NULL;
   }
 
-  if ( roster )
+  if (roster)
   {
     OSSO_ABOOK_NOTE(LIST_STORE, "%s@%p: new roster: %s",
                     get_store_book_uri(store),

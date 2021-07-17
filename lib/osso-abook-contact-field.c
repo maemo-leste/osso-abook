@@ -3377,3 +3377,59 @@ osso_abook_contact_field_action_unref(OssoABookContactFieldAction *action)
     g_slice_free(OssoABookContactFieldAction, action);
   }
 }
+
+int
+osso_abook_contact_field_cmp(OssoABookContactField       *a,
+                             OssoABookContactField       *b)
+{
+  OssoABookContactField *pa = osso_abook_contact_field_get_parent(a);
+  OssoABookContactField *pb = osso_abook_contact_field_get_parent(b);
+  gint rv;
+
+  if (pa != pb)
+  {
+    if (pa == b)
+      return 1;
+
+    if (a == pb)
+      return -1;
+
+    if (!pa)
+      pa = a;
+
+    if (!pb)
+      pb = b;
+
+    rv = osso_abook_contact_field_cmp(pa, pb);
+  }
+
+  if (rv)
+    return rv;
+
+  rv = osso_abook_contact_field_get_sort_weight(b) -
+      osso_abook_contact_field_get_sort_weight(a);
+
+  if (rv)
+    return rv;
+
+  rv = g_strcmp0(osso_abook_contact_field_get_display_title(a),
+                 osso_abook_contact_field_get_display_title(b));
+  if (rv)
+    return rv;
+
+  rv = g_strcmp0(osso_abook_contact_field_get_display_value(a),
+                 osso_abook_contact_field_get_display_value(b));
+
+  if (rv)
+    return rv;
+
+  if (a != b)
+  {
+    if (a >= b)
+      return 1;
+
+    return -1;
+  }
+
+  return rv;
+}

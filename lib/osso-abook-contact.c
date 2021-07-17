@@ -3081,3 +3081,19 @@ osso_abook_contact_async_commit(OssoABookContact *contact, EBook *book,
 
   return rv;
 }
+
+gboolean
+osso_abook_contact_is_sim_contact(OssoABookContact *contact)
+{
+  OssoABookRoster *roster;
+  const char *uri;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
+
+  roster = osso_abook_contact_get_roster(contact);
+
+  if (roster && (uri = osso_abook_roster_get_book_uri(roster)))
+    return g_str_has_prefix(uri, "sim:");
+
+  return FALSE;
+}
