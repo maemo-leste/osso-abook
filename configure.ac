@@ -1,4 +1,4 @@
-AC_INIT([osso-abook], [4.0])
+AC_INIT([libosso-abook], [4.0])
 AC_CANONICAL_SYSTEM
 
 AM_CONFIG_HEADER(config.h)
@@ -98,7 +98,7 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "${GETTEXT_PACKAGE}", [gettext package])
 DGETTEXT="-D'_(msgid)'='g_dgettext(GETTEXT_PACKAGE, msgid)'"
 AC_SUBST(DGETTEXT)
 
-CFLAGS="-Wall -Werror -DG_LOG_DOMAIN=GETTEXT_PACKAGE"
+CFLAGS="-Wall -Werror -DG_LOG_DOMAIN=PACKAGE_NAME"
 AC_SUBST(CFLAGS)
 
 ISO_CODES_PREFIX=`pkg-config iso-codes --variable=prefix`
