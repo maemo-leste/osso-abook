@@ -38,7 +38,7 @@ struct _OssoABookContactDetailStorePrivate {
   OssoABookContactDetailFilters filters;
   GSequence *fields;
   int is_empty;
-  int probably_initialised;
+  gboolean ready;
 };
 
 typedef struct _OssoABookContactDetailStorePrivate
@@ -251,7 +251,7 @@ account_changed(OssoABookContactDetailStore *store)
   OssoABookContactDetailStorePrivate *priv =
       OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(store);
 
-  if (!priv->probably_initialised)
+  if (!priv->ready)
   {
     if (priv->fields)
     {
@@ -371,7 +371,7 @@ osso_abook_contact_detail_store_constructed(GObject *object)
 {
   OssoABookContactDetailStore *store = OSSO_ABOOK_CONTACT_DETAIL_STORE(object);
 
-  OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(store)->probably_initialised = 0;
+  OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(store)->ready = FALSE;
   account_changed(store);
 }
 
@@ -487,7 +487,7 @@ osso_abook_contact_detail_store_init(OssoABookContactDetailStore * store)
 {
     OssoABookAccountManager *account_manager;
 
-	OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(store)->probably_initialised = 1;
+    OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(store)->ready = TRUE;
     account_manager = osso_abook_account_manager_get_default();
 
     g_signal_connect_swapped(
