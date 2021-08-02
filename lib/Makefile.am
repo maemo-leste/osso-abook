@@ -38,43 +38,49 @@ COMMON_SOURCES = \
 		osso-abook-avatar-cache.c \
 		osso-abook-icon-sizes.c
 
+COMMON_CFLAGS = \
+		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
+		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
+		$(CAIRO_CFLAGS) $(RTCOM_CFLAGS) $(XML_CFLAGS) $(GOFONO_CFLAGS) \
+		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
+		-DOSSOLOG_COMPILE=1 -DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" \
+		-Wno-format-extra-args $(DGETTEXT)
+
+COMMON_LIBS = \
+		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
+		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) \
+		$(CAIRO_LIBS) $(GOFONO_LIBS) -lm
+
+noinst_LIBRARIES = libosso-abook-test.a
+
+libosso_abook_test_a_SOURCES = \
+		$(COMMON_SOURCES)
+
+libosso_abook_test_a_CFLAGS = \
+		$(COMMON_CFLAGS) -g -DTEST
+
 test_avatar_editor_dialog_SOURCES = \
-		$(COMMON_SOURCES) \
 		test-avatar-editor-dialog.c \
 		osso-abook-avatar-editor.c \
 		osso-abook-avatar-editor-dialog.c
 
 test_avatar_editor_dialog_CFLAGS = \
-		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
-		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
-		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
-		$(RTCOM_CFLAGS) -DOSSOLOG_COMPILE=1 -Wno-format-extra-args \
-		$(DGETTEXT) $(XML_CFLAGS) \
-		-DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" -g -DTEST
+		$(COMMON_CFLAGS) -g -DTEST
 
 test_avatar_editor_dialog_LDADD = \
-		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
-		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) -lm
+		$(COMMON_LIBS) libosso-abook-test.a
 
 test_avatar_chooser_dialog_SOURCES = \
-		$(COMMON_SOURCES) \
 		test-avatar-chooser-dialog.c \
 		osso-abook-avatar-chooser-dialog.c
 
 test_avatar_chooser_dialog_CFLAGS = \
-		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
-		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
-		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
-		$(RTCOM_CFLAGS) -DOSSOLOG_COMPILE=1 -Wno-format-extra-args \
-		$(DGETTEXT) $(XML_CFLAGS) \
-		-DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" -g -DTEST
+		$(COMMON_CFLAGS) -g -DTEST
 
 test_avatar_chooser_dialog_LDADD = \
-		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
-		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) -lm
+		$(COMMON_LIBS) libosso-abook-test.a
 
 test_contact_chooser_SOURCES = \
-		$(COMMON_SOURCES) \
 		test-contact-chooser.c \
 		osso-abook-contact-view.c \
 		osso-abook-tree-view.c \
@@ -82,16 +88,11 @@ test_contact_chooser_SOURCES = \
 		osso-abook-contact-chooser.c
 
 test_contact_chooser_CFLAGS = \
-		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
-		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
-		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
-		$(RTCOM_CFLAGS) -DOSSOLOG_COMPILE=1 -Wno-format-extra-args \
-		$(DGETTEXT) $(XML_CFLAGS) \
-		-DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" -g -DTEST
+		$(COMMON_CFLAGS) -g -DTEST
 
 test_contact_chooser_LDADD = \
-		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
-		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) -lm
+		$(COMMON_LIBS) libosso-abook-test.a
+
 
 lib_LTLIBRARIES = libosso-abook-@API_VERSION_MAJOR@.la
 
@@ -99,18 +100,11 @@ libosso_abook_@API_VERSION_MAJOR@_includedir = \
 		$(includedir)/lib$(PACKAGE)-$(API_VERSION_MAJOR)/lib$(PACKAGE)
 
 libosso_abook_@API_VERSION_MAJOR@_la_CFLAGS = \
-		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
-		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
-		$(CAIRO_CFLAGS) $(RTCOM_CFLAGS) $(XML_CFLAGS) \
-		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
-		-DOSSOLOG_COMPILE=1 -DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" \
-		-Wno-format-extra-args $(DGETTEXT)
+		$(COMMON_CFLAGS)
 
 libosso_abook_@API_VERSION_MAJOR@_la_LDFLAGS = -Wl,--no-undefined
 libosso_abook_@API_VERSION_MAJOR@_la_LIBADD = \
-		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
-		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) \
-		$(CAIRO_LIBS) -lm
+		$(COMMON_LIBS)
 
 libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-enums.c \
