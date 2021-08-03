@@ -1,4 +1,5 @@
 bin_PROGRAMS = \
+		test_voicemail_selector \
 		test_avatar_editor_dialog \
 		test_avatar_chooser_dialog \
 		test_contact_chooser
@@ -19,6 +20,7 @@ COMMON_SOURCES = \
 		osso-abook-filter-model.c \
 		osso-abook-gconf-contact.c \
 		osso-abook-voicemail-contact.c \
+		osso-abook-voicemail-selector.c \
 		osso-abook-group.c \
 		osso-abook-all-group.c \
 		osso-abook-presence.c \
@@ -44,7 +46,8 @@ COMMON_CFLAGS = \
 		$(CAIRO_CFLAGS) $(RTCOM_CFLAGS) $(XML_CFLAGS) $(GOFONO_CFLAGS) \
 		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
 		-DOSSOLOG_COMPILE=1 -DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" \
-		-Wno-format-extra-args $(DGETTEXT)
+		-DMBPI_DATABASE=\"$(MBPI_DATABASE)\" -Wno-format-extra-args \
+		$(DGETTEXT)
 
 COMMON_LIBS = \
 		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
@@ -93,6 +96,14 @@ test_contact_chooser_CFLAGS = \
 test_contact_chooser_LDADD = \
 		$(COMMON_LIBS) libosso-abook-test.a
 
+test_voicemail_selector_SOURCES = \
+		test-voicemail-selector.c
+
+test_voicemail_selector_CFLAGS = \
+		$(COMMON_CFLAGS) -g -DTEST
+
+test_voicemail_selector_LDADD = \
+		$(COMMON_LIBS) libosso-abook-test.a
 
 lib_LTLIBRARIES = libosso-abook-@API_VERSION_MAJOR@.la
 
@@ -134,6 +145,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-roster.c \
 		osso-abook-gconf-contact.c \
 		osso-abook-voicemail-contact.c \
+		osso-abook-voicemail-selector.c \
 		osso-abook-aggregator.c \
 		osso-abook-contact.c \
 		osso-abook-utils-private.c \

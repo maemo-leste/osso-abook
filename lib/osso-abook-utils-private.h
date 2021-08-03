@@ -53,6 +53,13 @@ _osso_abook_get_cached_icon(gpointer widget, const gchar *icon_name, gint size);
 gchar *
 _osso_abook_get_safe_folder(const char *folder);
 
+gchar *
+_osso_abook_get_operator_id(const char *modem_path, GError **error);
+
+gchar *
+_osso_abook_get_operator_name(const char *modem_path, const char *imsi,
+                              GError **error);
+
 G_END_DECLS
 
 #endif /* __OSSO_ABOOK_UTILS_PRIVATE_H_INCLUDED__ */

@@ -1,6 +1,11 @@
 #include <gdk/gdk.h>
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-bindings.h>
+#include <gofono/gofono_manager.h>
+#include <gofono/gofono_modem.h>
+#include <gofono/gofono_names.h>
+#include <gofono/gofono_simmgr.h>
+#include <gofono/gofono_netreg.h>
 
 #include <math.h>
 
@@ -8,6 +13,8 @@
 #include "osso-abook-log.h"
 
 #include "config.h"
+
+#define OSSO_ABOOK_OFONO_TIMEOUT (15 * 1000)
 
 __attribute__ ((visibility ("hidden"))) void
 disconnect_signal_if_connected(gpointer instance, gulong handler)
@@ -526,4 +533,340 @@ _osso_abook_get_safe_folder(const char *folder)
   g_free(mydocs_path);
 
   return path;
+}
+
+static void
+_osso_abook_phone_error(const gchar *func, GError **error, GQuark domain,
+                        gint code, const gchar *message)
+{
+  if (error)
+    g_set_error_literal(error, domain, code, message);
+  else
+    g_warning("%s: %s", func, message);
+}
+
+static void
+_osso_abook_phone_error_message(gchar *func, GError **error, GQuark quark,
+                                gint code, gchar *format, ...)
+{
+  gchar *message;
+  va_list va;
+
+  va_start(va, format);
+  message = g_strdup_vprintf(format, va);
+  _osso_abook_phone_error(func, error, quark, code, message);
+  g_free(message);
+  va_end(va);
+}
+
+static GQuark
+_osso_abook_phone_net_error_quark()
+{
+  return g_quark_from_static_string("osso-abook-phone-net-error");
+}
+
+static GQuark
+_osso_abook_phone_sim_error_quark()
+{
+  return g_quark_from_static_string("osso-abook-phone-sim-error");
+}
+
+#define osso_abook_phone_error_message(error, quark, code, format, ...) \
+  _osso_abook_phone_error_message(G_STRLOC, (error), (quark), (code), (format), ## __VA_ARGS__);
+
+#define OSSO_ABOOK_PHONE_NET_ERROR (_osso_abook_phone_net_error_quark())
+#define OSSO_ABOOK_PHONE_SIM_ERROR (_osso_abook_phone_sim_error_quark())
+
+static OfonoSimMgr *
+_get_sim(const char *modem_path, GError **error)
+{
+  OfonoManager *manager = ofono_manager_new();
+  OfonoSimMgr *sim = NULL;
+  GError *err = NULL;
+
+  if (ofono_manager_wait_valid(manager, OSSO_ABOOK_OFONO_TIMEOUT, &err))
+  {
+    GPtrArray *modems = ofono_manager_get_modems(manager);
+    OfonoModem *modem = NULL;
+    int i;
+
+    for (i = 0; i < modems->len; i++)
+    {
+      OfonoModem *candidate = g_ptr_array_index (modems, i);
+
+      if (!ofono_modem_wait_valid(candidate, OSSO_ABOOK_OFONO_TIMEOUT, &err))
+      {
+        OSSO_ABOOK_WARN("OFONO modem [%s] wait ready timeout: '%s'",
+                        ofono_modem_path(candidate), err->message);
+        g_clear_error(&err);
+      }
+      else
+      {
+        if (modem_path)
+        {
+          if (!g_strcmp0(modem_path, ofono_modem_path(candidate)))
+          {
+            modem = candidate;
+            break;
+          }
+        }
+        else if (ofono_modem_has_interface(candidate,
+                                           OFONO_SIMMGR_INTERFACE_NAME))
+        {
+          modem = candidate;
+          break;
+        }
+      }
+    }
+
+    if (modem)
+    {
+      sim = ofono_simmgr_new(ofono_modem_path(modem));
+
+      if (!ofono_simmgr_wait_valid(sim, OSSO_ABOOK_OFONO_TIMEOUT, &err))
+      {
+        gint code = err ? err->code : 0;
+
+        osso_abook_phone_error_message(
+              error, OSSO_ABOOK_PHONE_SIM_ERROR, code,
+              "OFONO sim manager wait ready timeout, error code %d", code);
+        g_clear_error(&err);
+        ofono_simmgr_unref(sim);
+        sim = NULL;
+      }
+    }
+    else
+    {
+      if (modem_path)
+      {
+        osso_abook_phone_error_message(
+              error, OSSO_ABOOK_PHONE_SIM_ERROR, 0,
+              "OFONO modem %s not found", modem_path);
+      }
+      else
+      {
+        osso_abook_phone_error_message(
+              error, OSSO_ABOOK_PHONE_SIM_ERROR, 0,
+              "No OFONO modem with SIM found");
+      }
+    }
+  }
+  else
+  {
+    gint code = err ? err->code : 0;
+
+    osso_abook_phone_error_message(
+          error, OSSO_ABOOK_PHONE_SIM_ERROR, code,
+          "OFONO manager wait ready timeout, error code %d", code);
+    g_clear_error(&err);
+  }
+
+  ofono_manager_unref(manager);
+
+  return sim;
+}
+
+static gchar *
+_osso_abook_get_imsi(const char *modem_path, GError **error)
+{
+  gchar *imsi = NULL;
+
+  OfonoSimMgr *sim = _get_sim(modem_path, error);
+
+  if (sim)
+  {
+    if (sim->imsi)
+      imsi = g_strdup(sim->imsi);
+
+    ofono_simmgr_unref(sim);
+  }
+
+  return imsi;
+}
+
+__attribute__ ((visibility ("hidden"))) gchar *
+_osso_abook_get_operator_id(const char *modem_path, GError **error)
+{
+  gchar *imsi = _osso_abook_get_imsi(modem_path, error);
+  gchar *id;
+
+  if (!imsi)
+    return NULL;
+
+  id = g_strndup(imsi, 5);
+  g_free(imsi);
+
+  return id;
+}
+
+static gchar *
+_mbpi_get_name(int mnc, int mcc)
+{
+  xmlDocPtr doc;
+  gchar *name = NULL;
+
+  doc = xmlParseFile(MBPI_DATABASE);
+
+  if (doc)
+  {
+    /* Create xpath evaluation context */
+    xmlXPathContextPtr ctx = xmlXPathNewContext(doc);
+
+    if (ctx)
+    {
+      gchar* xpath = g_strdup_printf(
+            "//network-id[@mcc='%03d' and @mnc='%02d']/../../name/text()", mnc,
+            mcc);
+      xmlXPathObjectPtr obj = xmlXPathEvalExpression(BAD_CAST xpath, ctx);
+
+      g_free(xpath);
+
+      if (obj)
+      {
+        xmlNodeSetPtr nodes = obj->nodesetval;
+
+        if (nodes->nodeNr)
+        {
+          xmlChar *content = xmlNodeGetContent(nodes->nodeTab[0]);
+
+          name = g_strdup((const gchar *)content);
+
+          xmlFree(content);
+        }
+
+        xmlXPathFreeObject(obj);
+      }
+      else
+        OSSO_ABOOK_WARN("Unable to evaluate xpath expression '%s'", xpath);
+
+      xmlXPathFreeContext(ctx);
+    }
+    else
+      OSSO_ABOOK_WARN("Unable to create new XPath context");
+
+    xmlFreeDoc(doc);
+  }
+  else
+    OSSO_ABOOK_WARN("Unable to parse '" MBPI_DATABASE "'");
+
+  return name;
+}
+
+__attribute__ ((visibility ("hidden"))) gchar *
+_osso_abook_get_operator_name(const char *modem_path, const char *imsi,
+                              GError **error)
+{
+  gchar *operator_id = NULL;
+  gchar *name = NULL;
+  int mnc;
+  int mcc;
+
+  if (IS_EMPTY(imsi))
+  {
+    operator_id = _osso_abook_get_operator_id(modem_path, error);
+    imsi = operator_id;
+  }
+
+  if (!IS_EMPTY(imsi))
+  {
+    if (sscanf(imsi, "%03d%02d", &mcc, &mnc) == 2)
+    {
+      OfonoManager *manager = ofono_manager_new();
+      GError *err = NULL;
+      gchar *spn = NULL;
+
+      if (ofono_manager_wait_valid(manager, OSSO_ABOOK_OFONO_TIMEOUT, &err))
+      {
+        GPtrArray *modems = ofono_manager_get_modems(manager);
+        int i;
+
+        for (i = 0; i < modems->len; i++)
+        {
+          OfonoModem *modem = g_ptr_array_index (modems, i);
+
+          if (ofono_modem_wait_valid(modem, OSSO_ABOOK_OFONO_TIMEOUT, &err))
+          {
+            if (ofono_modem_has_interface(modem, OFONO_NETREG_INTERFACE_NAME))
+            {
+              OfonoNetReg *net = ofono_netreg_new(ofono_modem_path(modem));
+
+              if (ofono_netreg_valid(net) &&
+                  net->mcc && net->mnc && !IS_EMPTY(net->name) &&
+                  mcc == atoi(net->mcc) && mnc == atoi(net->mnc))
+              {
+                name = g_strdup(net->name);
+                ofono_netreg_unref(net);
+                break;
+              }
+
+              ofono_netreg_unref(net);
+            }
+
+            if (!spn &&
+                ofono_modem_has_interface(modem, OFONO_SIMMGR_INTERFACE_NAME))
+            {
+              OfonoSimMgr *sim = ofono_simmgr_new(ofono_modem_path(modem));
+
+              if (ofono_simmgr_wait_valid(sim, OSSO_ABOOK_OFONO_TIMEOUT, &err))
+              {
+                if (sim->mcc && sim->mnc && !IS_EMPTY(sim->spn) &&
+                    mcc == atoi(sim->mcc) && mnc == atoi(sim->mnc))
+                {
+                  spn = g_strdup(sim->spn);
+                }
+              }
+              else
+              {
+                OSSO_ABOOK_WARN(
+                      "OFONO modem [%s] SIM manager wait ready timeout: '%s'",
+                      ofono_modem_path(modem), err->message);
+                g_clear_error(&err);
+              }
+
+              ofono_simmgr_unref(sim);
+            }
+          }
+          else
+          {
+            OSSO_ABOOK_WARN("OFONO modem [%s] wait ready timeout: '%s'",
+                            ofono_modem_path(modem), err->message);
+            g_clear_error(&err);
+          }
+        }
+
+        if (name)
+          g_free(spn);
+        else
+          name = spn;
+      }
+      else
+      {
+        OSSO_ABOOK_WARN("OFONO manager wait ready timeout, [%s]", err->message);
+        g_clear_error(&err);
+      }
+
+      ofono_manager_unref(manager);
+
+      if (!name)
+        name = _mbpi_get_name(mnc, mcc);
+
+      if (!name)
+      {
+        osso_abook_phone_error_message(
+              error, OSSO_ABOOK_PHONE_NET_ERROR, 1001,
+              "Failed to lookup operator name for mobile operator with MCC=%03d and MNC=%02d.",
+              mcc, mnc);
+      }
+    }
+    else
+    {
+      osso_abook_phone_error_message(
+            error, OSSO_ABOOK_PHONE_NET_ERROR, 1001,
+            "Invalid IMSI. First five numbers should be MCC and MNC.");
+    }
+  }
+
+  g_free(operator_id);
+
+  return name;
 }

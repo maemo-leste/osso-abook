@@ -65,6 +65,13 @@ PKG_CHECK_MODULES(CAIRO, [cairo])
 AC_SUBST(CAIRO_CFLAGS)
 AC_SUBST(CAIRO_LIBS)
 
+PKG_CHECK_MODULES(GOFONO, [libgofono libglibutil])
+AC_SUBST(GOFONO_CFLAGS)
+AC_SUBST(GOFONO_LIBS)
+
+PKG_CHECK_MODULES(MBPI, [mobile-broadband-provider-info])
+PKG_CHECK_MODULES(ISO_CODES, [iso-codes])
+
 AC_ARG_ENABLE([maemo-launcher],
               [AS_HELP_STRING([--enable-maemo-launcher],
                               [build with maemo-launcher support])],
@@ -103,6 +110,9 @@ AC_SUBST(CFLAGS)
 
 ISO_CODES_PREFIX=`pkg-config iso-codes --variable=prefix`
 AC_SUBST(ISO_CODES_PREFIX)
+
+MBPI_DATABASE=`pkg-config mobile-broadband-provider-info --variable=database`
+AC_SUBST(MBPI_DATABASE)
 
 AC_OUTPUT([
 Makefile
