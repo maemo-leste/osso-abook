@@ -1,5 +1,7 @@
 #include <glib-object.h>
 
+#include <string.h>
+
 #include "osso-abook-string-list.h"
 
 GList *
@@ -62,4 +64,37 @@ GList *
 osso_abook_string_list_find(GList *list, const char *s)
 {
   return g_list_find_custom(list, s, (GCompareFunc)strcmp);
+}
+
+int
+osso_abook_list_compare(OssoABookStringList a, OssoABookStringList b,
+                        OssoABookStringListCompareFunction compare_function)
+{
+  int rv;
+
+  if (!a)
+    return b ? -1 : 0;
+
+  while (b)
+  {
+    rv = compare_function(a->data, b->data);
+
+    if (rv)
+      return rv;
+
+    a = a->next;
+    b = b->next;
+
+    if (!a)
+      return b ? -1 : 0;
+  }
+
+  return 1;
+}
+
+int
+osso_abook_string_list_compare(OssoABookStringList a, OssoABookStringList b)
+{
+  return osso_abook_list_compare(a, b,
+                                 (OssoABookStringListCompareFunction)strcmp);
 }

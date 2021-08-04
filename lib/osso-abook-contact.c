@@ -1,5 +1,6 @@
 #include <glib.h>
 #include <telepathy-glib/enums.h>
+#include <libedata-book/libedata-book.h>
 
 #include <string.h>
 #include <errno.h>
@@ -3096,4 +3097,122 @@ osso_abook_contact_is_sim_contact(OssoABookContact *contact)
     return g_str_has_prefix(uri, "sim:");
 
   return FALSE;
+}
+
+static gboolean
+contact_has_attribute(OssoABookContact *contact, EVCardAttribute *attr)
+{
+  const char *name = e_vcard_attribute_get_name(attr);
+  GList *vals = e_vcard_attribute_get_values(attr);
+  gboolean rv = FALSE;
+
+  if (!strcmp(EVC_TEL, name) && vals->data)
+  {
+    EBookQuery *q = osso_abook_query_phone_number(vals->data, TRUE);
+    char *qs = e_book_query_to_string(q);
+    EBookBackendSExp *sexp = e_book_backend_sexp_new(qs);
+
+    rv = e_book_backend_sexp_match_contact(sexp, E_CONTACT(contact));
+    g_object_unref(sexp);
+    g_free(qs);
+    e_book_query_unref(q);
+  }
+  else
+  {
+    GList *attrs = osso_abook_contact_get_attributes(E_CONTACT(contact), name);
+    GList *l;
+
+    for (l = attrs; l; l = l->next)
+    {
+      if (!osso_abook_string_list_compare(
+            vals, e_vcard_attribute_get_values(l->data)))
+      {
+        rv = TRUE;
+        break;
+      }
+    }
+
+    g_list_free(attrs);
+  }
+
+  return rv;
+}
+
+static void
+add_readonly_attribute(OssoABookContact *contact, EVCardAttribute *attr)
+{
+  attr = e_vcard_attribute_copy(attr);
+  osso_abook_contact_attribute_set_readonly(attr, TRUE);
+  e_vcard_add_attribute(E_VCARD(contact), attr);
+}
+
+static void
+fetch_roster_info(OssoABookContact *contact, OssoABookContact *info_contact,
+                  GList *roster_contacts)
+{
+  GList *l;
+
+  for (l = roster_contacts; l; l = l->next)
+  {
+    const char *vcard_field = osso_abook_contact_get_vcard_field(l->data);
+    GList *attrs ;
+
+    for (attrs = e_vcard_get_attributes(E_VCARD(l->data)); attrs;
+         attrs = attrs->next)
+    {
+      EVCardAttribute *attr = attrs->data;
+      const char *name = e_vcard_attribute_get_name(attr);
+      GQuark quark = g_quark_from_string(name);
+      gboolean add_it = FALSE;
+
+      if (osso_abook_contact_get_values(E_CONTACT(contact), name) ||
+          osso_abook_contact_get_values(E_CONTACT(info_contact), name))
+      {
+        if (contact_has_attribute(info_contact, attr) ||
+            contact_has_attribute(contact, attr))
+        {
+          continue;
+        }
+      }
+      else if (quark == OSSO_ABOOK_QUARK_VCA_BDAY ||
+               quark == OSSO_ABOOK_QUARK_VCA_NICKNAME ||
+               quark == OSSO_ABOOK_QUARK_VCA_TITLE)
+      {
+        add_it = TRUE;
+      }
+
+      if (add_it ||
+          quark == OSSO_ABOOK_QUARK_VCA_EMAIL ||
+          quark == OSSO_ABOOK_QUARK_VCA_TEL ||
+          quark == OSSO_ABOOK_QUARK_VCA_ADR ||
+          quark == OSSO_ABOOK_QUARK_VCA_NOTE ||
+          quark == OSSO_ABOOK_QUARK_VCA_ORG ||
+          quark == OSSO_ABOOK_QUARK_VCA_URL ||
+          (vcard_field && !strcmp(name, vcard_field)))
+      {
+        add_readonly_attribute(info_contact, attr);
+      }
+    }
+  }
+}
+
+OssoABookContact *
+osso_abook_contact_fetch_roster_info(OssoABookContact *contact)
+{
+  GList *roster_contacts;
+  OssoABookContact *info_contact = NULL;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  roster_contacts = osso_abook_contact_get_roster_contacts(contact);
+
+  if (roster_contacts)
+  {
+    info_contact = osso_abook_contact_new();
+    fetch_roster_info(contact, info_contact, roster_contacts);
+  }
+
+  g_list_free(roster_contacts);
+
+  return info_contact;
 }
