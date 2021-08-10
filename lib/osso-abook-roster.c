@@ -836,8 +836,10 @@ osso_abook_roster_get_protocol(OssoABookRoster *roster)
 
   if (account)
   {
-    return
+    TpProtocol *protocol =
         osso_abook_account_manager_get_account_protocol_object(NULL, account);
+
+    return g_object_ref(protocol);
   }
 
   return NULL;

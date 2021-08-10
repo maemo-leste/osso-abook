@@ -60,6 +60,15 @@ gchar *
 _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
                               GError **error);
 
+gboolean
+_osso_abook_e_vcard_attribute_has_value(EVCardAttribute *attr);
+
+gchar *
+_osso_abook_get_delete_confirmation_string(GList *contacts,
+                                           gboolean show_contact_name,
+                                           const gchar *no_im_format,
+                                           gchar *single_service_format,
+                                           gchar *mutiple_services_format);
 G_END_DECLS
 
 #endif /* __OSSO_ABOOK_UTILS_PRIVATE_H_INCLUDED__ */

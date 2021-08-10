@@ -3433,3 +3433,39 @@ osso_abook_contact_field_cmp(OssoABookContactField       *a,
 
   return rv;
 }
+
+gboolean
+osso_abook_contact_field_action_start_with_callback(
+    OssoABookContactFieldAction *action, GtkWindow *parent,
+    OssoABookContactActionStartCb callback, gpointer callback_data)
+{
+  TpAccount *account;
+  gboolean aborted = TRUE;
+  gboolean rv = FALSE;
+
+  g_return_val_if_fail(action != NULL, FALSE);
+  g_return_val_if_fail(action->field != NULL, FALSE);
+  g_return_val_if_fail(parent == NULL || GTK_IS_WINDOW(parent), FALSE);
+
+  account = osso_abook_contact_field_action_request_account(
+        action, parent, &aborted);
+
+  if (!aborted)
+  {
+    OssoABookContactAction contact_action = action->contact_action;
+
+    if (!account && contact_action == OSSO_ABOOK_CONTACT_ACTION_BIND)
+      contact_action = OSSO_ABOOK_CONTACT_ACTION_CREATE_ACCOUNT;
+
+    rv = osso_abook_contact_action_start_with_callback(
+          contact_action,
+          osso_abook_contact_field_get_master_contact(action->field),
+          osso_abook_contact_field_get_attribute(action->field),
+          account, parent, callback, callback_data);
+  }
+
+  if (account)
+    g_object_unref(account);
+
+  return rv;
+}

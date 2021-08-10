@@ -3216,3 +3216,18 @@ osso_abook_contact_fetch_roster_info(OssoABookContact *contact)
 
   return info_contact;
 }
+
+gboolean
+osso_abook_contact_has_roster_contacts(OssoABookContact *master_contact)
+{
+  GHashTable *roster_contacts;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(master_contact), FALSE);
+
+  roster_contacts = OSSO_ABOOK_CONTACT_PRIVATE(master_contact)->roster_contacts;
+
+  if (roster_contacts)
+    return g_hash_table_size(roster_contacts) != 0;
+
+  return FALSE;
+}

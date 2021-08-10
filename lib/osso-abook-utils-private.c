@@ -11,6 +11,7 @@
 
 #include "osso-abook-utils-private.h"
 #include "osso-abook-log.h"
+#include "osso-abook-contact.h"
 
 #include "config.h"
 
@@ -869,4 +870,139 @@ _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
   g_free(operator_id);
 
   return name;
+}
+
+__attribute__ ((visibility ("hidden"))) gboolean
+_osso_abook_e_vcard_attribute_has_value(EVCardAttribute *attr)
+{
+  GList *val;
+
+  for (val = e_vcard_attribute_get_values(attr); val; val = val->next)
+  {
+    gchar *tmp = g_strdup(val->data);
+
+    if (!IS_EMPTY(g_strchomp(tmp)))
+    {
+      g_free(tmp);
+      return TRUE;
+    }
+
+    g_free(tmp);
+  }
+
+  return FALSE;
+}
+
+static gchar *
+get_im_service_name(OssoABookContact *rc)
+{
+  TpProtocol *protocol;
+  gchar *name;
+
+  g_return_val_if_fail(osso_abook_contact_is_roster_contact(rc), NULL);
+
+  protocol = osso_abook_contact_get_protocol(rc);
+  name = g_strdup(tp_protocol_get_name(protocol));
+  g_object_unref(protocol);
+
+  return name;
+}
+
+__attribute__ ((visibility ("hidden"))) gchar *
+_osso_abook_get_delete_confirmation_string(GList *contacts,
+                                           gboolean show_contact_name,
+                                           const gchar *no_im_format,
+                                           gchar *single_service_format,
+                                           gchar *mutiple_services_format)
+{
+  const char *display_name = NULL;
+  gchar *service_name = NULL;
+  gboolean has_roster_contact = FALSE;
+  const char *msgid;
+  gchar *confirmation_string;
+
+  g_return_val_if_fail(no_im_format != NULL, NULL);
+  g_return_val_if_fail(single_service_format != NULL, NULL);
+  g_return_val_if_fail(mutiple_services_format != NULL, NULL);
+
+  if (!contacts)
+    return g_strdup(_(no_im_format));
+
+  if (contacts->next)
+  {
+    if (show_contact_name)
+      g_critical("Cannot show the contact name with multiple contacts");
+
+    show_contact_name = FALSE;
+  }
+  else if (show_contact_name)
+    display_name = osso_abook_contact_get_display_name(contacts->data);
+
+  while (contacts)
+  {
+    GList *roster_contacts;
+    gboolean names_mismatch = FALSE;
+
+    if (osso_abook_contact_is_roster_contact(contacts->data))
+      roster_contacts = g_list_prepend(NULL, contacts->data);
+    else
+      roster_contacts = osso_abook_contact_get_roster_contacts(contacts->data);
+
+    if (roster_contacts)
+    {
+      while(roster_contacts)
+      {
+        gchar *name = get_im_service_name(roster_contacts->data);
+
+        if (service_name)
+        {
+          if (strcmp(service_name, name))
+          {
+            g_free(name);
+            g_free(service_name);
+            service_name = NULL;
+            g_list_free(roster_contacts);
+            names_mismatch = TRUE;
+            break;
+          }
+
+          g_free(name);
+        }
+        else
+          service_name = name;
+
+        roster_contacts = g_list_delete_link(roster_contacts, roster_contacts);
+      }
+
+      has_roster_contact = TRUE;
+    }
+
+    if (names_mismatch)
+      break;
+
+    contacts = contacts->next;
+  }
+
+  if (!has_roster_contact)
+    msgid = _(no_im_format);
+  else if (service_name)
+    msgid = _(single_service_format);
+  else
+    msgid = _(mutiple_services_format);
+
+  if (has_roster_contact && service_name)
+  {
+    if (show_contact_name)
+      confirmation_string = g_strdup_printf(msgid, display_name, service_name);
+    else
+      confirmation_string = g_strdup_printf(msgid, service_name);
+  }
+  else if (show_contact_name)
+    confirmation_string = g_strdup_printf(msgid, display_name);
+  else
+    confirmation_string = g_strdup(msgid);
+
+  g_free(service_name);
+
+  return confirmation_string;
 }
