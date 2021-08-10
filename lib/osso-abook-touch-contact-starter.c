@@ -18,6 +18,8 @@
  */
 #include <gtk/gtkprivate.h>
 
+#include <libintl.h>
+
 #include "config.h"
 
 #include "osso-abook-touch-contact-starter.h"
@@ -33,6 +35,9 @@
 #include "osso-abook-button.h"
 #include "osso-abook-errors.h"
 #include "osso-abook-icon-sizes.h"
+#include "osso-abook-voicemail-contact.h"
+#include "osso-abook-voicemail-selector.h"
+#include "osso-abook-aggregator.h"
 
 struct _OssoABookTouchContactStarterPrivate
 {
@@ -54,7 +59,7 @@ struct _OssoABookTouchContactStarterPrivate
   gboolean flag1 : 1;       /* priv->flags & 0xFD 0x02 */
   gboolean landscape : 1;   /* priv->flags & 0xFB 0x04 */
   gboolean editable : 1;    /* priv->flags & 0xF7 0x08 */
-  gboolean flag5 : 1;       /* priv->flags & 0xEF 0x10 */
+  gboolean started : 1;     /* priv->flags & 0xEF 0x10 */
   gboolean inited : 1;      /* priv->flags & 0xDF 0x20 */
   gboolean left_part : 1;   /* priv->flags & 0xBF 0x40 */
   gboolean interactive : 1; /* priv->flags & 0x7F 0x80 */
@@ -92,6 +97,14 @@ enum {
 };
 
 static guint signals[LAST_SIGNAL] = {};
+
+struct contacts_added_data
+{
+  OssoABookTouchContactStarter *starter;
+  OssoABookRoster *aggregator;
+  gchar *uid;
+};
+
 
 static OssoABookMessageMapping message_map[] =
 {
@@ -1681,4 +1694,148 @@ osso_abook_touch_contact_starter_init(OssoABookTouchContactStarter *starter)
 
   priv->full_view = FALSE;
   priv->flag1 = FALSE;
+}
+
+static void
+editor_response_cb(GtkWidget *dialog, int response_id, gpointer user_data)
+{
+  OssoABookTouchContactStarterPrivate *priv =
+      OSSO_ABOOK_TOUCH_CONTACT_STARTER_PRIVATE(user_data);
+
+  priv->started = FALSE;
+  gtk_widget_destroy(dialog);
+}
+
+static void
+voicemail_response_cb(GtkWidget *dialog, gint response_id, gpointer user_data)
+{
+  if (response_id == GTK_RESPONSE_OK)
+  {
+    HildonTouchSelector *selector =
+        hildon_picker_dialog_get_selector(HILDON_PICKER_DIALOG(dialog));
+
+    osso_abook_voicemail_selector_apply(
+          OSSO_ABOOK_VOICEMAIL_SELECTOR(selector));
+    osso_abook_voicemail_selector_save(OSSO_ABOOK_VOICEMAIL_SELECTOR(selector));
+  }
+
+  editor_response_cb(dialog, response_id, user_data);
+}
+
+static void
+contacts_added_closure_finish(struct contacts_added_data *data,
+                              OssoABookContact *contact)
+{
+  OssoABookTouchContactStarterPrivate *priv =
+      OSSO_ABOOK_TOUCH_CONTACT_STARTER_PRIVATE(data->starter);
+
+  g_return_if_fail(contact && OSSO_ABOOK_IS_CONTACT (contact));
+
+  g_signal_handlers_disconnect_matched(data->aggregator, G_SIGNAL_MATCH_DATA, 0,
+                                       0, NULL, NULL, data);
+  osso_abook_contact_detail_store_set_contact(priv->details, contact);
+  g_free(data->uid);
+  g_free(data);
+}
+
+static void
+contacts_added_cb(OssoABookRoster *roster, OssoABookContact **contacts,
+                  gpointer user_data)
+{
+  struct contacts_added_data *data = user_data;
+
+  while(*contacts)
+  {
+    if (!g_strcmp0(e_contact_get_const(E_CONTACT(*contacts), E_CONTACT_UID),
+                   data->uid))
+    {
+      contacts_added_closure_finish(data, *contacts);
+      break;
+    }
+
+    contacts++;
+  }
+}
+
+static gboolean
+contact_saved_cb(OssoABookContactEditor *editor, const char *uid,
+                 gpointer user_data)
+{
+  struct contacts_added_data *data = g_new(struct contacts_added_data, 1);
+  GList *contact;
+
+  data->starter = user_data;
+  data->aggregator = osso_abook_aggregator_get_default(NULL);
+  data->uid = g_strdup(uid);
+
+  g_signal_connect(data->aggregator, "contacts-added",
+                   G_CALLBACK(contacts_added_cb), data);
+  contact = osso_abook_aggregator_lookup(
+        OSSO_ABOOK_AGGREGATOR(data->aggregator), uid);
+
+  if (contact && contact->data)
+    contacts_added_closure_finish(data, contact->data);
+
+  g_list_free(contact);
+
+  return FALSE;
+}
+
+void
+osso_abook_touch_contact_starter_start_editor(
+    OssoABookTouchContactStarter *starter)
+{
+  OssoABookTouchContactStarterPrivate *priv;
+  GtkWindow *parent;
+  OssoABookContact *contact;
+  GtkWidget *dialog;
+
+  g_return_if_fail(OSSO_ABOOK_IS_TOUCH_CONTACT_STARTER(starter));
+
+  priv = OSSO_ABOOK_TOUCH_CONTACT_STARTER_PRIVATE(starter);
+
+  g_return_if_fail(priv->editable);
+
+  if (priv->started)
+    return;
+
+  priv->started = TRUE;
+  parent = (GtkWindow *)gtk_widget_get_ancestor(GTK_WIDGET(starter),
+                                                GTK_TYPE_WINDOW);
+  contact = get_details_contact(priv);
+
+  if (OSSO_ABOOK_IS_VOICEMAIL_CONTACT(contact))
+  {
+    GtkWidget *selector;
+
+    dialog = hildon_picker_dialog_new(parent);
+    gtk_window_set_title(GTK_WINDOW(dialog),
+                         osso_abook_contact_get_display_name(contact));
+    selector = osso_abook_voicemail_selector_new();
+    hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog),
+                                      HILDON_TOUCH_SELECTOR(selector));
+    hildon_picker_dialog_set_done_label(
+          HILDON_PICKER_DIALOG(dialog),
+          dgettext("hildon-libs", "wdgt_bd_save"));
+    g_signal_connect(dialog, "response",
+                     G_CALLBACK(voicemail_response_cb), starter);
+  }
+  else
+  {
+    dialog = osso_abook_contact_editor_new_with_contact(
+          parent, contact, OSSO_ABOOK_CONTACT_EDITOR_EDIT);
+
+    if (osso_abook_contact_is_temporary(contact))
+    {
+      g_signal_connect(dialog, "contact-saved",
+                       G_CALLBACK(contact_saved_cb), starter);
+    }
+
+    g_signal_connect(dialog, "response",
+                     G_CALLBACK(editor_response_cb), starter);
+
+    g_signal_emit(starter, signals[EDITOR_STARTED], 0, dialog);
+  }
+
+  gtk_widget_show(dialog);
 }
