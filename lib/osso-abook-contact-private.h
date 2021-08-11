@@ -22,7 +22,7 @@
 
 G_BEGIN_DECLS
 
-void _osso_abook_contact_reject_for_uid_full(
+gboolean _osso_abook_contact_reject_for_uid_full(
     OssoABookContact *contact, const gchar *master_uid,
     gboolean always_keep_roster_contact, GError **error);
 

@@ -892,7 +892,8 @@ reject_dangling_roster_contacts(OssoABookAggregator *aggregator,
     if (!contact ||
         is_dangling_roster_contact(aggregator, contact, roster_contact))
     {
-      _osso_abook_contact_reject_for_uid_full(roster_contact, l->data, 1, 0);
+      _osso_abook_contact_reject_for_uid_full(roster_contact, l->data, TRUE,
+                                              NULL);
     }
   }
 }

@@ -1750,7 +1750,7 @@ get_contact_book(OssoABookContact *contact)
   return book;
 }
 
-void
+gboolean
 _osso_abook_contact_reject_for_uid_full(OssoABookContact *contact,
                                         const gchar *master_uid,
                                         gboolean always_keep_roster_contact,
@@ -1759,15 +1759,16 @@ _osso_abook_contact_reject_for_uid_full(OssoABookContact *contact,
   const gchar *contact_uid;
   EBook *book;
   GString *id;
+  gboolean removed;
 
-  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
-  g_return_if_fail(master_uid || !always_keep_roster_contact);
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
+  g_return_val_if_fail(master_uid || !always_keep_roster_contact, FALSE);
 
   contact_uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
-  g_return_if_fail(NULL != contact_uid);
+  g_return_val_if_fail(NULL != contact_uid, FALSE);
 
   book = get_contact_book(contact);
-  g_return_if_fail(NULL != book);
+  g_return_val_if_fail(NULL != book, FALSE);
 
   id = g_string_new(contact_uid);
 
@@ -1784,9 +1785,11 @@ _osso_abook_contact_reject_for_uid_full(OssoABookContact *contact,
     g_string_append(id, "preserve");
   }
 
-  e_book_remove_contact(book, id->str, error);
+  removed = e_book_remove_contact(book, id->str, error);
   g_object_unref(book);
   g_string_free(id, TRUE);
+
+  return removed;
 }
 
 static void
@@ -3230,4 +3233,41 @@ osso_abook_contact_has_roster_contacts(OssoABookContact *master_contact)
     return g_hash_table_size(roster_contacts) != 0;
 
   return FALSE;
+}
+
+gboolean
+osso_abook_contact_has_valid_name(OssoABookContact *contact)
+{
+  EContact *ec;
+
+  g_return_val_if_fail(NULL != contact, FALSE);
+  g_return_val_if_fail(E_IS_CONTACT(contact), FALSE);
+
+  ec = E_CONTACT(contact);
+
+#define fld_is_empty(__ec__, __fld_id__) ({ \
+  const char *__tmp__ = e_contact_get_const((__ec__), (__fld_id__)); \
+  IS_EMPTY(__tmp__); \
+})
+  return
+      !fld_is_empty(ec, E_CONTACT_GIVEN_NAME) ||
+      !fld_is_empty(ec, E_CONTACT_FAMILY_NAME) ||
+      !fld_is_empty(ec, E_CONTACT_NICKNAME) ||
+      !fld_is_empty(ec, E_CONTACT_ORG);
+#undef fld_is_empty
+}
+
+void
+osso_abook_contact_reject_for_uid(OssoABookContact *contact,
+                                  const char *master_uid, GtkWindow *parent)
+{
+  GError *error = NULL;
+
+  g_return_if_fail(parent == NULL || GTK_IS_WINDOW(parent));
+
+  if (!_osso_abook_contact_reject_for_uid_full(contact, master_uid, FALSE,
+                                               &error))
+  {
+    osso_abook_handle_gerror(parent, error);
+  }
 }

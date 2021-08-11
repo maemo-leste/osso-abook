@@ -1193,6 +1193,12 @@ osso_abook_button_class_init(OssoABookButtonClass *klass)
 }
 
 GtkWidget *
+osso_abook_button_new(HildonSizeType size)
+{
+  return gtk_widget_new(OSSO_ABOOK_TYPE_BUTTON, "size", size, NULL);
+}
+
+GtkWidget *
 osso_abook_button_new_with_presence(HildonSizeType size, const char *icon_name,
                                     const char *title, const char *value,
                                     OssoABookPresence *presence)
@@ -1215,4 +1221,11 @@ osso_abook_button_set_style(OssoABookButton *button, OssoABookButtonStyle style)
 {
   g_return_if_fail(OSSO_ABOOK_IS_BUTTON(button));
   g_object_set(button, "style", style, NULL);
+}
+
+void
+osso_abook_button_set_title(OssoABookButton *button, const char *title)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_BUTTON(button));
+  g_object_set(button, "title", title, NULL);
 }

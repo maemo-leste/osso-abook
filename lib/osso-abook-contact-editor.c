@@ -71,7 +71,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 enum
 {
   PROP_CONTACT = 0x1,
-  PROP_MODE = 0x2,
+  PROP_MODE = 0x2
 };
 
 enum
@@ -2025,4 +2025,146 @@ osso_abook_contact_editor_init(OssoABookContactEditor *editor)
   g_signal_connect(editor, "set-focus", G_CALLBACK(set_focus_cb), NULL);
 
   osso_abook_set_portrait_mode_supported(GTK_WINDOW(editor), FALSE); /* :( */
+}
+
+GtkWidget *
+osso_abook_contact_editor_new_with_contact(GtkWindow *parent,
+                                           OssoABookContact *contact,
+                                           OssoABookContactEditorMode mode)
+{
+  g_return_val_if_fail(!parent || GTK_IS_WINDOW(parent), NULL);
+  g_return_val_if_fail(!contact || OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  return g_object_new(OSSO_ABOOK_TYPE_CONTACT_EDITOR,
+                      "transient-for", parent,
+                      "contact", contact,
+                      "mode", mode,
+                      "has-separator", FALSE,
+                      "modal", TRUE,
+                      "destroy-with-parent", TRUE,
+                      NULL);
+}
+
+GtkWidget *
+osso_abook_contact_editor_new()
+{
+  return osso_abook_contact_editor_new_with_contact(
+        NULL, NULL, OSSO_ABOOK_CONTACT_EDITOR_EDIT);
+}
+
+void
+osso_abook_contact_editor_set_mode(OssoABookContactEditor *editor,
+                                   OssoABookContactEditorMode mode)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_EDITOR(editor));
+
+  PRIVATE(editor)->mode = mode;
+
+  if (gtk_widget_get_realized(GTK_WIDGET(editor)))
+    update_fields(editor);
+
+  g_object_notify(G_OBJECT(editor), "mode");
+}
+
+OssoABookContactEditorMode
+osso_abook_contact_editor_get_mode(OssoABookContactEditor *editor)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_EDITOR(editor),
+                       OSSO_ABOOK_CONTACT_EDITOR_EDIT);
+
+  return PRIVATE(editor)->mode;
+}
+
+OssoABookContact *
+osso_abook_contact_editor_get_contact(OssoABookContactEditor *editor)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_EDITOR(editor), NULL);
+
+  return PRIVATE(editor)->contact;
+}
+
+static void
+update_minimum_label_width(OssoABookContactEditorPrivate *priv)
+{
+  GtkWidget *button;
+  GList *l;
+
+  g_return_if_fail(0 == priv->minimum_label_width);
+
+  button = osso_abook_button_new(HILDON_SIZE_FINGER_HEIGHT);
+  gtk_widget_set_parent(button, priv->table);
+  gtk_widget_ensure_style(button);
+
+  for (l = osso_abook_contact_field_list_supported_fields(
+         priv->message_map, priv->contact, NULL, NULL); l;
+       l = g_list_delete_link(l, l) )
+  {
+    GList *children;
+
+    const char *display_title =
+        osso_abook_contact_field_get_display_title(l->data);
+
+    if (display_title)
+    {
+      GtkRequisition requisition;
+
+      osso_abook_button_set_title(OSSO_ABOOK_BUTTON(button), display_title);
+      gtk_widget_size_request(button, &requisition);
+
+      if (requisition.width > priv->minimum_label_width)
+        priv->minimum_label_width = requisition.width;
+    }
+
+    for (children = osso_abook_contact_field_get_children(l->data);
+         children; children = children->next )
+    {
+      l = g_list_insert_before(l, l->next, g_object_ref(children->data));
+    }
+
+    g_object_unref(l->data);
+  }
+
+  /* this seem to unref it as well */
+  gtk_widget_unparent(button);
+}
+
+void
+osso_abook_contact_editor_set_contact(OssoABookContactEditor *editor,
+                                      OssoABookContact *contact)
+{
+  OssoABookContactEditorPrivate *priv; // r0 MAPDST
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_EDITOR(editor));
+  g_return_if_fail(contact == NULL || OSSO_ABOOK_IS_CONTACT(contact));
+
+  priv = PRIVATE(editor);
+
+  if (priv->contact != contact)
+    update_minimum_label_width(priv);
+
+  if (contact)
+    g_object_ref(contact);
+
+  set_contact(editor, contact);
+
+  if (priv->contact)
+  {
+    if (OSSO_ABOOK_DEBUG_FLAGS(EDITOR))
+    {
+      GList *rc;
+
+      OSSO_ABOOK_DUMP_VCARD(EDITOR, priv->contact, "master contact");
+
+      for (rc = osso_abook_contact_get_roster_contacts(priv->contact); rc;
+           rc = rc->next)
+      {
+        OSSO_ABOOK_DUMP_VCARD(EDITOR, rc, "roster contact");
+      }
+    }
+  }
+
+  if (gtk_widget_get_realized(GTK_WIDGET(editor)))
+    update_fields(editor);
+
+  g_object_notify(G_OBJECT(editor), "contact");
 }
