@@ -38,6 +38,8 @@ COMMON_SOURCES = \
 		osso-abook-avatar-image.c \
 		osso-abook-avatar.c \
 		osso-abook-avatar-cache.c \
+		osso-abook-icon-sizes.c \
+		osso-abook-address-format.c
 		osso-abook-icon-sizes.c
 
 COMMON_CFLAGS = \
@@ -125,6 +127,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-debug.c \
 		osso-abook-errors.c \
 		osso-abook-string-list.c \
+		osso-abook-address-format.c \
 		osso-abook-contact-chooser.c \
 		osso-abook-filter-model.c \
 		osso-abook-row-model.c \
@@ -208,6 +211,7 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-plugin.h \
 		osso-abook-plugin-manager.h \
 		osso-abook-button.h \
+		osso-abook-contact-editor.h \
 		osso-abook-contact-field.h \
 		osso-abook-contact-detail-store.h \
 		osso-abook-row-model.h
