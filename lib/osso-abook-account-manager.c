@@ -1757,6 +1757,20 @@ osso_abook_account_manager_list_accounts(OssoABookAccountManager *manager,
   return g_list_reverse(accounts);
 }
 
+static gboolean
+_tp_account_is_enabled(TpAccount *account, gpointer user_data)
+{
+  return tp_account_is_enabled(account);
+}
+
+GList *
+osso_abook_account_manager_list_enabled_accounts(
+    OssoABookAccountManager *manager)
+{
+  return osso_abook_account_manager_list_accounts(manager,
+                                                  _tp_account_is_enabled, NULL);
+}
+
 GList *
 osso_abook_account_manager_list_protocols(OssoABookAccountManager *manager,
                                           const gchar *attr_name,
@@ -1908,4 +1922,58 @@ osso_abook_account_manager_get_protocol_object_by_vcard_field(
     g_object_ref(protocol);
 
   return protocol;
+}
+
+/**
+ * Get all TpProtocol objects known to #OssoABookAccountManager
+ *
+ * @param manager #OssoABookAccountManager to get protocol objects of
+ *
+ * @return list of protocol objects. Free with g_list_free()
+ */
+GList *
+osso_abook_account_manager_get_protocols(OssoABookAccountManager *manager)
+{
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+
+  return g_hash_table_get_values(
+        OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols);
+}
+
+GList *
+osso_abook_account_manager_list_by_vcard_field(OssoABookAccountManager *manager,
+                                               const char *vcard_field)
+{
+  GList *l;
+  GList *protocols;
+  GList *rv = NULL;
+
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+  g_return_val_if_fail(NULL != vcard_field, NULL);
+
+  protocols = osso_abook_account_manager_get_protocols(manager);
+
+  for (l = protocols; l; l = l->next)
+  {
+    TpProtocol *protocol = l->data;
+    const char *vcf = tp_protocol_get_vcard_field(protocol);
+
+    if (vcf && !strcmp(vcard_field, vcf))
+    {
+      GList *rosters = osso_abook_account_manager_list_by_protocol(
+            manager, tp_protocol_get_name(protocol));
+
+      rv = g_list_concat(rosters, rv);
+    }
+  }
+
+  g_list_free(protocols);
+
+  return rv;
 }

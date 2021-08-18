@@ -69,6 +69,13 @@ _osso_abook_get_delete_confirmation_string(GList *contacts,
                                            const gchar *no_im_format,
                                            gchar *single_service_format,
                                            gchar *mutiple_services_format);
+
+gboolean
+_osso_abook_tp_protocol_has_rosters(TpProtocol *protocol);
+
+gchar *
+_osso_abook_tp_account_get_vcard_field(TpAccount *account);
+
 G_END_DECLS
 
 #endif /* __OSSO_ABOOK_UTILS_PRIVATE_H_INCLUDED__ */

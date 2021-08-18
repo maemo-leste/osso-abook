@@ -2312,6 +2312,36 @@ osso_abook_contact_find_roster_contacts_for_account(
   return osso_abook_contact_real_find_roster_contacts(master_contact, &data);
 }
 
+GList *
+osso_abook_contact_find_roster_contacts_for_attribute(
+    OssoABookContact *master_contact, EVCardAttribute *attribute)
+{
+  GList *values;
+  GList *contacts = NULL;
+  FindRosterContactsData data = {};
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(master_contact), NULL);
+  g_return_val_if_fail(NULL != attribute, NULL);
+
+  values = e_vcard_attribute_get_values(attribute);
+
+  if (values && !IS_EMPTY(values->data))
+  {
+    data.protocol = osso_abook_contact_attribute_get_protocol(attribute);
+
+    if (data.protocol)
+    {
+      data.vcard_field = e_vcard_attribute_get_name(attribute);
+      data.username = contacts->data;
+      contacts =
+          osso_abook_contact_real_find_roster_contacts(master_contact, &data);
+      g_object_unref(data.protocol);
+    }
+  }
+
+  return contacts;
+}
+
 static gboolean
 osso_abook_contact_presence_is_invalid(OssoABookPresence *presence)
 {
@@ -3270,4 +3300,42 @@ osso_abook_contact_reject_for_uid(OssoABookContact *contact,
   {
     osso_abook_handle_gerror(parent, error);
   }
+}
+
+TpProtocol *
+osso_abook_contact_attribute_get_protocol(EVCardAttribute *attribute)
+{
+  const char *vcard_attr_name = e_vcard_attribute_get_name(attribute);
+  GList *params;
+
+  for (params = e_vcard_attribute_get_params(attribute); params;
+       params = params->next)
+  {
+    const char *param_name = e_vcard_attribute_param_get_name(params->data);
+    GList *values;
+
+    if (!strcmp(param_name, EVC_TYPE))
+    {
+      for (values = e_vcard_attribute_param_get_values(params->data);
+           values; values = values->next)
+      {
+        if (!IS_EMPTY(values->data))
+        {
+          TpProtocol *protocol =
+              osso_abook_account_manager_get_protocol_object(NULL, values->data);
+
+          if (protocol)
+          {
+            const char *vcard_field = tp_protocol_get_vcard_field(protocol);
+
+            if (vcard_field && !strcmp(vcard_field, vcard_attr_name))
+              return g_object_ref(protocol);
+          }
+        }
+      }
+    }
+  }
+
+  return osso_abook_account_manager_get_protocol_object_by_vcard_field(
+        NULL, vcard_attr_name);
 }

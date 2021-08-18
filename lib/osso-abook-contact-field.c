@@ -38,6 +38,7 @@
 #include "osso-abook-avatar-editor-dialog.h"
 #include "osso-abook-entry.h"
 #include "osso-abook-account-manager.h"
+#include "osso-abook-string-list.h"
 
 typedef struct _OssoABookContactFieldTemplate OssoABookContactFieldTemplate;
 
@@ -3468,4 +3469,224 @@ osso_abook_contact_field_action_start_with_callback(
     g_object_unref(account);
 
   return rv;
+}
+
+static void
+flags_to_vcard_attribute_values(EVCardAttribute *attr,
+                                OssoABookContactFieldFlags flags)
+{
+  GList *l = NULL;
+
+  if (flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_CELL)
+  {
+    flags &= ~OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE;
+    l = g_list_prepend(l, "CELL");
+  }
+
+  if (flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE)
+    l = g_list_prepend(l, "VOICE");
+
+  if (flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_FAX)
+    l = g_list_prepend(l, "FAX");
+
+  if (flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_HOME)
+    l = g_list_prepend(l, "HOME");
+
+  if (flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_WORK)
+    l = g_list_prepend(l, "WORK");
+
+  if (l)
+  {
+    EVCardAttributeParam *param = e_vcard_attribute_param_new(EVC_TYPE);
+
+    while (l)
+    {
+      osso_abook_e_vcard_attribute_param_merge_value(param, l->data, NULL);
+      l = g_list_delete_link(l, l);
+    }
+
+    e_vcard_attribute_remove_param(attr, EVC_TYPE);
+
+    if (param)
+      e_vcard_attribute_add_param(attr, param);
+  }
+  else
+    e_vcard_attribute_remove_param(attr, EVC_TYPE);
+
+}
+
+GList *
+osso_abook_contact_field_list_supported_fields(
+    GHashTable *message_map, OssoABookContact *master_contact,
+    OssoABookContactFieldPredicate accept_field, gpointer user_data)
+{
+  OssoABookContactFieldTemplate *t;
+  GList *fields = NULL;
+  GList *protocols;
+  GList *rosters;
+  GList *l;
+
+  g_return_val_if_fail(NULL == master_contact ||
+                       OSSO_ABOOK_IS_CONTACT(master_contact), NULL);
+
+  for (t = general_templates;
+       t < &general_templates[G_N_ELEMENTS(general_templates)]; t++)
+  {
+    if (!(t->flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER))
+    {
+      EVCardAttribute *attr = e_vcard_attribute_new(NULL, t->name);
+      OssoABookContactField *field;
+
+      flags_to_vcard_attribute_values(attr, t->flags);
+      field = osso_abook_contact_field_new_full(message_map, master_contact,
+                                                NULL, attr);
+      e_vcard_attribute_free(attr);
+
+      if (field)
+      {
+        if (!accept_field || accept_field(field, user_data))
+          fields = g_list_prepend(fields, field);
+        else
+          g_object_unref(field);
+      }
+    }
+  }
+
+  for (rosters = osso_abook_roster_manager_list_rosters(NULL); rosters;
+       rosters = g_list_delete_link(rosters, rosters))
+  {
+    OssoABookRoster *roster = rosters->data;
+    const char *vcard_field = osso_abook_roster_get_vcard_field(roster);
+
+    if (vcard_field && strcmp(vcard_field, EVC_TEL))
+    {
+      TpProtocol *protocol;
+      OssoABookContactField *field;
+      OssoABookContact *roster_contact = osso_abook_contact_new();
+      EVCardAttribute *attr = e_vcard_attribute_new(NULL, vcard_field);
+
+      osso_abook_contact_set_roster(roster_contact, roster);
+      protocol = osso_abook_roster_get_protocol(roster);
+
+      if (protocol)
+      {
+        e_vcard_attribute_add_param_with_value(
+              attr, e_vcard_attribute_param_new(EVC_TYPE),
+              tp_protocol_get_name(protocol));
+        g_object_unref(protocol);
+      }
+
+      field = osso_abook_contact_field_new_full(message_map, master_contact,
+                                                roster_contact, attr);
+      g_object_unref(roster_contact);
+      e_vcard_attribute_free(attr);
+
+      if (field)
+      {
+        if (!accept_field || accept_field(field, user_data))
+          fields = g_list_prepend(fields, field);
+        else
+          g_object_unref(field);
+      }
+    }
+  }
+
+  protocols = osso_abook_account_manager_get_protocols(NULL);
+
+  for (l = protocols; l; l = l->next)
+  {
+    TpProtocol *protocol = l->data;
+
+    if (!_osso_abook_tp_protocol_has_rosters(protocol))
+    {
+      const char *vcard_field = tp_protocol_get_vcard_field(protocol);
+
+      if (vcard_field && strcmp(vcard_field, EVC_TEL))
+      {
+        EVCardAttribute *attr = e_vcard_attribute_new(NULL, vcard_field);
+        OssoABookContactField *field;
+
+        e_vcard_attribute_add_param_with_value(
+              attr, e_vcard_attribute_param_new(EVC_TYPE),
+              tp_protocol_get_name(protocol));
+        field = osso_abook_contact_field_new_full(
+              message_map, master_contact, NULL, attr);
+        e_vcard_attribute_free(attr);
+
+        if (field)
+        {
+          if (!accept_field || accept_field(field, user_data))
+            fields = g_list_prepend(fields, field);
+          else
+            g_object_unref(field);
+        }
+      }
+    }
+  }
+
+  g_list_free(protocols);
+
+  return fields;
+}
+
+GList *
+osso_abook_contact_field_list_account_fields(GHashTable *message_map,
+                                             OssoABookContact *master_contact)
+{
+  GList *fields = NULL;
+  GList *protocols = NULL;
+  GList *accounts;
+
+  g_return_val_if_fail(NULL == master_contact ||
+                       OSSO_ABOOK_IS_CONTACT(master_contact), NULL);
+
+  for (accounts = osso_abook_account_manager_list_enabled_accounts(NULL);
+       accounts; accounts = g_list_delete_link(accounts, accounts))
+  {
+    TpAccount *account = accounts->data;
+    gchar *vcard_field = _osso_abook_tp_account_get_vcard_field(accounts->data);
+    const char *protocol = tp_account_get_protocol_name(account);
+
+    if (vcard_field && protocol && strcmp(vcard_field, EVC_TEL))
+    {
+
+      OssoABookRoster *roster = osso_abook_roster_manager_get_roster(
+            NULL, tp_account_get_path_suffix(account));
+
+      if (roster || !osso_abook_string_list_find(protocols, protocol))
+      {
+        OssoABookContact *roster_contact = NULL;
+        OssoABookContactField *field;
+        EVCardAttribute *attr;
+
+        if (roster)
+        {
+          roster_contact = osso_abook_contact_new();
+          osso_abook_contact_set_roster(roster_contact, roster);
+        }
+        else
+          protocols = g_list_prepend(protocols, (gpointer)protocol);
+
+        attr = e_vcard_attribute_new(NULL, vcard_field);
+        e_vcard_attribute_add_param_with_value(
+              attr, e_vcard_attribute_param_new(EVC_TYPE), protocol);
+        field = osso_abook_contact_field_new_full(message_map, master_contact,
+                                                  roster_contact, attr);
+
+        if (field)
+          fields = g_list_prepend(fields, field);
+
+        if (roster_contact)
+          g_object_unref(roster_contact);
+
+        e_vcard_attribute_free(attr);
+      }
+    }
+
+    g_free(vcard_field);
+  }
+
+  g_list_free(protocols);
+
+  return fields;
 }

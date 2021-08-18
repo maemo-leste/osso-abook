@@ -12,6 +12,7 @@
 #include "osso-abook-utils-private.h"
 #include "osso-abook-log.h"
 #include "osso-abook-contact.h"
+#include "osso-abook-account-manager.h"
 
 #include "config.h"
 
@@ -1005,4 +1006,51 @@ _osso_abook_get_delete_confirmation_string(GList *contacts,
   g_free(service_name);
 
   return confirmation_string;
+}
+
+__attribute__ ((visibility ("hidden"))) gboolean
+_osso_abook_tp_protocol_has_rosters(TpProtocol *protocol)
+{
+  GList *l;
+  GList *next;
+  GList *accounts;
+
+  if (!(osso_abook_caps_from_tp_protocol(protocol) &
+        OSSO_ABOOK_CAPS_ADDRESSBOOK))
+  {
+    return FALSE;
+  }
+
+  accounts = osso_abook_account_manager_list_by_protocol(
+        NULL, tp_protocol_get_name(protocol));
+
+  for (l = accounts; l; l = next)
+  {
+    next = l->next;
+
+    if (!tp_account_is_enabled(l->data))
+      accounts = g_list_delete_link(accounts, l);
+  }
+
+  g_list_free(accounts);
+
+  return !!accounts;
+}
+
+__attribute__ ((visibility ("hidden"))) gchar *
+_osso_abook_tp_account_get_vcard_field(TpAccount *account)
+{
+  const gchar *  protocol_name = tp_account_get_protocol_name(account);
+  TpProtocol *protocol;
+
+  if (!protocol_name)
+    return NULL;
+
+  protocol = osso_abook_account_manager_get_protocol_object(NULL,
+                                                            protocol_name);
+
+  if (!protocol)
+    return NULL;
+
+  return g_strdup(tp_protocol_get_vcard_field(protocol));
 }
