@@ -39,6 +39,7 @@
 #include "osso-abook-entry.h"
 #include "osso-abook-account-manager.h"
 #include "osso-abook-string-list.h"
+#include "osso-abook-contact-field-selector.h"
 
 typedef struct _OssoABookContactFieldTemplate OssoABookContactFieldTemplate;
 
@@ -3689,4 +3690,207 @@ osso_abook_contact_field_list_account_fields(GHashTable *message_map,
   g_list_free(protocols);
 
   return fields;
+}
+
+static void
+update_field_type(OssoABookContactField *field, OssoABookContactField *update)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  OssoABookContactFieldTemplate *new_t;
+  OssoABookContactFieldTemplate *t;
+  OssoABookContactFieldFlags new_flags;
+
+  g_return_if_fail(priv && priv->template);
+
+  t = priv->template;
+  new_t = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(update)->template;
+
+  new_flags = flags_type(new_t->flags);
+
+  if (new_flags != flags_type(t->flags))
+  {
+    flags_to_vcard_attribute_values(
+          osso_abook_contact_field_get_attribute(field), new_flags);
+
+    if (t->msgid)
+    {
+      g_free(priv->display_title);
+      priv->display_title = NULL;
+    }
+
+    if (!(t->flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DYNAMIC))
+    {
+      g_free(priv->secondary_title);
+      priv->secondary_title = NULL;
+    }
+
+    priv->modified = TRUE;
+    priv->template = new_t;
+    OSSO_ABOOK_CONTACT_FIELD_GET_CLASS(field)->update_label(field);
+    g_object_notify(G_OBJECT(field), "modified");
+  }
+}
+
+static gboolean
+compare_field_names(OssoABookContactField *field, gpointer user_data)
+{
+  return
+      osso_abook_contact_field_get_name(field) ==
+      osso_abook_contact_field_get_name(user_data);
+}
+
+static gboolean
+compare_field_flags(OssoABookContactField *field, gpointer user_data)
+{
+  return
+      flags_type(osso_abook_contact_field_get_flags(field)) ==
+      flags_type(osso_abook_contact_field_get_flags(user_data));
+}
+
+static void
+update_field_type_dialog_set_title(GtkWindow *window,
+                                   OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  OssoABookContactFieldTemplate *t = priv->template;
+  const char *title = NULL;
+
+  if (t && t->title)
+  {
+    title = t->title;
+
+    if (priv->message_map)
+      title = osso_abook_message_map_lookup(priv->message_map, title);
+  }
+
+  if (!title)
+    title = osso_abook_contact_field_get_display_title(field);
+
+  osso_abook_set_portrait_mode_supported(window, FALSE);
+  gtk_window_set_title(window, title);
+}
+
+static void
+label_button_clicked_cb(GtkWidget *button, OssoABookContactField *field)
+{
+  GtkWidget *selector;
+  OssoABookContact *contact;
+  GtkWidget *dialog;
+  OssoABookContactField *selected;
+
+  selector = osso_abook_contact_field_selector_new();
+  contact = osso_abook_contact_field_get_master_contact(field);
+  osso_abook_contact_field_selector_load(
+        OSSO_ABOOK_CONTACT_FIELD_SELECTOR(selector), contact,
+        compare_field_names, field);
+  hildon_touch_selector_set_active(
+        HILDON_TOUCH_SELECTOR(selector), 0,
+        osso_abook_contact_field_selector_find_custom(
+          OSSO_ABOOK_CONTACT_FIELD_SELECTOR(selector), compare_field_flags,
+          field));
+  dialog = hildon_picker_dialog_new(
+        GTK_WINDOW(gtk_widget_get_ancestor(button, GTK_TYPE_WINDOW)));
+  update_field_type_dialog_set_title(GTK_WINDOW(dialog), field);
+  hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog),
+                                    HILDON_TOUCH_SELECTOR(selector));
+
+  if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK)
+  {
+    selected = osso_abook_contact_field_selector_get_selected(
+          OSSO_ABOOK_CONTACT_FIELD_SELECTOR(selector));
+
+    if (selected)
+    {
+      update_field_type(field, selected);
+
+      g_object_unref(selected);
+    }
+  }
+
+  gtk_widget_destroy(dialog);
+}
+
+GtkWidget *
+osso_abook_contact_field_get_label_widget(OssoABookContactField *field)
+{
+  OssoABookContactFieldPrivate *priv;
+  GList *templates = NULL;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+
+  if (priv->label)
+    return priv->label;
+
+  g_return_val_if_fail(NULL != priv->template, NULL);
+
+  if (IS_EMPTY(osso_abook_contact_field_get_display_title(field)))
+    return NULL;
+
+  if (!(osso_abook_contact_field_get_flags(field) &
+        OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER))
+  {
+    if (is_template_builtin(priv->template))
+    {
+      OssoABookContactFieldTemplate *ft = priv->template;
+      OssoABookContactFieldTemplate *t;
+
+      for (t = ft - 1; t >= general_templates && ft->name == t->name; t--);
+
+      for (t = t + 1; t < &general_templates[G_N_ELEMENTS(general_templates)] &&
+           ft->name == t->name; t++)
+      {
+        templates = g_list_prepend(templates, t);
+      }
+
+      templates = g_list_reverse(templates);
+    }
+  }
+
+  if (templates && templates->next &&
+      !osso_abook_contact_field_is_readonly(field))
+  {
+    const char *title = osso_abook_contact_field_get_display_title(field);
+    const char *value = osso_abook_contact_field_get_secondary_title(field);
+    GtkWidget *button;
+
+    if (osso_abook_contact_field_has_editor_widget(field))
+    {
+      button = osso_abook_button_new_with_text(HILDON_SIZE_FINGER_HEIGHT,
+                                               title, value);
+      osso_abook_button_set_style(OSSO_ABOOK_BUTTON(button),
+                                  OSSO_ABOOK_BUTTON_STYLE_PICKER);
+    }
+    else
+    {
+      button = hildon_button_new_with_text(
+            HILDON_SIZE_FINGER_HEIGHT, HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
+            title, value);
+      gtk_button_set_alignment(GTK_BUTTON(button), 0.0, 0.5);
+      hildon_button_set_style(HILDON_BUTTON(button),
+                              HILDON_BUTTON_STYLE_PICKER);
+    }
+
+    gtk_widget_set_can_focus(button, FALSE);
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(label_button_clicked_cb), field);
+    priv->label = button;
+  }
+  else
+  {
+    GtkWidget *button = osso_abook_button_new_with_text(
+          HILDON_SIZE_FINGER_HEIGHT,
+          osso_abook_contact_field_get_display_title(field),
+          osso_abook_contact_field_get_secondary_title(field));
+    osso_abook_button_set_style(OSSO_ABOOK_BUTTON(button),
+                                OSSO_ABOOK_BUTTON_STYLE_LABEL);
+    gtk_widget_set_can_focus(button, FALSE);
+    priv->label = button;
+  }
+
+  g_object_ref_sink(priv->label);
+  g_list_free(templates);
+
+  return priv->label;
 }
