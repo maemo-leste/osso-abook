@@ -3894,3 +3894,23 @@ osso_abook_contact_field_get_label_widget(OssoABookContactField *field)
 
   return priv->label;
 }
+
+TpAccount *
+osso_abook_contact_field_action_request_account(
+    OssoABookContactFieldAction *action, GtkWindow *parent, gboolean *aborted)
+{
+  g_assert(0);
+
+  return NULL;
+}
+
+gboolean
+osso_abook_contact_action_start_with_callback(
+    OssoABookContactAction action, OssoABookContact *contact,
+    EVCardAttribute *attribute, TpAccount *account, GtkWindow *parent,
+    OssoABookContactActionStartCb callback, gpointer callback_data)
+{
+  g_assert(0);
+
+  return FALSE;
+}
