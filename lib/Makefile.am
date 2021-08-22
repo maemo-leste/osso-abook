@@ -17,6 +17,8 @@ COMMON_SOURCES = \
 		osso-abook-row-model.c \
 		eds.c \
 		osso-abook-contact-filter.c \
+		osso-abook-contact-editor.c \
+		osso-abook-contact-field-selector.c \
 		osso-abook-filter-model.c \
 		osso-abook-gconf-contact.c \
 		osso-abook-voicemail-contact.c \
@@ -39,8 +41,9 @@ COMMON_SOURCES = \
 		osso-abook-avatar.c \
 		osso-abook-avatar-cache.c \
 		osso-abook-icon-sizes.c \
-		osso-abook-address-format.c
-		osso-abook-icon-sizes.c
+		osso-abook-address-format.c \
+		osso-abook-dialogs.c \
+		osso-abook-tp-account-model.c
 
 COMMON_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
@@ -167,12 +170,18 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-message-map.c \
 		osso-abook-avatar-editor.c \
 		osso-abook-avatar-editor-dialog.c \
+		osso-abook-touch-contact-starter.c \
 		osso-abook-entry.c \
 		osso-abook-button.c \
 		osso-abook-avatar-image.c \
 		osso-abook-icon-sizes.c \
 		osso-abook-avatar-chooser-dialog.c \
-		osso-abook-contact-detail-store.c
+		osso-abook-contact-field.c \
+		osso-abook-contact-editor.c \
+		osso-abook-contact-field-selector.c \
+		osso-abook-contact-detail-store.c \
+		osso-abook-dialogs.c \
+		osso-abook-tp-account-model.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-aggregator.h \
@@ -214,7 +223,8 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-contact-editor.h \
 		osso-abook-contact-field.h \
 		osso-abook-contact-detail-store.h \
-		osso-abook-row-model.h
+		osso-abook-row-model.h \
+		osso-abook-tp-account-model.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
 		osso-abook-enums.h

@@ -1199,6 +1199,17 @@ osso_abook_button_new(HildonSizeType size)
 }
 
 GtkWidget *
+osso_abook_button_new_with_text(HildonSizeType size, const char *title,
+                                const char *value)
+{
+  return gtk_widget_new(OSSO_ABOOK_TYPE_BUTTON,
+                        "size", size,
+                        "title", title,
+                        "value", value,
+                        NULL);
+}
+
+GtkWidget *
 osso_abook_button_new_with_presence(HildonSizeType size, const char *icon_name,
                                     const char *title, const char *value,
                                     OssoABookPresence *presence)

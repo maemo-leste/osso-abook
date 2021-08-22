@@ -1568,6 +1568,20 @@ osso_abook_account_manager_get_allowed_accounts(
   return OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->allowed_accounts;
 }
 
+void
+osso_abook_account_manager_set_allowed_accounts(
+    OssoABookAccountManager *manager, GList *accounts)
+{
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager));
+
+  g_object_set(G_OBJECT(manager),
+               "allowed-accounts", accounts,
+               NULL);
+}
+
 OssoABookCapsFlags
 osso_abook_account_manager_get_allowed_capabilities(
     OssoABookAccountManager *manager)
@@ -1582,6 +1596,20 @@ osso_abook_account_manager_get_allowed_capabilities(
 
 }
 
+void
+osso_abook_account_manager_set_allowed_capabilities(
+    OssoABookAccountManager *manager, OssoABookCapsFlags caps)
+{
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager));
+
+  g_object_set(G_OBJECT(manager),
+               "allowed-capabilities", caps,
+               NULL);
+}
+
 OssoABookCapsFlags
 osso_abook_account_manager_get_required_capabilities(
     OssoABookAccountManager *manager)
@@ -1594,6 +1622,20 @@ osso_abook_account_manager_get_required_capabilities(
   return OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->required_capabilities;
 }
 
+void
+osso_abook_account_manager_set_required_capabilities(
+    OssoABookAccountManager *manager, OssoABookCapsFlags caps)
+{
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager));
+
+  g_object_set(G_OBJECT(manager),
+               "required-capabilities", caps,
+               NULL);
+}
+
 const char *
 osso_abook_account_manager_get_account_protocol(
     OssoABookAccountManager *manager)
@@ -1601,9 +1643,23 @@ osso_abook_account_manager_get_account_protocol(
   if (!manager)
     manager = osso_abook_account_manager_get_default();
 
-  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER (manager), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
 
   return OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->account_protocol;
+}
+
+void
+osso_abook_account_manager_set_account_protocol(
+    OssoABookAccountManager *manager, const char *protocol)
+{
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager));
+
+  g_object_set(G_OBJECT(manager),
+               "account-protocol", protocol,
+               NULL);
 }
 
 TpAccount *

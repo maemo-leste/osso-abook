@@ -31,6 +31,7 @@
 #include "osso-abook-filter-model.h"
 #include "osso-abook-utils-private.h"
 #include "osso-abook-avatar-image.h"
+#include "osso-abook-account-manager.h"
 
 struct OssoABookAsyncPixbufData
 {
@@ -999,4 +1000,68 @@ osso_abook_file_set_contents(const char *filename, const void *contents,
   g_free(tmp_name);
 
   return rv;
+}
+
+static char *
+account_get_display_string(TpAccount *account, const char *username,
+                           const char *format, gboolean markup)
+{
+  const char *display_name;
+  char *display_string;
+
+  g_return_val_if_fail(TP_IS_ACCOUNT(account), NULL);
+
+
+  if ( !format )
+    format = "%s\n%s";
+
+  display_name = tp_account_get_display_name(account);
+
+  if (IS_EMPTY(display_name))
+  {
+    const char *protocol = tp_account_get_protocol_name(account);
+
+    if (protocol)
+    {
+      TpProtocol *protocol_object =
+          osso_abook_account_manager_get_protocol_object(NULL, protocol);
+
+      if (protocol_object)
+        display_name = tp_protocol_get_english_name(protocol_object);
+    }
+
+    if (IS_EMPTY(display_name))
+      display_name = tp_account_get_path_suffix(account);
+  }
+
+  if (IS_EMPTY(username))
+    username = osso_abook_tp_account_get_bound_name(account);
+
+  if (markup)
+  {
+    char foreground[40];
+    GdkColor color;
+    GtkStyle *style = gtk_rc_get_style_by_paths(gtk_settings_get_default(),
+                                                NULL, NULL, GTK_TYPE_LABEL);
+
+    if (gtk_style_lookup_color(style, "SecondaryTextColor", &color) )
+      snprintf(foreground, sizeof(foreground), "#%02x%02x%02x",
+               color.red >> 8, color.green >> 8, color.blue >> 8);
+
+    display_string = g_markup_printf_escaped(
+          "%s\n<span size=\"x-small\" foreground=\"%s\">%s</span>",
+          display_name, foreground, username);
+  }
+  else
+    display_string = g_strdup_printf(format, display_name, username);
+
+  return display_string;
+}
+
+char *
+osso_abook_tp_account_get_display_string(TpAccount *account,
+                                         const char *username,
+                                         const char *format)
+{
+  return account_get_display_string(account, username, format, 0);
 }
