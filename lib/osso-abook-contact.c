@@ -3339,3 +3339,71 @@ osso_abook_contact_attribute_get_protocol(EVCardAttribute *attribute)
   return osso_abook_account_manager_get_protocol_object_by_vcard_field(
         NULL, vcard_attr_name);
 }
+
+static void
+osso_abook_contact_delete_async_remove_cb(EBook *book, EBookStatus status,
+                                          gpointer closure)
+{
+  if (status != E_BOOK_ERROR_OK && status != E_BOOK_ERROR_CONTACT_NOT_FOUND)
+    osso_abook_handle_estatus(NULL, status, book);
+
+  g_object_unref(book);
+}
+
+gboolean
+osso_abook_contact_delete(OssoABookContact *contact, EBook *book,
+                          GtkWindow *window)
+{
+  OssoABookContactPrivate *priv;
+  const char *uid;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
+
+  if (!osso_abook_check_disc_space(window))
+      return FALSE;
+
+  if (book)
+    g_object_ref(book);
+  else
+    book = get_contact_book(contact);
+
+  g_return_val_if_fail(E_IS_BOOK(book), FALSE);
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+
+  uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+  append_last_photo_uri(contact);
+  delete_temporary_photo_files(contact);
+
+  if (priv->roster_contacts)
+  {
+    GHashTableIter iter;
+    struct roster_link *link;
+
+    g_hash_table_iter_init(&iter, priv->roster_contacts);
+
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&link))
+      osso_abook_contact_reject_for_uid(link->roster_contact, uid, window);
+  }
+
+  if (!osso_abook_is_temporary_uid(uid))
+  {
+    OssoABookContactClass *contact_class =
+        OSSO_ABOOK_CONTACT_GET_CLASS(contact);
+
+    if (contact_class->async_remove)
+      return contact_class->async_remove(
+            contact, book, osso_abook_contact_delete_async_remove_cb, NULL);
+
+    OSSO_ABOOK_NOTE(
+          EDS, "now removing %s; note that we're assuming that "
+          "e_book_async_remove_contact() always succeeds, since it sometiems "
+          "returns false negatives",
+          uid);
+    e_book_async_remove_contact(book, E_CONTACT(contact_class),
+                                osso_abook_contact_delete_async_remove_cb,
+                                NULL);
+  }
+
+  return TRUE;
+}

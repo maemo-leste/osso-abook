@@ -60,7 +60,6 @@ delete_contact_changed_cb(OssoABookRoster *roster, OssoABookContact **contacts,
 
     contacts++;
   }
-
 }
 
 static void

@@ -1,8 +1,16 @@
 #include <hildon/hildon.h>
 
-#include "osso-abook-errors.h"
+#include <sys/statfs.h>
+#include <errno.h>
 
 #include "config.h"
+
+#include "osso-abook-errors.h"
+#include "osso-abook-debug.h"
+#include "osso-abook-util.h"
+#include "osso-abook-log.h"
+
+#define MIN_FREE_BYTES (8 * 1024 * 1024)
 
 GQuark
 osso_abook_error_quark()
@@ -96,4 +104,45 @@ _osso_abook_handle_estatus(GtkWindow *parent, const char *strloc,
 
   msg = estatus_to_string(status);
   hildon_banner_show_information(parent ? GTK_WIDGET(parent) : NULL, 0, msg);
+}
+
+gboolean
+_osso_abook_check_disc_space(GtkWindow *parent, const char *strloc,
+                            const char *path)
+{
+  gboolean disk_full = TRUE;
+  struct statfs buf;
+
+  if (!OSSO_ABOOK_DEBUG_FLAGS(DISK_SPACE))
+  {
+    if (!path )
+      path = osso_abook_get_work_dir();
+
+    if (statfs(path, &buf))
+    {
+      OSSO_ABOOK_WARN("Error while checking file system space: %s",
+                      strerror(errno));
+    }
+    else
+    {
+      uint64_t min =
+          (3ULL * (uint64_t)buf.f_bsize * (uint64_t)buf.f_blocks) / 100ULL;
+      uint64_t avail = ((uint64_t)buf.f_bsize * (uint64_t)buf.f_bavail);
+
+      if (min >= (MIN_FREE_BYTES + 1ULL))
+        min = MIN_FREE_BYTES;
+
+      if (avail >= min)
+        disk_full = FALSE;
+    }
+  }
+
+  if (disk_full)
+  {
+    hildon_banner_show_information(parent ? GTK_WIDGET(parent) : NULL, NULL,
+                                   _("addr_ib_disc_full"));
+    g_warning("%s: insufficient disk space", strloc);
+  }
+
+  return !disk_full;
 }

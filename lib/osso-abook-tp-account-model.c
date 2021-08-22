@@ -43,9 +43,12 @@ typedef struct _OssoABookTpAccountModelPrivate OssoABookTpAccountModelPrivate;
 struct _OssoABookTpAccountData
 {
   gpointer user_data;
-  int field_4;
-  int field_8;
-  int field_C;
+/* nobody is using that */
+#ifdef ACCOUNT_DATA_SIGNALS
+  gulong account_created_id;
+  gulong account_changed_id;
+  gulong account_removed_id;
+#endif
 };
 
 typedef struct _OssoABookTpAccountData OssoABookTpAccountData;
@@ -138,12 +141,13 @@ osso_abook_tp_account_model_get_property(GObject *object, guint property_id,
 static gboolean
 account_data_free(gpointer key, gpointer value, gpointer user_data)
 {
+#ifdef ACCOUNT_DATA_SIGNALS
   OssoABookTpAccountData *data = value;
-
-  disconnect_signal_if_connected(key, data->field_4);
-  disconnect_signal_if_connected(key, data->field_8);
-  disconnect_signal_if_connected(key, data->field_C);
-  return 1;
+  disconnect_signal_if_connected(key, data->account_created_id);
+  disconnect_signal_if_connected(key, data->account_changed_id);
+  disconnect_signal_if_connected(key, data->account_removed_id);
+#endif
+  return TRUE;
 }
 
 static void
@@ -354,9 +358,12 @@ osso_abook_tp_account_model_remove_account(OssoABookTpAccountModel *model,
 
   g_return_if_fail(data != NULL);
 
-  disconnect_signal_if_connected(account, data->field_4);
-  disconnect_signal_if_connected(account, data->field_8);
-  disconnect_signal_if_connected(account, data->field_C);
+#ifdef ACCOUNT_DATA_SIGNALS
+  disconnect_signal_if_connected(account, data->account_created_id);
+  disconnect_signal_if_connected(account, data->account_changed_id);
+  disconnect_signal_if_connected(account, data->account_removed_id);
+#endif
+
   modify_account(model, account, data, FALSE);
   g_hash_table_remove(priv->accounts, account);
 }
