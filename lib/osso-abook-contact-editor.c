@@ -1541,7 +1541,7 @@ static gboolean
 verify_contact(OssoABookContactEditor *editor, OssoABookContact *contact)
 {
   OssoABookContactEditorPrivate *priv = PRIVATE(editor);
-  gboolean field_empty = FALSE;
+  gboolean all_empty = FALSE;
   const char *msgid = NULL;
   GSequenceIter *it;
 
@@ -1550,11 +1550,11 @@ verify_contact(OssoABookContactEditor *editor, OssoABookContact *contact)
   for (it = g_sequence_get_begin_iter(priv->fields);
        !g_sequence_iter_is_end(it); it = g_sequence_iter_next(it))
   {
-    if ((field_empty = osso_abook_contact_field_is_empty(g_sequence_get(it))))
+    if (!(all_empty = osso_abook_contact_field_is_empty(g_sequence_get(it))))
       break;
   }
 
-  if (!field_empty && !is_self_mode(priv))
+  if (all_empty && !is_self_mode(priv))
   {
     if (!is_create_mode(priv))
     {
