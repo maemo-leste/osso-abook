@@ -136,7 +136,7 @@ osso_abook_caps_from_tp_protocol(TpProtocol *protocol)
       }
     }
 
-    g_object_unref(props);
+    g_hash_table_destroy(props);
   }
 
   capabilities = tp_protocol_get_capabilities(protocol);
