@@ -54,7 +54,7 @@ struct _OssoABookContactEditorPrivate
   OssoABookRoster* roster;
   guint jump_to_child_id;
   gint minimum_label_width;
-  guint verify_contact_idle_id;
+  guint save_idle_id;
 };
 
 typedef struct _OssoABookContactEditorPrivate OssoABookContactEditorPrivate;
@@ -336,7 +336,7 @@ _roster_master_contacts_changed_cb(OssoABookRoster *roster,
 
   uid = e_contact_get_const(E_CONTACT(priv->contact), E_CONTACT_UID);
 
-  if (!uid || priv->verify_contact_idle_id)
+  if (!uid || priv->save_idle_id)
     return;
 
   while (*contacts)
@@ -1457,7 +1457,7 @@ add_contact_cb(EBook *book, EBookStatus status, const gchar *uid,
 
   OSSO_ABOOK_NOTE(EDITOR, "status=%d, uid=%s", status, uid);
 
-  if (status)
+  if (status != E_BOOK_ERROR_OK)
   {
     osso_abook_handle_estatus(GTK_WINDOW(data->editor), status, book);
     set_progress_indicator(data->editor, 0);
@@ -1467,7 +1467,7 @@ add_contact_cb(EBook *book, EBookStatus status, const gchar *uid,
     if (uid != e_contact_get_const(E_CONTACT(data->contact), E_CONTACT_UID))
       e_contact_set(E_CONTACT(data->contact), E_CONTACT_UID, uid);
 
-    if ( !is_self_mode(priv) )
+    if (!is_self_mode(priv))
     {
       update_subscriptions(data->editor, uid);
       cleanup_subscriptions(data->editor, uid);
@@ -1487,7 +1487,7 @@ add_contact_cb(EBook *book, EBookStatus status, const gchar *uid,
     }
   }
 
-  priv->verify_contact_idle_id = 0;
+  priv->save_idle_id = 0;
 
   if (data->editor)
     g_object_unref(data->editor);
@@ -1515,7 +1515,7 @@ commit_save(OssoABookContactEditor *editor,
             OssoABookContact *contact)
 {
   OssoABookContactEditorPrivate *priv = PRIVATE(editor);
-  EBook *book;
+  EBook *book = NULL;
   const char *uid;
   struct async_data *data;
 
@@ -1621,7 +1621,7 @@ save_idle_cb(gpointer user_data)
   else
     set_progress_indicator(editor, 0);
 
-  priv->verify_contact_idle_id = 0;
+  priv->save_idle_id = 0;
 
   if (contact)
     g_object_unref(contact);
@@ -1960,10 +1960,10 @@ save_button_clicked_cb(GtkButton *button, OssoABookContactEditor *editor)
 {
   OssoABookContactEditorPrivate *priv = PRIVATE(editor);
 
-  if (!priv->verify_contact_idle_id)
+  if (!priv->save_idle_id)
   {
     editor = g_object_ref(editor);
-    priv->verify_contact_idle_id = gdk_threads_add_idle(save_idle_cb, editor);
+    priv->save_idle_id = gdk_threads_add_idle(save_idle_cb, editor);
     set_progress_indicator(editor, 1);
   }
 }
@@ -2136,7 +2136,7 @@ void
 osso_abook_contact_editor_set_contact(OssoABookContactEditor *editor,
                                       OssoABookContact *contact)
 {
-  OssoABookContactEditorPrivate *priv; // r0 MAPDST
+  OssoABookContactEditorPrivate *priv;
 
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_EDITOR(editor));
   g_return_if_fail(contact == NULL || OSSO_ABOOK_IS_CONTACT(contact));

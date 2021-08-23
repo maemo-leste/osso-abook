@@ -40,6 +40,8 @@ main(int argc, char **argv)
   GtkWidget *chooser = osso_abook_contact_editor_new_with_contact(
         GTK_WINDOW(window), contact, OSSO_ABOOK_CONTACT_EDITOR_CREATE);
 
+  g_signal_connect_swapped(chooser, "response",
+                           G_CALLBACK(gtk_widget_destroy), window);
   g_signal_connect(window, "destroy", G_CALLBACK(loop_quit), main_loop);
 
   gtk_widget_show_all(window);

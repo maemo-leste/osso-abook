@@ -115,7 +115,7 @@ OssoABookCapsFlags
 osso_abook_caps_from_tp_protocol(TpProtocol *protocol)
 {
   OssoABookCapsFlags caps = OSSO_ABOOK_CAPS_NONE;
-  const GHashTable *props = NULL;
+  GHashTable *props = NULL;
   const GValue *value;
   TpCapabilities *capabilities;
 
@@ -135,6 +135,8 @@ osso_abook_caps_from_tp_protocol(TpProtocol *protocol)
         caps |= OSSO_ABOOK_CAPS_ADDRESSBOOK;
       }
     }
+
+    g_object_unref(props);
   }
 
   capabilities = tp_protocol_get_capabilities(protocol);

@@ -2911,7 +2911,7 @@ osso_abook_contact_detach_photo(OssoABookContact *contact)
 
   if (photo)
   {
-    if (photo->type == E_CONTACT_PHOTO_TYPE_URI)
+    if (photo->type == E_CONTACT_PHOTO_TYPE_INLINED)
     {
       photos_dir = _get_photos_dir();
       g_mkdir_with_parents(photos_dir, 0755);
@@ -2941,7 +2941,7 @@ osso_abook_contact_detach_photo(OssoABookContact *contact)
         rv = _osso_abook_e_book_status_from_gerror(error);
       }
     }
-    else
+    else if (photo->type != E_CONTACT_PHOTO_TYPE_URI)
       rv = E_BOOK_ERROR_INVALID_ARG;
   }
 
