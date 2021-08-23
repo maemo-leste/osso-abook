@@ -114,10 +114,10 @@ static OssoABookMessageMapping contact_editor_map[] =
   { "mobile_home", "addr_bd_newedit_phone_mobile" },
   { "mobile_work", "addr_bd_newedit_phone_mobile" },
   { "phone", "addr_bd_newedit_phone" },
-  { "phone_home", "addr_bd_newedit_phone_home" },
-  { "phone_work", "addr_bd_newedit_phone_work" },
-  { "phone_other", "addr_bd_newedit_phone_other" },
-  { "phone_fax", "addr_bd_newedit_phone_fax" },
+  { "phone_home", "addr_bd_newedit_phone" },
+  { "phone_work", "addr_bd_newedit_phone" },
+  { "phone_other", "addr_bd_newedit_phone" },
+  { "phone_fax", "addr_bd_newedit_phone" },
   { "email", "addr_bd_newedit_email" },
   { "email_home", "addr_bd_newedit_email" },
   { "email_work", "addr_bd_newedit_email" },
@@ -139,19 +139,19 @@ static OssoABookMessageMapping contact_editor_map[] =
   { "note", "addr_fi_newedit_note" },
   { "gender", "addr_bd_newedit_gender" },
   { "address_detail", "" },
-  { "address_home_detail", "addr_va_newedit_address_home_detail" },
-  { "address_work_detail", "addr_va_newedit_address_work_detail" },
+  { "address_home_detail", "addr_va_newedit_address_home" },
+  { "address_work_detail", "addr_va_newedit_address_work" },
   { "email_detail", "" },
-  { "email_home_detail", "addr_va_newedit_email_home_detail" },
-  { "email_work_detail", "addr_va_newedit_email_work_detail" },
+  { "email_home_detail", "addr_va_newedit_email_home" },
+  { "email_work_detail", "addr_va_newedit_email_work" },
   { "mobile_detail", "" },
-  { "mobile_home_detail", "addr_va_newedit_mobile_home_detail" },
-  { "mobile_work_detail", "addr_va_newedit_mobile_work_detail" },
+  { "mobile_home_detail", "addr_va_newedit_mobile_home" },
+  { "mobile_work_detail", "addr_va_newedit_mobile_work" },
   { "phone_detail", "" },
-  { "phone_home_detail", "addr_va_newedit_phone_home_detail" },
-  { "phone_work_detail", "addr_va_newedit_phone_work_detail" },
-  { "phone_other_detail", "addr_va_newedit_phone_other_detail" },
-  { "phone_fax_detail", "addr_va_newedit_phone_fax_detail" },
+  { "phone_home_detail", "addr_va_newedit_phone_home" },
+  { "phone_work_detail", "addr_va_newedit_phone_work" },
+  { "phone_other_detail", "addr_va_newedit_phone_other" },
+  { "phone_fax_detail", "addr_va_newedit_phone_fax" },
   { NULL, NULL }
 };
 
@@ -1062,7 +1062,7 @@ update_fields(OssoABookContactEditor *editor)
         const char *field_name = osso_abook_contact_field_get_name(field);
         gboolean skip = FALSE;
 
-        if ((!title || !*title) && !(has_editor_widget || has_children))
+        if (IS_EMPTY(title) && !(has_editor_widget || has_children))
         {
           OSSO_ABOOK_NOTE(EDITOR,
                           "skipping %s (children=%s, title=%s, editor=%p)",
@@ -1072,22 +1072,26 @@ update_fields(OssoABookContactEditor *editor)
                           editor);
           skip = TRUE;
         }
-        else if (!strcmp(field_name, EVC_N))
-        {
-          if (!priv->name_field)
-            priv->name_field = field;
-          else
-            skip = TRUE;
-        }
-        else if (!strcmp(field_name, EVC_PHOTO))
-        {
-          if (!priv->photo_field)
-            priv->photo_field = field;
-          else
-            skip = TRUE;
-        }
         else
-          attach_row_widgets(priv, field);
+        {
+          if (!strcmp(field_name, EVC_N))
+          {
+            if (!priv->name_field)
+              priv->name_field = field;
+            else
+              skip = TRUE;
+          }
+
+          if (!strcmp(field_name, EVC_PHOTO))
+          {
+            if (!priv->photo_field)
+              priv->photo_field = field;
+            else
+              skip = TRUE;
+          }
+          else
+            attach_row_widgets(priv, field);
+        }
 
         if (!skip)
           g_sequence_append(priv->fields, field);

@@ -125,11 +125,15 @@ osso_abook_caps_from_tp_protocol(TpProtocol *protocol)
   {
     value = tp_asv_lookup(props, TP_PROP_PROTOCOL_CONNECTION_INTERFACES);
 
-    if (value && G_VALUE_HOLDS(value, G_TYPE_STRV) &&
-        g_strv_contains(g_value_get_boxed(value),
-                        TP_IFACE_CONNECTION_INTERFACE_CONTACT_LIST))
+    if (value && G_VALUE_HOLDS(value, G_TYPE_STRV))
     {
-      caps |= OSSO_ABOOK_CAPS_ADDRESSBOOK;
+      const gchar *const *strv = g_value_get_boxed(value);
+
+      if (strv && g_strv_contains(strv,
+                                  TP_IFACE_CONNECTION_INTERFACE_CONTACT_LIST))
+      {
+        caps |= OSSO_ABOOK_CAPS_ADDRESSBOOK;
+      }
     }
   }
 

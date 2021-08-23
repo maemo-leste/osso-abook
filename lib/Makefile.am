@@ -2,46 +2,68 @@ bin_PROGRAMS = \
 		test_voicemail_selector \
 		test_avatar_editor_dialog \
 		test_avatar_chooser_dialog \
-		test_contact_chooser
+		test_contact_chooser \
+		test_contact_editor
 
 # this shall be removed once we are able to build the whole library
 COMMON_SOURCES = \
-		$(BUILT_SOURCES) \
+		osso-abook-enums.c \
+		osso-abook-marshal.c \
+		tp-glib-enums.c \
 		osso-abook-init.c \
 		osso-abook-debug.c \
-		osso-abook-util.c \
 		osso-abook-errors.c \
 		osso-abook-string-list.c \
-		osso-abook-utils-private.c \
-		osso-abook-list-store.c \
-		osso-abook-row-model.c \
-		eds.c \
-		osso-abook-contact-filter.c \
-		osso-abook-contact-editor.c \
-		osso-abook-contact-field-selector.c \
+		osso-abook-address-format.c \
+		osso-abook-contact-chooser.c \
 		osso-abook-filter-model.c \
-		osso-abook-gconf-contact.c \
-		osso-abook-voicemail-contact.c \
-		osso-abook-voicemail-selector.c \
-		osso-abook-group.c \
-		osso-abook-all-group.c \
+		osso-abook-row-model.c \
+		osso-abook-list-store.c \
+		osso-abook-waitable.c \
+		osso-abook-util.c \
+		osso-abook-contact-view.c \
+		osso-abook-tree-view.c \
+		osso-abook-contact-model.c \
 		osso-abook-presence.c \
 		osso-abook-caps.c \
 		osso-abook-settings.c \
+		osso-abook-avatar.c \
+		osso-abook-group.c \
+		osso-abook-all-group.c \
+		osso-abook-avatar-cache.c \
+		eds.c \
 		osso-abook-roster.c \
+		osso-abook-gconf-contact.c \
+		osso-abook-voicemail-contact.c \
+		osso-abook-voicemail-selector.c \
+		osso-abook-aggregator.c \
+		osso-abook-contact.c \
+		osso-abook-utils-private.c \
 		osso-abook-roster-manager.c \
+		osso-abook-contact-filter.c \
+		osso-abook-eventlogger.c \
 		osso-abook-msgids.c \
 		osso-abook-quarks.c \
 		osso-abook-account-manager.c \
-		osso-abook-waitable.c \
-		osso-abook-aggregator.c \
-		osso-abook-contact.c \
-		osso-abook-eventlogger.c \
+		osso-abook-service-group.c \
+		osso-abook-contact-subscriptions.c \
+		osso-abook-plugin.c \
+		osso-abook-menu-extension.c \
+		osso-abook-plugin-manager.c \
+		osso-abook-presence-label.c \
+		osso-abook-message-map.c \
+		osso-abook-avatar-editor.c \
+		osso-abook-avatar-editor-dialog.c \
+		osso-abook-touch-contact-starter.c \
+		osso-abook-entry.c \
+		osso-abook-button.c \
 		osso-abook-avatar-image.c \
-		osso-abook-avatar.c \
-		osso-abook-avatar-cache.c \
 		osso-abook-icon-sizes.c \
-		osso-abook-address-format.c \
+		osso-abook-avatar-chooser-dialog.c \
+		osso-abook-contact-field.c \
+		osso-abook-contact-editor.c \
+		osso-abook-contact-field-selector.c \
+		osso-abook-contact-detail-store.c \
 		osso-abook-dialogs.c \
 		osso-abook-tp-account-model.c
 
@@ -68,9 +90,7 @@ libosso_abook_test_a_CFLAGS = \
 		$(COMMON_CFLAGS) -g -DTEST
 
 test_avatar_editor_dialog_SOURCES = \
-		test-avatar-editor-dialog.c \
-		osso-abook-avatar-editor.c \
-		osso-abook-avatar-editor-dialog.c
+		test-avatar-editor-dialog.c
 
 test_avatar_editor_dialog_CFLAGS = \
 		$(COMMON_CFLAGS) -g -DTEST
@@ -89,11 +109,7 @@ test_avatar_chooser_dialog_LDADD = \
 		$(COMMON_LIBS) libosso-abook-test.a
 
 test_contact_chooser_SOURCES = \
-		test-contact-chooser.c \
-		osso-abook-contact-view.c \
-		osso-abook-tree-view.c \
-		osso-abook-contact-model.c \
-		osso-abook-contact-chooser.c
+		test-contact-chooser.c
 
 test_contact_chooser_CFLAGS = \
 		$(COMMON_CFLAGS) -g -DTEST
@@ -108,6 +124,15 @@ test_voicemail_selector_CFLAGS = \
 		$(COMMON_CFLAGS) -g -DTEST
 
 test_voicemail_selector_LDADD = \
+		$(COMMON_LIBS) libosso-abook-test.a
+
+test_contact_editor_SOURCES = \
+		test-contact-editor.c
+
+test_contact_editor_CFLAGS = \
+		$(COMMON_CFLAGS) -g -DTEST
+
+test_contact_editor_LDADD = \
 		$(COMMON_LIBS) libosso-abook-test.a
 
 lib_LTLIBRARIES = libosso-abook-@API_VERSION_MAJOR@.la

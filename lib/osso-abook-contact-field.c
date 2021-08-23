@@ -983,7 +983,8 @@ avatar_chooser_response_cb(GtkWidget *dialog, int response_id,
 static void
 avatar_button_clicked_cb(GtkWidget *widget, OssoABookContactField *field)
 {
-  GtkWidget *dialog = osso_abook_avatar_chooser_dialog_new(GTK_WINDOW(widget));
+  GtkWidget *dialog = osso_abook_avatar_chooser_dialog_new(
+        GTK_WINDOW(gtk_widget_get_ancestor(widget, GTK_TYPE_WINDOW)));
 
   osso_abook_set_portrait_mode_supported(GTK_WINDOW(dialog), FALSE);
   osso_abook_avatar_chooser_dialog_set_contact(
@@ -1825,8 +1826,9 @@ get_children(OssoABookContactField *field, OssoABookContactFieldTemplate *t,
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
   GList *values = e_vcard_attribute_get_values(priv->attribute);
   GList *list = NULL;
+  OssoABookContactFieldTemplate *last = &t[count];
 
-  while (t < &t[count])
+  while (t < last)
   {
     const char *val;
 
@@ -1856,8 +1858,7 @@ get_children(OssoABookContactField *field, OssoABookContactFieldTemplate *t,
       child_priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(child_field);
       child_priv->parent = field;
       child_priv->template = t;
-      g_object_add_weak_pointer(&field->parent_instance,
-                                (gpointer *)&child_priv->parent);
+      g_object_add_weak_pointer((gpointer)field, (gpointer *)&child_priv->parent);
       list = g_list_prepend(list, child_field);
     }
 
@@ -3127,15 +3128,15 @@ find_template_by_name_and_flags(OssoABookContactFieldTemplate *t, size_t t_size,
 
     if (_t->name == name)
     {
-      if ( !(_t->flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER) &&
-           flags_type(_t->flags) == type)
+      if (!(_t->flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER) &&
+          flags_type(_t->flags) == type)
       {
         return _t;
       }
     }
   }
 
-  return 0;
+  return NULL;
 }
 
 static void
@@ -3171,120 +3172,120 @@ osso_abook_contact_field_constructed(GObject *object)
     if ((flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DEVICE_MASK))
       flags &= ~OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER;
   }
-  else if (!strcmp(e_vcard_attribute_get_name(priv->attribute), "TEL"))
-    flags |= OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE;
 
-  if ((!param && (flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE)) ||
-      ((flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER) ||
-       (flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_FAX)))
+  if (!param || !(flags & (OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER |
+                           OSSO_ABOOK_CONTACT_FIELD_FLAGS_FAX)))
   {
-    if (priv->template)
-      return;
+    if (!strcmp(e_vcard_attribute_get_name(priv->attribute), EVC_TEL))
+      flags |= OSSO_ABOOK_CONTACT_FIELD_FLAGS_VOICE;
+  }
 
-    priv->template = find_template_by_name_and_flags(
-          general_templates, G_N_ELEMENTS(general_templates), name, flags);
+  if (priv->template)
+    return;
 
-    if (priv->template )
-      return;
+  priv->template = find_template_by_name_and_flags(
+        general_templates, G_N_ELEMENTS(general_templates), name, flags);
 
-    priv->template = find_template_by_name_and_flags(
-          general_templates, G_N_ELEMENTS(general_templates), name,
-          flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DEVICE_MASK);
+  if (priv->template )
+    return;
 
-    if (priv->template )
-      return;
+  priv->template = find_template_by_name_and_flags(
+        general_templates, G_N_ELEMENTS(general_templates), name,
+        flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DEVICE_MASK);
 
-    for (i = 0; i < G_N_ELEMENTS(flags_tel); i++)
+  if (priv->template )
+    return;
+
+  for (i = 0; i < G_N_ELEMENTS(flags_tel); i++)
+  {
+    if (flags_tel[i] & flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DEVICE_MASK)
     {
-      if (flags_tel[i] & flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DEVICE_MASK)
-      {
-        priv->template = find_template_by_name_and_flags(
-              general_templates, G_N_ELEMENTS(general_templates), name,
-              flags_tel[i]);
+      priv->template = find_template_by_name_and_flags(
+            general_templates, G_N_ELEMENTS(general_templates), name,
+            flags_tel[i]);
 
-        if (priv->template)
-          return;
-      }
-    }
-
-    for (i = 0; i < G_N_ELEMENTS(general_templates); i++)
-    {
-      OssoABookContactFieldTemplate *tmplt = &general_templates[i];
-
-      if (name == tmplt->name &&
-          tmplt->flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER)
-      {
-        priv->template = tmplt;
+      if (priv->template)
         return;
-      }
     }
+  }
 
-    if (!priv->roster_contact && priv->master_contact)
+  for (i = 0; i < G_N_ELEMENTS(general_templates); i++)
+  {
+    OssoABookContactFieldTemplate *tmplt = &general_templates[i];
+
+    if (name == tmplt->name &&
+        tmplt->flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER)
     {
-      contacts = osso_abook_contact_find_roster_contacts_for_attribute(
-            priv->master_contact, priv->attribute);
-
-      if (contacts)
-        priv->roster_contact = contacts->data;
-
-      if (priv->roster_contact)
-        g_object_ref(priv->roster_contact);
+      priv->template = tmplt;
+      return;
     }
+  }
+
+  if (!priv->roster_contact && priv->master_contact)
+  {
+    contacts = osso_abook_contact_find_roster_contacts_for_attribute(
+          priv->master_contact, priv->attribute);
+
+    if (contacts)
+      priv->roster_contact = contacts->data;
 
     if (priv->roster_contact)
+      g_object_ref(priv->roster_contact);
+  }
+
+  if (priv->roster_contact)
+  {
+    TpAccount *account = osso_abook_contact_get_account(priv->roster_contact);
+
+    if (account)
     {
-      TpAccount *account = osso_abook_contact_get_account(priv->roster_contact);
+      const gchar *display_title = NULL;
+      protocol = osso_abook_contact_get_protocol(priv->roster_contact);
 
-      if (account)
-      {
-        const gchar *display_title = NULL;
-        protocol = osso_abook_contact_get_protocol(priv->roster_contact);
+      if (contacts && !contacts->next)
+        display_title = tp_account_get_display_name(account);
 
-        if (contacts && !contacts->next)
-          display_title = tp_account_get_display_name(account);
+      if (IS_EMPTY(priv->display_title))
+        display_title = tp_protocol_get_english_name(protocol);
 
-        if (IS_EMPTY(priv->display_title))
-          display_title = tp_protocol_get_english_name(protocol);
-
-        priv->display_title = g_strdup(display_title);
-        priv->secondary_title =
-            g_strdup(osso_abook_tp_account_get_bound_name(account));
-        titles_set = TRUE;
-      }
+      priv->display_title = g_strdup(display_title);
+      priv->secondary_title =
+          g_strdup(osso_abook_tp_account_get_bound_name(account));
+      titles_set = TRUE;
     }
+  }
 
-    if (!titles_set)
-      protocol = osso_abook_contact_attribute_get_protocol(priv->attribute);
+  if (!titles_set)
+    protocol = osso_abook_contact_attribute_get_protocol(priv->attribute);
 
-    g_list_free(contacts);
+  g_list_free(contacts);
 
-    if (protocol)
-    {
-      OssoABookContactFieldTemplate t;
+  if (protocol)
+  {
+    OssoABookContactFieldTemplate t;
 
-      t.name = g_intern_string(e_vcard_attribute_get_name(priv->attribute));
-      t.msgid = NULL;
-      t.title = NULL;
-      t.icon_name = NULL;
-      t.sort_weight = 200;
-      t.flags = OSSO_ABOOK_CONTACT_FIELD_FLAGS_DYNAMIC;
-      t.actions = NULL;
-      t.editor_widget = get_dynamic_editor_widget;
-      t.children = NULL;
-      t.update = update_text_attribute;
-      t.synthesize_attributes = NULL;
-      t.get_attr_value = e_vcard_attribute_get_value;
+    t.name = g_intern_string(e_vcard_attribute_get_name(priv->attribute));
+    t.msgid = NULL;
+    t.title = NULL;
+    t.icon_name = NULL;
+    t.sort_weight = 200;
+    t.flags = OSSO_ABOOK_CONTACT_FIELD_FLAGS_DYNAMIC;
+    t.actions = NULL;
+    t.editor_widget = get_dynamic_editor_widget;
+    t.children = NULL;
+    t.update = update_text_attribute;
+    t.synthesize_attributes = NULL;
+    t.get_attr_value = e_vcard_attribute_get_value;
 
-      priv->template = g_slice_new(OssoABookContactFieldTemplate);
-      *priv->template = t;
-      priv->template->actions = get_dynamic_actions;
-      priv->template->icon_name = g_strdup(tp_protocol_get_icon_name(protocol));
+    priv->template = g_slice_new(OssoABookContactFieldTemplate);
+    *priv->template = t;
+    priv->template->actions = get_dynamic_actions;
+    priv->template->icon_name = g_strdup(tp_protocol_get_icon_name(protocol));
 
-      if (!priv->display_title)
-        priv->display_title = g_strdup(tp_protocol_get_english_name(protocol));
+    if (!priv->display_title)
+      priv->display_title = g_strdup(tp_protocol_get_english_name(protocol));
 
-      g_object_unref(protocol);
-    }
+    g_object_unref(protocol);
   }
 }
 
@@ -3386,7 +3387,7 @@ osso_abook_contact_field_cmp(OssoABookContactField       *a,
 {
   OssoABookContactField *pa = osso_abook_contact_field_get_parent(a);
   OssoABookContactField *pb = osso_abook_contact_field_get_parent(b);
-  gint rv;
+  gint rv = 0;
 
   if (pa != pb)
   {
@@ -3513,7 +3514,6 @@ flags_to_vcard_attribute_values(EVCardAttribute *attr,
   }
   else
     e_vcard_attribute_remove_param(attr, EVC_TYPE);
-
 }
 
 GList *
