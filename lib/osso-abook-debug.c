@@ -27,8 +27,7 @@ static GDebugKey debug_keys[] =
   {"editor", OSSO_ABOOK_DEBUG_EDITOR },
   {"tree-view", OSSO_ABOOK_DEBUG_TREE_VIEW },
   {"disk-space", OSSO_ABOOK_DEBUG_DISK_SPACE},
-  {"todo", OSSO_ABOOK_DEBUG_TODO},
-  {"all", OSSO_ABOOK_DEBUG_ALL & ~OSSO_ABOOK_DEBUG_DISK_SPACE}
+  {"todo", OSSO_ABOOK_DEBUG_TODO}
 };
 
 static GTimer *_osso_debug_timer = NULL;

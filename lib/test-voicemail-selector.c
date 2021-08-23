@@ -81,7 +81,7 @@ main(int argc, char **argv)
 {
   hildon_gtk_init (&argc, &argv);
 
-  setenv("OSSO_ABOOK_DEBUG", "all", TRUE);
+  setenv("OSSO_ABOOK_DEBUG", "all,disk-space", TRUE);
 
   GMainLoop *main_loop = g_main_loop_new(NULL, FALSE);
 
