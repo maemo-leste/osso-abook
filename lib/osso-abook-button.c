@@ -731,8 +731,8 @@ osso_abook_button_style_set(GtkWidget *widget, GtkStyle *previous_style)
     if (style)
     {
       pango_font_description_free(hints->style[STYLE_VALUE_DEFAULT]->font_desc);
-      style = hints->style[STYLE_VALUE_DEFAULT];
-      style->font_desc = pango_font_description_copy(style->font_desc);
+      hints->style[STYLE_VALUE_DEFAULT]->font_desc =
+          pango_font_description_copy(style->font_desc);
     }
 
     metrics = pango_context_get_metrics(gtk_widget_get_pango_context(widget),

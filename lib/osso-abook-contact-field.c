@@ -708,7 +708,7 @@ get_note_editor_widget(OssoABookContactField *field)
 static void
 set_editor_window_title(GtkWindow *parent, OssoABookContactField *field)
 {
-  const char *title;
+  const char *title = NULL;
 
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
 

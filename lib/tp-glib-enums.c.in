@@ -64,7 +64,7 @@ G_CONST_RETURN char *
 
   while(v->value_name)
   {
-    if (v->value == value)
+    if (((@EnumName@)(v->value)) == value)
       return v->value_name;
 
     v++;
@@ -80,7 +80,7 @@ G_CONST_RETURN char *
 
   while(v->value_nick)
   {
-    if (v->value == value)
+    if (((@EnumName@)(v->value)) == value)
       return v->value_nick;
 
     v++;

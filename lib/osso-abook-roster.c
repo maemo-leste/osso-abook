@@ -141,7 +141,7 @@ osso_abook_roster_set_property(GObject *object, guint property_id,
       break;
     case PROP_NAME_ORDER:
     {
-      gint name_order = g_value_get_enum(value);
+      OssoABookNameOrder name_order = g_value_get_enum(value);
 
       if (osso_abook_roster_is_running(roster))
       {
