@@ -30,7 +30,6 @@
 
 struct _OssoABookTpAccountModelPrivate
 {
-  int field_0;
   OssoABookAccountManager *account_manager;
   GHashTable *accounts;
   gulong account_created_id;

@@ -65,7 +65,8 @@ COMMON_SOURCES = \
 		osso-abook-contact-field-selector.c \
 		osso-abook-contact-detail-store.c \
 		osso-abook-dialogs.c \
-		osso-abook-tp-account-model.c
+		osso-abook-tp-account-model.c \
+		osso-abook-tp-account-selector.c
 
 COMMON_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
@@ -206,7 +207,8 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-contact-field-selector.c \
 		osso-abook-contact-detail-store.c \
 		osso-abook-dialogs.c \
-		osso-abook-tp-account-model.c
+		osso-abook-tp-account-model.c \
+		osso-abook-tp-account-selector.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-aggregator.h \
@@ -249,7 +251,8 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-contact-field.h \
 		osso-abook-contact-detail-store.h \
 		osso-abook-row-model.h \
-		osso-abook-tp-account-model.h
+		osso-abook-tp-account-model.h \
+		osso-abook-tp-account-selector.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
 		osso-abook-enums.h

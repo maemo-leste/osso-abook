@@ -1065,3 +1065,9 @@ osso_abook_tp_account_get_display_string(TpAccount *account,
 {
   return account_get_display_string(account, username, format, 0);
 }
+
+char *
+osso_abook_tp_account_get_display_markup(TpAccount *account)
+{
+  return account_get_display_string(account, NULL, NULL, TRUE);
+}
