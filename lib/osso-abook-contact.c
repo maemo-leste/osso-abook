@@ -171,8 +171,8 @@ is_vcard_field(GQuark quark, const char *attr_name)
   else
     vca_fields = g_hash_table_new(g_str_hash, g_str_equal);
 
-  if (osso_abook_account_manager_has_primary_vcard_field(0, attr_name) ||
-      osso_abook_account_manager_has_secondary_vcard_field(0, attr_name))
+  if (osso_abook_account_manager_has_primary_vcard_field(NULL, attr_name) ||
+      osso_abook_account_manager_has_secondary_vcard_field(NULL, attr_name))
   {
     g_hash_table_insert(vca_fields, g_strdup(attr_name), GINT_TO_POINTER(1));
     return TRUE;
@@ -2204,7 +2204,6 @@ osso_abook_contact_matches_username(OssoABookContact *contact,
 
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
 
-
   for (attr = e_vcard_get_attributes(E_VCARD(contact)); attr; attr = attr->next)
   {
     GList *attr_values = e_vcard_attribute_get_values(attr->data);
@@ -2224,28 +2223,31 @@ osso_abook_contact_matches_username(OssoABookContact *contact,
       if (strcmp(attr_name, vcard_field))
         continue;
     }
-
-    g_assert(0);
-
-    /*
     else
     {
-      profiles = mc_profiles_list_by_vcard_field(attr_name);
+      GList *protocols;
 
-      if ( !profiles )
-        goto LABEL_21;
+      for (protocols = osso_abook_account_manager_get_protocols(NULL);
+           protocols; protocols = g_list_delete_link(protocols, protocols))
+      {
+        const char *vcf = tp_protocol_get_vcard_field(protocols->data);
 
-      mc_profiles_free_list(profiles);
+        if (vcf && !strcmp(attr_name, vcf))
+          break;
+      }
+
+      if (!protocols)
+        continue;
+
+      g_list_free(protocols);
     }
-    */
 
     if (!account_name)
       return TRUE;
 
-
-    for (contacts = osso_abook_contact_find_roster_contacts(
-           contact, username, attr_name); contacts;
-         contacts = g_list_delete_link(contacts, contacts))
+    for (contacts = osso_abook_contact_find_roster_contacts(contact, username,
+                                                            attr_name);
+         contacts; contacts = g_list_delete_link(contacts, contacts))
     {
       TpAccount *account = osso_abook_contact_get_account(contacts->data);
 
