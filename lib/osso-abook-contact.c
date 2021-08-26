@@ -2300,6 +2300,27 @@ osso_abook_contact_real_find_roster_contacts(OssoABookContact *master_contact,
 }
 
 GList *
+osso_abook_contact_find_roster_contacts(OssoABookContact *master_contact,
+                                        const char *username,
+                                        const char *vcard_field)
+{
+  GList *contacts;
+  FindRosterContactsData data;
+
+  data.vcard_field = vcard_field;
+  data.protocol = NULL;
+  data.account_id = NULL;
+  data.username = username;
+
+  contacts = osso_abook_contact_real_find_roster_contacts(master_contact,
+                                                          &data);
+  OSSO_ABOOK_NOTE(EDS,"%d match(es) for %s contacts with unique name \"%s\"\n",
+                  g_list_length(contacts), vcard_field, username);
+
+  return contacts;
+}
+
+GList *
 osso_abook_contact_find_roster_contacts_for_account(
     OssoABookContact *master_contact, const char *username,
     const char *account_id)
