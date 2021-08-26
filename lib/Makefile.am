@@ -139,7 +139,7 @@ test_contact_editor_LDADD = \
 lib_LTLIBRARIES = libosso-abook-@API_VERSION_MAJOR@.la
 
 libosso_abook_@API_VERSION_MAJOR@_includedir = \
-		$(includedir)/lib$(PACKAGE)-$(API_VERSION_MAJOR)/lib$(PACKAGE)
+		$(includedir)/$(PACKAGE)-$(API_VERSION_MAJOR)/$(PACKAGE)
 
 libosso_abook_@API_VERSION_MAJOR@_la_CFLAGS = \
 		$(COMMON_CFLAGS)
