@@ -252,7 +252,10 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-contact-detail-store.h \
 		osso-abook-row-model.h \
 		osso-abook-tp-account-model.h \
-		osso-abook-tp-account-selector.h
+		osso-abook-tp-account-selector.h \
+		osso-abook-touch-contact-starter.h \
+		osso-abook-merge.h \
+		osso-abook-voicemail-contact.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
 		osso-abook-enums.h
