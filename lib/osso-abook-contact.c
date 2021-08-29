@@ -2294,9 +2294,127 @@ static GList *
 osso_abook_contact_real_find_roster_contacts(OssoABookContact *master_contact,
                                              FindRosterContactsData *data)
 {
-  g_assert(0);
+  OssoABookContactPrivate *priv;
+  gchar *vcard_field = NULL;
+  GList *roster_contacts = NULL;
+  GHashTableIter iter;
+  struct roster_link *link;
 
-  return NULL;
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(master_contact), NULL);
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(master_contact);
+
+  if (!priv->roster_contacts)
+    return NULL;
+
+  if (data->account_id)
+  {
+    TpAccount *account =
+        osso_abook_account_manager_lookup_by_name(NULL, data->account_id);
+
+    if (!account)
+      return NULL;
+
+    vcard_field = _osso_abook_tp_account_get_vcard_field(account);
+
+    if (IS_EMPTY(vcard_field))
+    {
+      g_free(vcard_field);
+      return NULL;
+    }
+
+    if (data->vcard_field && strcmp(data->vcard_field, vcard_field))
+      return NULL;
+  }
+
+  g_hash_table_iter_init(&iter, priv->roster_contacts);
+
+  while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&link))
+  {
+    OssoABookRoster *roster =
+        osso_abook_contact_get_roster(link->roster_contact);
+    const char *roster_vcard_field = data->vcard_field;
+    const char *roster_account_vcard_field;
+
+    if (!roster)
+      continue;
+
+    if (data->account_id)
+    {
+      TpAccount *roster_account = osso_abook_roster_get_account(roster);
+
+      if (!roster_vcard_field)
+        roster_vcard_field = vcard_field;
+
+      if (!roster_account)
+        continue;
+      else
+      {
+        const char *id = tp_account_get_path_suffix(roster_account);
+
+        if (!id || strcmp(data->account_id, id))
+          continue;
+      }
+    }
+
+    roster_account_vcard_field = osso_abook_roster_get_vcard_field(roster);
+
+    if (roster_vcard_field)
+    {
+      if (g_strcmp0(roster_vcard_field, roster_account_vcard_field))
+        continue;
+    }
+    else
+      roster_vcard_field = roster_account_vcard_field;
+
+    if (data->username || data->vcard_field || data->protocol)
+    {
+      if (!roster_vcard_field)
+        continue;
+
+      if (data->username &&
+          !osso_abook_contact_matches_username(link->roster_contact,
+                                               data->username,
+                                               roster_vcard_field, NULL))
+      {
+        continue;
+      }
+
+
+      if (!data->username || data->protocol)
+      {
+        GList *attr = osso_abook_contact_get_attributes(
+              E_CONTACT(link->roster_contact), roster_vcard_field);
+        GList *l = attr;
+
+        if (data->protocol)
+        {
+          for (; l; l = l->next)
+          {
+            TpProtocol *protocol =
+                osso_abook_contact_attribute_get_protocol(l->data);
+
+            if (protocol)
+              g_object_unref(protocol);
+
+            if (protocol == data->protocol)
+              break;
+          }
+        }
+
+        g_list_free(attr);
+
+        if (!l || data->username)
+          continue;
+      }
+    }
+
+    roster_contacts = g_list_prepend(roster_contacts, link->roster_contact);
+  }
+
+  g_free(vcard_field);
+
+  return roster_contacts;
 }
 
 GList *
