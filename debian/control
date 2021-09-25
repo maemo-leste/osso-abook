@@ -1,6 +1,6 @@
 Source: libosso-abook
 Priority: optional
-Maintainer: Ivaylo Dimitrov < <ivo.g.dimitrov.75@gmail.com>
+Maintainer: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
 Build-Depends:
  debhelper (>= 9),
  libglib2.0-dev,
@@ -18,7 +18,8 @@ Build-Depends:
  libcairo2-dev,
  libgofono-dev,
  mobile-broadband-provider-info,
- libhildonfm2-dev
+ libhildonfm2-dev,
+ libmodest-dbus-client-dev
 Section: libs
 Standards-Version: 4.3.0
 # Packages that could/should go in Build-Depends, but are currently missing:
@@ -26,7 +27,6 @@ Standards-Version: 4.3.0
 #libdbus-glib-1-dev,
 #conbtdialogs-dev,
 #libmcclient-dev (>= 5.0.beta59),
-#libmodest-dbus-client-dev,
 #libnavigation-dev (>= 0.105),
 #librtcom-accounts-ui-client-dev,
 

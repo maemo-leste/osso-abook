@@ -72,6 +72,9 @@ AC_SUBST(GOFONO_LIBS)
 PKG_CHECK_MODULES(MBPI, [mobile-broadband-provider-info])
 PKG_CHECK_MODULES(ISO_CODES, [iso-codes])
 
+PKG_CHECK_MODULES(MODEST_DBUS, [libmodest-dbus-client-1.0])
+
+
 AC_ARG_ENABLE([maemo-launcher],
               [AS_HELP_STRING([--enable-maemo-launcher],
                               [build with maemo-launcher support])],
