@@ -1,6 +1,5 @@
 #include <glib.h>
 #include <glib-object.h>
-#include <libedata-book/libedata-book.h>
 #include <gtk/gtkprivate.h>
 
 #include "config.h"

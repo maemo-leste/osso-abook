@@ -12,6 +12,7 @@
 
 #include "osso-abook-caps.h"
 #include <telepathy-glib/account-manager.h>
+#include <libebook/libebook.h>
 
 G_BEGIN_DECLS
 
