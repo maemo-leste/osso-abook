@@ -211,6 +211,7 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-tp-account-selector.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
+		osso-abook.h \
 		osso-abook-aggregator.h \
 		osso-abook-settings.h \
 		osso-abook-caps.h \
@@ -255,7 +256,26 @@ libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook-tp-account-selector.h \
 		osso-abook-touch-contact-starter.h \
 		osso-abook-merge.h \
-		osso-abook-voicemail-contact.h
+		osso-abook-voicemail-contact.h \
+		osso-abook-send-contacts.h \
+		osso-abook-avatar-cache.h \
+		osso-abook-contact-chooser.h \
+		osso-abook-contact-detail-selector.h \
+		osso-abook-contact-field-selector.h \
+		osso-abook-dialogs.h \
+		osso-abook-mecard-view.h \
+		osso-abook-message-map.h \
+		osso-abook-presence-icon.h \
+		osso-abook-presence-label.h \
+		osso-abook-profile-group.h \
+		osso-abook-quarks.h \
+		osso-abook-recent-group.h \
+		osso-abook-live-search.h \
+		osso-abook-alpha-shortcuts.h \
+		osso-abook-self-contact.h \
+		osso-abook-settings-dialog.h \
+		osso-abook-temporary-contact-dialog.h \
+		osso-abook-voicemail-selector.h
 
 libosso_abook_@API_VERSION_MAJOR@_built_public_headers  = \
 		osso-abook-enums.h
