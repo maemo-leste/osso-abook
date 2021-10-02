@@ -4,30 +4,30 @@
 
 #include "osso-abook-avatar-editor-dialog.h"
 #include "osso-abook-debug.h"
-#include "osso-abook-util.h"
 #include "osso-abook-log.h"
+#include "osso-abook-util.h"
 
 static void
 loop_quit (GtkWindow *window, gpointer data)
 {
-    GMainLoop *loop = data;
+  GMainLoop *loop = data;
 
-    g_return_if_fail(loop != NULL);
+  g_return_if_fail(loop != NULL);
 
-    gtk_widget_hide(GTK_WIDGET(window));
+  gtk_widget_hide(GTK_WIDGET(window));
 
-    while (gtk_events_pending())
-        gtk_main_iteration();
+  while (gtk_events_pending())
+    gtk_main_iteration();
 
-    g_main_loop_quit(loop);
+  g_main_loop_quit(loop);
 }
 
-static  void
+static void
 avatar_editor_response_cb(GtkWidget *dialog, int response_id,
                           gpointer user_data)
 {
   GdkPixbuf *pixbuf = osso_abook_avatar_editor_dialog_get_scaled_pixbuf(
-        OSSO_ABOOK_AVATAR_EDITOR_DIALOG(dialog));
+    OSSO_ABOOK_AVATAR_EDITOR_DIALOG(dialog));
   GtkWidget *image = gtk_image_new_from_pixbuf(pixbuf);
 
   g_object_unref(pixbuf);
@@ -47,7 +47,7 @@ pixbuf_ready_cb(GObject *source_object, GAsyncResult *res, gpointer user_data)
   if (!error)
   {
     GtkWidget *dialog = osso_abook_avatar_editor_dialog_new(
-          GTK_WINDOW(user_data), pixbuf);
+      GTK_WINDOW(user_data), pixbuf);
 
     g_signal_connect(dialog, "response",
                      G_CALLBACK(avatar_editor_response_cb), user_data);
@@ -64,7 +64,7 @@ pixbuf_ready_cb(GObject *source_object, GAsyncResult *res, gpointer user_data)
 int
 main(int argc, char **argv)
 {
-  hildon_gtk_init (&argc, &argv);
+  hildon_gtk_init(&argc, &argv);
 
   setenv("OSSO_ABOOK_DEBUG", "all,disk-space", TRUE);
 

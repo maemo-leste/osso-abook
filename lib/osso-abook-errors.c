@@ -1,14 +1,14 @@
 #include <hildon/hildon.h>
 
-#include <sys/statfs.h>
 #include <errno.h>
+#include <sys/statfs.h>
 
 #include "config.h"
 
-#include "osso-abook-errors.h"
 #include "osso-abook-debug.h"
-#include "osso-abook-util.h"
+#include "osso-abook-errors.h"
 #include "osso-abook-log.h"
+#include "osso-abook-util.h"
 
 #define MIN_FREE_BYTES (8 * 1024 * 1024)
 
@@ -20,7 +20,7 @@ osso_abook_error_quark()
   if (!_osso_abook_error_quark)
   {
     _osso_abook_error_quark =
-        g_quark_from_static_string("osso-abook-error-quark");
+      g_quark_from_static_string("osso-abook-error-quark");
   }
 
   return _osso_abook_error_quark;
@@ -91,7 +91,6 @@ _osso_abook_handle_estatus(GtkWindow *parent, const char *strloc,
 
     uid = e_source_dup_uid(source);
     on = " on ";
-
   }
   else
   {
@@ -108,14 +107,14 @@ _osso_abook_handle_estatus(GtkWindow *parent, const char *strloc,
 
 gboolean
 _osso_abook_check_disc_space(GtkWindow *parent, const char *strloc,
-                            const char *path)
+                             const char *path)
 {
   gboolean disk_full = TRUE;
   struct statfs buf;
 
   if (!OSSO_ABOOK_DEBUG_FLAGS(DISK_SPACE))
   {
-    if (!path )
+    if (!path)
       path = osso_abook_get_work_dir();
 
     if (statfs(path, &buf))
@@ -126,7 +125,7 @@ _osso_abook_check_disc_space(GtkWindow *parent, const char *strloc,
     else
     {
       uint64_t min =
-          (3ULL * (uint64_t)buf.f_bsize * (uint64_t)buf.f_blocks) / 100ULL;
+        (3ULL * (uint64_t)buf.f_bsize * (uint64_t)buf.f_blocks) / 100ULL;
       uint64_t avail = ((uint64_t)buf.f_bsize * (uint64_t)buf.f_bavail);
 
       if (min >= (MIN_FREE_BYTES + 1ULL))

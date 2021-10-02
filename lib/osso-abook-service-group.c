@@ -41,14 +41,17 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define OSSO_ABOOK_SERVICE_GROUP_PRIVATE(group) \
-                ((OssoABookServiceGroupPrivate *) osso_abook_service_group_get_instance_private(group))
+  ((OssoABookServiceGroupPrivate *)osso_abook_service_group_get_instance_private( \
+     group))
 
-enum {
+enum
+{
   PROP_SERVICE_NAME = 1,
   PROP_DISPLAY_NAME
 };
 
-enum {
+enum
+{
   REFILTER_GROUP,
   LAST_SIGNAL
 };
@@ -63,7 +66,7 @@ osso_abook_service_group_set_property(GObject *object, guint property_id,
   OssoABookServiceGroup *group = OSSO_ABOOK_SERVICE_GROUP(object);
   OssoABookServiceGroupPrivate *priv = OSSO_ABOOK_SERVICE_GROUP_PRIVATE(group);
 
-  switch(property_id)
+  switch (property_id)
   {
     case PROP_SERVICE_NAME:
     {
@@ -86,7 +89,7 @@ osso_abook_service_group_set_property(GObject *object, guint property_id,
     }
     default:
     {
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
     }
   }
@@ -99,7 +102,7 @@ osso_abook_service_group_get_property(GObject *object, guint property_id,
   OssoABookServiceGroup *group = OSSO_ABOOK_SERVICE_GROUP(object);
   OssoABookServiceGroupPrivate *priv = OSSO_ABOOK_SERVICE_GROUP_PRIVATE(group);
 
-  switch(property_id)
+  switch (property_id)
   {
     case PROP_SERVICE_NAME:
     {
@@ -113,7 +116,7 @@ osso_abook_service_group_get_property(GObject *object, guint property_id,
     }
     default:
     {
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
     }
   }
@@ -212,8 +215,8 @@ osso_abook_service_group_sort_func(const OssoABookListStoreRow *row_a,
                                    gpointer user_data)
 {
   return osso_abook_presence_compare_for_display(
-        OSSO_ABOOK_PRESENCE(row_a->contact),
-        OSSO_ABOOK_PRESENCE(row_b->contact));
+    OSSO_ABOOK_PRESENCE(row_a->contact),
+    OSSO_ABOOK_PRESENCE(row_b->contact));
 }
 
 static OssoABookListStoreCompareFunc
@@ -241,22 +244,22 @@ osso_abook_service_group_class_init(OssoABookServiceGroupClass *klass)
   group_class->get_sort_func = osso_abook_service_group_get_sort_func;
 
   g_object_class_install_property(
-        object_class, PROP_SERVICE_NAME,
-        g_param_spec_string(
-                 "service-name",
-                 "Service Name",
-                 "The name of the service",
-                 "",
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_SERVICE_NAME,
+    g_param_spec_string(
+      "service-name",
+      "Service Name",
+      "The name of the service",
+      "",
+      GTK_PARAM_READWRITE));
 
   g_object_class_install_property(
-        object_class, PROP_DISPLAY_NAME,
-        g_param_spec_string(
-                 "display-name",
-                 "Display Name",
-                 "The name to be shown in the UI",
-                 "",
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_DISPLAY_NAME,
+    g_param_spec_string(
+      "display-name",
+      "Display Name",
+      "The name to be shown in the UI",
+      "",
+      GTK_PARAM_READWRITE));
 
   signals[REFILTER_GROUP] = g_signal_lookup("refilter-group",
                                             OSSO_ABOOK_TYPE_GROUP);

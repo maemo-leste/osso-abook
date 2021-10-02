@@ -25,10 +25,10 @@
 
 #include "osso-abook-avatar-chooser-dialog.h"
 #include "osso-abook-contact.h"
-#include "osso-abook-utils-private.h"
+#include "osso-abook-errors.h"
 #include "osso-abook-icon-sizes.h"
 #include "osso-abook-util.h"
-#include "osso-abook-errors.h"
+#include "osso-abook-utils-private.h"
 
 struct _OssoABookAvatarChooserDialogPrivate
 {
@@ -40,7 +40,8 @@ struct _OssoABookAvatarChooserDialogPrivate
   OssoABookContact *contact;
 };
 
-typedef struct _OssoABookAvatarChooserDialogPrivate OssoABookAvatarChooserDialogPrivate;
+typedef struct _OssoABookAvatarChooserDialogPrivate
+  OssoABookAvatarChooserDialogPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(
   OssoABookAvatarChooserDialog,
@@ -49,7 +50,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define PRIVATE(dialog) \
-  ((OssoABookAvatarChooserDialogPrivate *)osso_abook_avatar_chooser_dialog_get_instance_private(((OssoABookAvatarChooserDialog *)dialog)))
+  ((OssoABookAvatarChooserDialogPrivate *) \
+   osso_abook_avatar_chooser_dialog_get_instance_private((( \
+                                                            OssoABookAvatarChooserDialog \
+                                                            *)dialog)))
 
 enum
 {
@@ -91,11 +95,12 @@ _avatar_image_changed_cb(OssoABookAvatarChooserDialog *dialog)
     if (priv->contact)
     {
       GdkPixbuf *image = osso_abook_avatar_get_server_image_scaled(
-            OSSO_ABOOK_AVATAR(priv->contact), 106, 106, 1);
+        OSSO_ABOOK_AVATAR(priv->contact), 106, 106, 1);
 
       gtk_list_store_set(GTK_LIST_STORE(tree_model), &iter,
                          COLUMN_IMAGE, image,
                          -1);
+
       if (image)
         g_object_unref(image);
     }
@@ -115,14 +120,14 @@ osso_abook_avatar_chooser_dialog_set_property(GObject *object,
                                               GParamSpec *pspec)
 {
   OssoABookAvatarChooserDialog *dialog =
-      OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(object);
+    OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(object);
   OssoABookAvatarChooserDialogPrivate *priv = PRIVATE(dialog);
 
   switch (property_id)
   {
     case PROP_CONTACT:
     {
-      OssoABookContact *contact= g_value_get_object(value);
+      OssoABookContact *contact = g_value_get_object(value);
 
       if (contact)
         g_object_ref(contact);
@@ -130,8 +135,8 @@ osso_abook_avatar_chooser_dialog_set_property(GObject *object,
       if (priv->contact)
       {
         g_signal_handlers_disconnect_matched(
-              priv->contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
-              0, 0, NULL, _avatar_image_changed_cb, dialog);
+          priv->contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+          0, 0, NULL, _avatar_image_changed_cb, dialog);
         g_object_unref(priv->contact);
       }
 
@@ -201,7 +206,7 @@ osso_abook_avatar_chooser_dialog_finalize(GObject *object)
   g_free(priv->icon_name);
 
   G_OBJECT_CLASS(osso_abook_avatar_chooser_dialog_parent_class)->
-      finalize(object);
+  finalize(object);
 }
 
 static void
@@ -212,8 +217,8 @@ dispose(GObject *object)
   if (priv->contact)
   {
     g_signal_handlers_disconnect_matched(
-          priv->contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-          _avatar_image_changed_cb, object);
+      priv->contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+      _avatar_image_changed_cb, object);
     g_object_unref(priv->contact);
     priv->contact = NULL;
   }
@@ -225,7 +230,7 @@ dispose(GObject *object)
   }
 
   G_OBJECT_CLASS(osso_abook_avatar_chooser_dialog_parent_class)->
-      dispose(object);
+  dispose(object);
 }
 
 static void
@@ -237,7 +242,7 @@ osso_abook_avatar_chooser_dialog_style_set(GtkWidget *widget,
   GtkTreeIter iter;
 
   GTK_WIDGET_CLASS(osso_abook_avatar_chooser_dialog_parent_class)->
-      style_set(widget, previous_style);
+  style_set(widget, previous_style);
 
   if (!icon_view)
     return;
@@ -273,7 +278,7 @@ osso_abook_avatar_chooser_dialog_style_set(GtkWidget *widget,
 
 static void
 osso_abook_avatar_chooser_dialog_class_init(
-    OssoABookAvatarChooserDialogClass *klass)
+  OssoABookAvatarChooserDialogClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS(klass);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
@@ -286,30 +291,30 @@ osso_abook_avatar_chooser_dialog_class_init(
   widget_class->style_set = osso_abook_avatar_chooser_dialog_style_set;
 
   g_object_class_install_property(
-        object_class, PROP_PIXBUF,
-        g_param_spec_object(
-          "pixbuf", "Pixbuf", "The GdkPixbuf of the selected avatar",
-          GDK_TYPE_PIXBUF,
-          GTK_PARAM_READABLE));
+    object_class, PROP_PIXBUF,
+    g_param_spec_object(
+      "pixbuf", "Pixbuf", "The GdkPixbuf of the selected avatar",
+      GDK_TYPE_PIXBUF,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_FILENAME,
-        g_param_spec_string(
-          "filename", "Filename", "The filename of the selected avatar",
-          NULL,
-          GTK_PARAM_READABLE));
+    object_class, PROP_FILENAME,
+    g_param_spec_string(
+      "filename", "Filename", "The filename of the selected avatar",
+      NULL,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_ICON_NAME,
-        g_param_spec_string(
-          "icon-name", "Icon Name", "The icon name of the selected avatar",
-          NULL,
-          GTK_PARAM_READABLE));
+    object_class, PROP_ICON_NAME,
+    g_param_spec_string(
+      "icon-name", "Icon Name", "The icon name of the selected avatar",
+      NULL,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_CONTACT,
-        g_param_spec_object(
-          "contact", "Contact",
-          "Contact object providing the default avatar image",
-          OSSO_ABOOK_TYPE_CONTACT,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_CONTACT,
+    g_param_spec_object(
+      "contact", "Contact",
+      "Contact object providing the default avatar image",
+      OSSO_ABOOK_TYPE_CONTACT,
+      GTK_PARAM_READWRITE));
 }
 
 static void
@@ -376,7 +381,7 @@ _icon_load_timeout_cb(gpointer user_data)
   {
     data->progress_bar = gtk_progress_bar_new();
     data->note = hildon_note_new_cancel_with_progress_bar(
-          GTK_WINDOW(data->dialog), "", GTK_PROGRESS_BAR(data->progress_bar));
+      GTK_WINDOW(data->dialog), "", GTK_PROGRESS_BAR(data->progress_bar));
     data->note = data->note;
     g_signal_connect_swapped(data->note, "response",
                              G_CALLBACK(g_cancellable_cancel),
@@ -411,7 +416,7 @@ _load_icon(OssoABookAvatarChooserDialog *dialog, GFile *file)
   data.dialog = dialog;
   data.mainloop = g_main_loop_new(0, TRUE);
   data.progress_timeout =
-      gdk_threads_add_timeout(1000, _icon_load_timeout_cb, &data);
+    gdk_threads_add_timeout(1000, _icon_load_timeout_cb, &data);
   data.cancellable = g_cancellable_new();
   osso_abook_load_pixbuf_async(file, OSSO_ABOOK_DEFAULT_MAXIMUM_PIXBUF_SIZE, 0,
                                data.cancellable, _icon_load_ready_cb, &data);
@@ -442,9 +447,9 @@ static void
 load_stock_icon(OssoABookAvatarChooserDialog *dialog, const char *icon_name)
 {
   GtkIconTheme *icon_theme = gtk_icon_theme_get_for_screen(
-        gtk_widget_get_screen(GTK_WIDGET(dialog)));
+    gtk_widget_get_screen(GTK_WIDGET(dialog)));
   GtkIconInfo *icon = gtk_icon_theme_lookup_icon(
-        icon_theme, icon_name, OSSO_ABOOK_PIXEL_SIZE_AVATAR_LARGE, 0);
+    icon_theme, icon_name, OSSO_ABOOK_PIXEL_SIZE_AVATAR_LARGE, 0);
   const char *filename;
   GFile *file;
 
@@ -549,13 +554,13 @@ _response_cb(OssoABookAvatarChooserDialog *dialog, gint response_id,
   g_signal_stop_emission_by_name(dialog, "response");
 
   file_chooser = hildon_file_chooser_dialog_new_with_properties(
-        gtk_window_get_transient_for(GTK_WINDOW(dialog)),
-        "action", GTK_FILE_CHOOSER_ACTION_OPEN,
-        "title", g_dgettext("osso-addressbook", "addr_ti_select_picture_title"),
-        "empty-text", g_dgettext("osso-addressbook",
-                                 "addr_li_select_picture_none"),
-        "destroy-with-parent", TRUE,
-        NULL);
+    gtk_window_get_transient_for(GTK_WINDOW(dialog)),
+    "action", GTK_FILE_CHOOSER_ACTION_OPEN,
+    "title", g_dgettext("osso-addressbook", "addr_ti_select_picture_title"),
+    "empty-text", g_dgettext("osso-addressbook",
+                             "addr_li_select_picture_none"),
+    "destroy-with-parent", TRUE,
+    NULL);
   picture_folder = osso_abook_settings_get_picture_folder();
 
   if (picture_folder)
@@ -606,7 +611,7 @@ static void
 osso_abook_avatar_chooser_dialog_init(OssoABookAvatarChooserDialog *dialog)
 {
   OssoABookAvatarChooserDialogPrivate *priv = PRIVATE(dialog);
-  GType types[] = {G_TYPE_STRING, GDK_TYPE_PIXBUF, GDK_TYPE_PIXBUF};
+  GType types[] = { G_TYPE_STRING, GDK_TYPE_PIXBUF, GDK_TYPE_PIXBUF };
   GtkWidget *area;
   GtkIconTheme *icon_theme;
   GtkListStore *store;
@@ -617,7 +622,7 @@ osso_abook_avatar_chooser_dialog_init(OssoABookAvatarChooserDialog *dialog)
   gtk_dialog_add_button(GTK_DIALOG(dialog),
                         g_dgettext("osso-addressbook", "addr_bd_browse"), 1);
   icon_theme = gtk_icon_theme_get_for_screen(
-        gtk_widget_get_screen(GTK_WIDGET(dialog)));
+    gtk_widget_get_screen(GTK_WIDGET(dialog)));
 
   store = gtk_list_store_newv(G_N_ELEMENTS(types), types);
 
@@ -671,18 +676,17 @@ osso_abook_avatar_chooser_dialog_new(GtkWindow *parent)
   g_return_val_if_fail(!parent || GTK_IS_WINDOW(parent), NULL);
 
   return g_object_new(
-        OSSO_ABOOK_TYPE_AVATAR_CHOOSER_DIALOG,
-        "title", g_dgettext("osso-addressbook", "addr_ti_select_avatar"),
-        "transient-for", parent,
-        "destroy-with-parent", TRUE,
-        "modal", TRUE,
-        "has-separator", FALSE,
-        NULL);
+    OSSO_ABOOK_TYPE_AVATAR_CHOOSER_DIALOG,
+    "title", g_dgettext("osso-addressbook", "addr_ti_select_avatar"),
+    "transient-for", parent,
+    "destroy-with-parent", TRUE,
+    "modal", TRUE,
+    "has-separator", FALSE,
+    NULL);
 }
 
 GdkPixbuf *
-osso_abook_avatar_chooser_dialog_get_pixbuf(
-    OssoABookAvatarChooserDialog *dialog)
+osso_abook_avatar_chooser_dialog_get_pixbuf(OssoABookAvatarChooserDialog *dialog)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_CHOOSER_DIALOG(dialog), NULL);
 
@@ -691,7 +695,7 @@ osso_abook_avatar_chooser_dialog_get_pixbuf(
 
 const char *
 osso_abook_avatar_chooser_dialog_get_filename(
-    OssoABookAvatarChooserDialog *dialog)
+  OssoABookAvatarChooserDialog *dialog)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_CHOOSER_DIALOG(dialog), NULL);
 
@@ -700,7 +704,7 @@ osso_abook_avatar_chooser_dialog_get_filename(
 
 const char *
 osso_abook_avatar_chooser_dialog_get_icon_name(
-    OssoABookAvatarChooserDialog *dialog)
+  OssoABookAvatarChooserDialog *dialog)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_CHOOSER_DIALOG(dialog), NULL);
 
@@ -709,7 +713,8 @@ osso_abook_avatar_chooser_dialog_get_icon_name(
 
 void
 osso_abook_avatar_chooser_dialog_set_contact(
-    OssoABookAvatarChooserDialog *dialog, OssoABookContact *contact)
+  OssoABookAvatarChooserDialog *dialog,
+  OssoABookContact *contact)
 {
   g_return_if_fail(OSSO_ABOOK_IS_AVATAR_CHOOSER_DIALOG(dialog));
   g_return_if_fail(!contact || OSSO_ABOOK_IS_CONTACT(contact));
@@ -719,9 +724,9 @@ osso_abook_avatar_chooser_dialog_set_contact(
 
 OssoABookContact *
 osso_abook_avatar_chooser_dialog_get_contact(
-    OssoABookAvatarChooserDialog *dialog)
+  OssoABookAvatarChooserDialog *dialog)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_CHOOSER_DIALOG(dialog), NULL);
 
-    return PRIVATE(dialog)->contact;
+  return PRIVATE(dialog)->contact;
 }

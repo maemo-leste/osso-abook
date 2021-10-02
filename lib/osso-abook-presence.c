@@ -2,8 +2,8 @@
 #include <gtk/gtkprivate.h>
 #include <telepathy-glib/connection.h>
 
-#include <stdlib.h>
 #include <libintl.h>
+#include <stdlib.h>
 
 #include "osso-abook-presence.h"
 #include "osso-abook-utils-private.h"
@@ -13,7 +13,7 @@
 typedef OssoABookPresenceIface OssoABookPresenceInterface;
 
 static const char *
-icon_by_presence_type[TP_NUM_CONNECTION_PRESENCE_TYPES] =
+  icon_by_presence_type[TP_NUM_CONNECTION_PRESENCE_TYPES] =
 {
   NULL,
   "general_presence_offline",
@@ -29,46 +29,46 @@ icon_by_presence_type[TP_NUM_CONNECTION_PRESENCE_TYPES] =
 static GHashTable *icon_names = NULL;
 
 G_DEFINE_INTERFACE(
-    OssoABookPresence,
-    osso_abook_presence,
-    G_TYPE_OBJECT
+  OssoABookPresence,
+  osso_abook_presence,
+  G_TYPE_OBJECT
 );
 
 static void
 osso_abook_presence_default_init(OssoABookPresenceIface *iface)
 {
   g_object_interface_install_property(
-        iface,
-        g_param_spec_uint(
-                 "presence-type",
-                 "Presence Type",
-                 "The presence type.",
-                 0, G_MAXUINT, 0,
-                 GTK_PARAM_READABLE));
+    iface,
+    g_param_spec_uint(
+      "presence-type",
+      "Presence Type",
+      "The presence type.",
+      0, G_MAXUINT, 0,
+      GTK_PARAM_READABLE));
   g_object_interface_install_property(
-        iface,
-        g_param_spec_string(
-                 "presence-status",
-                 "Presence Status",
-                 "The presence status.",
-                 NULL,
-                 GTK_PARAM_READABLE));
+    iface,
+    g_param_spec_string(
+      "presence-status",
+      "Presence Status",
+      "The presence status.",
+      NULL,
+      GTK_PARAM_READABLE));
   g_object_interface_install_property(
-        iface,
-        g_param_spec_string(
-                 "presence-status-message",
-                 "Presence Status Message",
-                 "The presence status message.",
-                 NULL,
-                 GTK_PARAM_READABLE));
+    iface,
+    g_param_spec_string(
+      "presence-status-message",
+      "Presence Status Message",
+      "The presence status message.",
+      NULL,
+      GTK_PARAM_READABLE));
   g_object_interface_install_property(
-        iface,
-        g_param_spec_string(
-                 "presence-location-string",
-                 "Presence Location String",
-                 "The location information for this presence as a string. (Deprecated)",
-                 NULL,
-                 GTK_PARAM_READABLE));
+    iface,
+    g_param_spec_string(
+      "presence-location-string",
+      "Presence Location String",
+      "The location information for this presence as a string. (Deprecated)",
+      NULL,
+      GTK_PARAM_READABLE));
 }
 
 TpConnectionPresenceType
@@ -211,7 +211,7 @@ osso_abook_presence_get_icon_name(OssoABookPresence *presence)
         !(icon_name = g_hash_table_lookup(icon_names, presence_status)))
     {
       gchar *icon_name =
-          g_strconcat("general_presence_", presence_status, NULL);
+        g_strconcat("general_presence_", presence_status, NULL);
 
       if (gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), icon_name))
       {
@@ -324,17 +324,18 @@ custom_presence_convert(TpConnectionPresenceType presence_type)
     case TP_CONNECTION_PRESENCE_TYPE_UNKNOWN:
     case TP_CONNECTION_PRESENCE_TYPE_ERROR:
       return TP_CONNECTION_PRESENCE_TYPE_UNKNOWN;
+
     default:
       return default_presence_convert(presence_type);
   }
 }
 
 static int
-osso_abook_presence_compare_custom(
-    OssoABookPresence *a, OssoABookPresence *b,
-    TpConnectionPresenceType (*presence_convert_fn)(TpConnectionPresenceType))
+osso_abook_presence_compare_custom(OssoABookPresence *a,
+                                   OssoABookPresence *b,
+                                   TpConnectionPresenceType (*presence_convert_fn)(
+                                     TpConnectionPresenceType))
 {
-
   g_return_val_if_fail(OSSO_ABOOK_IS_PRESENCE(a), a == b ? 0 : -1);
   g_return_val_if_fail(OSSO_ABOOK_IS_PRESENCE(b), a == b ? 0 : 1);
 
@@ -342,8 +343,8 @@ osso_abook_presence_compare_custom(
     presence_convert_fn = default_presence_convert;
 
   return tp_connection_presence_type_cmp_availability(
-        presence_convert_fn(osso_abook_presence_get_presence_type(b)),
-        presence_convert_fn(osso_abook_presence_get_presence_type(a)));
+    presence_convert_fn(osso_abook_presence_get_presence_type(b)),
+    presence_convert_fn(osso_abook_presence_get_presence_type(a)));
 }
 
 int

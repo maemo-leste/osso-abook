@@ -17,11 +17,11 @@
  *
  */
 
-#include "osso-abook-voicemail-selector.h"
 #include "osso-abook-log.h"
 #include "osso-abook-settings.h"
 #include "osso-abook-utils-private.h"
 #include "osso-abook-voicemail-contact.h"
+#include "osso-abook-voicemail-selector.h"
 
 #include "config.h"
 
@@ -30,7 +30,8 @@ struct _OssoABookVoicemailSelectorPrivate
   gulong dialog_response_hook;
 };
 
-typedef struct _OssoABookVoicemailSelectorPrivate OssoABookVoicemailSelectorPrivate;
+typedef struct _OssoABookVoicemailSelectorPrivate
+  OssoABookVoicemailSelectorPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(
   OssoABookVoicemailSelector,
@@ -39,7 +40,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define PRIVATE(selector) \
-  ((OssoABookVoicemailSelectorPrivate *)osso_abook_voicemail_selector_get_instance_private((OssoABookVoicemailSelector *)selector))
+  ((OssoABookVoicemailSelectorPrivate *) \
+   osso_abook_voicemail_selector_get_instance_private(( \
+                                                        OssoABookVoicemailSelector \
+                                                        *)selector))
 
 enum
 {
@@ -69,7 +73,7 @@ osso_abook_voicemail_selector_size_request(GtkWidget *widget,
   GtkRequisition r;
 
   GTK_WIDGET_CLASS(osso_abook_voicemail_selector_parent_class)->size_request(
-        widget, requisition);
+    widget, requisition);
 
   hildon_touch_selector_optimal_size_request(HILDON_TOUCH_SELECTOR(widget), &r);
 
@@ -85,11 +89,11 @@ osso_abook_voicemail_selector_style_set(GtkWidget *widget,
   GList *last_cell;
 
   GTK_WIDGET_CLASS(osso_abook_voicemail_selector_parent_class)->style_set(
-        widget, previous_style);
+    widget, previous_style);
 
   cells = gtk_cell_layout_get_cells(
-        GTK_CELL_LAYOUT(hildon_touch_selector_get_column(
-                          HILDON_TOUCH_SELECTOR(widget), 0)));
+    GTK_CELL_LAYOUT(hildon_touch_selector_get_column(
+                      HILDON_TOUCH_SELECTOR(widget), 0)));
   last_cell = g_list_last(cells);
 
   if (last_cell)
@@ -127,12 +131,12 @@ osso_abook_voicemail_selector_class_init(OssoABookVoicemailSelectorClass *klass)
 static GtkTreeModel *
 create_numbers_model(GSList *numbers)
 {
-  GType types[] = {G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING};
+  GType types[] = { G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING };
   GtkListStore *store = gtk_list_store_newv(G_N_ELEMENTS(types), types);
   GtkTreeIter iter;
   GSList *l;
 
-  for (l = numbers ; l; l = l->next)
+  for (l = numbers; l; l = l->next)
   {
     OssoABookVoicemailNumber *number = l->data;
 
@@ -171,16 +175,15 @@ dialog_response_hook(GSignalInvocationHint *ihint, guint n_params,
 
     if (g_value_get_int(param_values + 1) == GTK_RESPONSE_OK)
     {
-
       if (HILDON_IS_PICKER_DIALOG(dialog))
       {
         HildonTouchSelector *selector =
-            hildon_picker_dialog_get_selector(dialog);
+          hildon_picker_dialog_get_selector(dialog);
         GtkTreeModel *model =
-            hildon_touch_selector_get_model(selector, COL_PHONE_NUMBER);
+          hildon_touch_selector_get_model(selector, COL_PHONE_NUMBER);
 
-        if (selector == data &&
-            gtk_tree_model_iter_n_children(model, NULL) <= 0)
+        if ((selector == data) &&
+            (gtk_tree_model_iter_n_children(model, NULL) <= 0))
         {
           gchar *text = hildon_touch_selector_get_current_text(selector);
 
@@ -218,7 +221,7 @@ osso_abook_voicemail_selector_init(OssoABookVoicemailSelector *selector)
   OssoABookVoicemailSelectorPrivate *priv = PRIVATE(selector);
   GtkTreeModel *model = create_numbers_model(NULL);
   HildonTouchSelectorColumn *col = hildon_touch_selector_append_text_column(
-        HILDON_TOUCH_SELECTOR(selector), model, 0);
+    HILDON_TOUCH_SELECTOR(selector), model, 0);
   GtkCellRenderer *cell_renderer = gtk_cell_renderer_text_new();
   OssoABookVoicemailNumber *number;
   GSList *numbers;
@@ -233,19 +236,19 @@ osso_abook_voicemail_selector_init(OssoABookVoicemailSelector *selector)
                                  "text", 2,
                                  NULL);
   hildon_touch_selector_entry_set_input_mode(
-        HILDON_TOUCH_SELECTOR_ENTRY(selector), HILDON_GTK_INPUT_MODE_TELE);
+    HILDON_TOUCH_SELECTOR_ENTRY(selector), HILDON_GTK_INPUT_MODE_TELE);
   hildon_touch_selector_entry_set_text_column(
-        HILDON_TOUCH_SELECTOR_ENTRY(selector), 0);
+    HILDON_TOUCH_SELECTOR_ENTRY(selector), 0);
 
   number = osso_abook_voicemail_number_new(NULL, NULL, NULL);
   number->phone_number =
-      osso_abook_voicemail_contact_get_preferred_number(NULL);
+    osso_abook_voicemail_contact_get_preferred_number(NULL);
 
   if (IS_EMPTY(number->phone_number))
   {
     number->operator_id = _osso_abook_get_operator_id(NULL, NULL);
     number->operator_name =
-        _osso_abook_get_operator_name(NULL, number->operator_id, NULL);
+      _osso_abook_get_operator_name(NULL, number->operator_id, NULL);
     g_free(number->phone_number);
     number->phone_number = NULL;
   }
@@ -262,7 +265,7 @@ osso_abook_voicemail_selector_init(OssoABookVoicemailSelector *selector)
     {
       if (!g_strcmp0(candidate->phone_number, number->phone_number))
       {
-        if (!IS_EMPTY(candidate->operator_id)&& !number->operator_id)
+        if (!IS_EMPTY(candidate->operator_id) && !number->operator_id)
         {
           osso_abook_voicemail_number_free(number);
           number = candidate;
@@ -291,8 +294,8 @@ osso_abook_voicemail_selector_init(OssoABookVoicemailSelector *selector)
 
   if (!IS_EMPTY(number->phone_number))
   {
-      numbers = g_slist_prepend(numbers, number);
-      number = NULL;
+    numbers = g_slist_prepend(numbers, number);
+    number = NULL;
   }
 
   operators = g_hash_table_new_full(g_str_hash, g_str_equal, NULL,
@@ -315,7 +318,7 @@ osso_abook_voicemail_selector_init(OssoABookVoicemailSelector *selector)
   while (g_hash_table_iter_next(&iter, (gpointer *)&operator_id, 0))
   {
     gchar *operator_name =
-        _osso_abook_get_operator_name(NULL, operator_id, NULL);
+      _osso_abook_get_operator_name(NULL, operator_id, NULL);
 
     if (operator_name)
       g_hash_table_insert(operators, operator_id, operator_name);
@@ -354,8 +357,8 @@ osso_abook_voicemail_selector_init(OssoABookVoicemailSelector *selector)
   osso_abook_voicemail_number_list_free(numbers);
   osso_abook_voicemail_number_free(number);
   priv->dialog_response_hook =
-      g_signal_add_emission_hook(g_signal_lookup("response", GTK_TYPE_DIALOG),
-                                 0, dialog_response_hook, selector, NULL);
+    g_signal_add_emission_hook(g_signal_lookup("response", GTK_TYPE_DIALOG),
+                               0, dialog_response_hook, selector, NULL);
 }
 
 GtkWidget *
@@ -368,7 +371,7 @@ static GSList *
 get_voicemail_numbers(OssoABookVoicemailSelector *selector)
 {
   GtkTreeModel *model =
-      hildon_touch_selector_get_model(HILDON_TOUCH_SELECTOR(selector), 0);
+    hildon_touch_selector_get_model(HILDON_TOUCH_SELECTOR(selector), 0);
   GSList *numbers = NULL;
   GtkTreeIter iter;
 
@@ -424,7 +427,7 @@ osso_abook_voicemail_selector_save(OssoABookVoicemailSelector *selector)
       g_list_free(tel);
 
       osso_abook_contact_async_commit(
-            OSSO_ABOOK_CONTACT(contact), NULL, NULL, NULL);
+        OSSO_ABOOK_CONTACT(contact), NULL, NULL, NULL);
       g_object_unref(contact);
     }
   }
@@ -455,14 +458,14 @@ osso_abook_voicemail_selector_apply(OssoABookVoicemailSelector *selector)
 
   g_warn_if_fail(!IS_EMPTY(current_text));
 
-  if (gtk_tree_model_iter_n_children(model,  NULL) > 0)
+  if (gtk_tree_model_iter_n_children(model, NULL) > 0)
     active = hildon_touch_selector_get_active(ts, 0);
 
   for (l = numbers; l; l = l->next)
   {
     OssoABookVoicemailNumber *number = l->data;
 
-    if (i == active && !g_strcmp0(current_text, number->phone_number))
+    if ((i == active) && !g_strcmp0(current_text, number->phone_number))
     {
       numbers = g_slist_remove_link(numbers, l);
       current_number = number;
@@ -485,8 +488,8 @@ osso_abook_voicemail_selector_apply(OssoABookVoicemailSelector *selector)
     if (!current_number->operator_name)
     {
       current_number->operator_name =
-          _osso_abook_get_operator_name(NULL,
-                                        current_number->operator_id, NULL);
+        _osso_abook_get_operator_name(NULL,
+                                      current_number->operator_id, NULL);
     }
 
     numbers = g_slist_prepend(numbers, current_number);

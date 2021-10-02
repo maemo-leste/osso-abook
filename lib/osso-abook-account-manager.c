@@ -1,23 +1,24 @@
-#include <glib.h>
 #include <glib-object.h>
+#include <glib.h>
 #include <gtk/gtkprivate.h>
 
 #include "config.h"
 
-#include "osso-abook-account-manager.h"
-#include "osso-abook-waitable.h"
-#include "osso-abook-roster-manager.h"
-#include "osso-abook-utils-private.h"
-#include "osso-abook-debug.h"
-#include "osso-abook-string-list.h"
-#include "osso-abook-marshal.h"
-#include "osso-abook-enums.h"
-#include "osso-abook-util.h"
-#include "osso-abook-log.h"
 #include "eds.h"
+#include "osso-abook-account-manager.h"
+#include "osso-abook-debug.h"
+#include "osso-abook-enums.h"
+#include "osso-abook-log.h"
+#include "osso-abook-marshal.h"
+#include "osso-abook-roster-manager.h"
+#include "osso-abook-string-list.h"
+#include "osso-abook-util.h"
+#include "osso-abook-utils-private.h"
+#include "osso-abook-waitable.h"
 #include "tp-glib-enums.h"
 
-enum {
+enum
+{
   ROSTER_CREATED,
   ROSTER_REMOVED,
   ACCOUNT_CREATED,
@@ -41,8 +42,8 @@ enum
 
 #define DEFAULT_ALLOWED_CAPABILITIES \
   (OSSO_ABOOK_CAPS_ALL | OSSO_ABOOK_CAPS_CHAT_ADDITIONAL | \
-  OSSO_ABOOK_CAPS_VOICE_ADDITIONAL | OSSO_ABOOK_CAPS_ADDRESSBOOK | \
-  OSSO_ABOOK_CAPS_IMMUTABLE_STREAMS)
+   OSSO_ABOOK_CAPS_VOICE_ADDITIONAL | OSSO_ABOOK_CAPS_ADDRESSBOOK | \
+   OSSO_ABOOK_CAPS_IMMUTABLE_STREAMS)
 
 struct account_info
 {
@@ -58,11 +59,12 @@ struct account_info
 
 typedef struct _OssoABookAccountManagerPrivate OssoABookAccountManagerPrivate;
 
-static void osso_abook_account_manager_waitable_iface_init(
-    OssoABookWaitableIface *iface);
+static void
+osso_abook_account_manager_waitable_iface_init(OssoABookWaitableIface *iface);
 
-static void osso_abook_account_manager_roster_manager_iface_init(
-    OssoABookRosterManagerIface *iface);
+static void
+osso_abook_account_manager_roster_manager_iface_init(
+  OssoABookRosterManagerIface *iface);
 
 struct _OssoABookAccountManagerPrivate
 {
@@ -96,15 +98,16 @@ struct _OssoABookAccountManagerPrivate
 typedef struct _OssoABookAccountManagerPrivate OssoABookAccountManagerPrivate;
 
 #define OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager) \
-  ((OssoABookAccountManagerPrivate *)osso_abook_account_manager_get_instance_private(manager))
+  ((OssoABookAccountManagerPrivate *) \
+   osso_abook_account_manager_get_instance_private(manager))
 
 G_DEFINE_TYPE_WITH_CODE(
   OssoABookAccountManager,
   osso_abook_account_manager,
   G_TYPE_OBJECT,
   G_IMPLEMENT_INTERFACE(
-      OSSO_ABOOK_TYPE_WAITABLE,
-      osso_abook_account_manager_waitable_iface_init);
+    OSSO_ABOOK_TYPE_WAITABLE,
+    osso_abook_account_manager_waitable_iface_init);
   G_IMPLEMENT_INTERFACE(
     OSSO_ABOOK_TYPE_ROSTER_MANAGER,
     osso_abook_account_manager_roster_manager_iface_init);
@@ -116,7 +119,7 @@ osso_abook_account_manager_waitable_pop(OssoABookWaitable *waitable,
                                         OssoABookWaitableClosure *closure)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE((OssoABookAccountManager *)waitable);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE((OssoABookAccountManager *)waitable);
 
   return osso_abook_list_pop(&priv->closures, closure);
 }
@@ -126,19 +129,20 @@ osso_abook_account_manager_waitable_is_ready(OssoABookWaitable *waitable,
                                              const GError **error)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(waitable));
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(waitable));
   gboolean is_ready = FALSE;
 
   if (priv->is_ready && !priv->pending_accounts)
     is_ready = priv->is_running && priv->rosters_completed;
 
   OSSO_ABOOK_NOTE(
-        TP, "account-manager: %s (%d accounts pending), roster-manager: %s (%s) => %s",
-        priv->is_ready ? "ready" : "pending",
-        priv->pending_accounts,
-        priv->rosters_completed ? "ready" : "pending",
-        priv->is_running ? "running" : "idle",
-        is_ready ? "ready" : "pending");
+    TP,
+    "account-manager: %s (%d accounts pending), roster-manager: %s (%s) => %s",
+    priv->is_ready ? "ready" : "pending",
+    priv->pending_accounts,
+    priv->rosters_completed ? "ready" : "pending",
+    priv->is_running ? "running" : "idle",
+    is_ready ? "ready" : "pending");
 
   if (error)
     *error = priv->error;
@@ -151,7 +155,7 @@ osso_abook_account_manager_waitable_push(OssoABookWaitable *waitable,
                                          OssoABookWaitableClosure *closure)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE((OssoABookAccountManager *)waitable);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE((OssoABookAccountManager *)waitable);
 
   osso_abook_list_push(&priv->closures, closure);
 }
@@ -170,7 +174,6 @@ get_tp_account_protocol(TpAccount *account,
 {
   return g_hash_table_lookup(priv->protocols,
                              tp_account_get_protocol_name(account));
-
 }
 
 static const gchar *
@@ -226,7 +229,7 @@ static void
 check_pending_accounts(OssoABookAccountManager *manager)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   GError *error = NULL;
 
   if (priv->pending_accounts)
@@ -269,9 +272,9 @@ check_pending_accounts(OssoABookAccountManager *manager)
 }
 
 /*
-  don't really like it, but I was not able to find a way to create
-  in-memory ESource
-*/
+   don't really like it, but I was not able to find a way to create
+   in-memory ESource
+ */
 static ESource *
 create_roster_source(const gchar *uid)
 {
@@ -307,13 +310,13 @@ create_roster_source(const gchar *uid)
     if (source)
     {
       ESourceBackend *backend =
-          e_source_get_extension (source, E_SOURCE_EXTENSION_ADDRESS_BOOK);
+        e_source_get_extension(source, E_SOURCE_EXTENSION_ADDRESS_BOOK);
       ESourceResource *resource =
-          e_source_get_extension (source, E_SOURCE_EXTENSION_RESOURCE);
+        e_source_get_extension(source, E_SOURCE_EXTENSION_RESOURCE);
       GList *sources = NULL;
 
       e_source_resource_set_identity(resource, uid);
-      e_source_backend_set_backend_name (backend, "tp");
+      e_source_backend_set_backend_name(backend, "tp");
       e_source_set_display_name(source, uid);
 
       sources = g_list_append(sources, source);
@@ -398,7 +401,7 @@ roster_get_book_view_cb(EBook *book, EBookStatus status, EBookView *book_view,
 {
   struct account_info *info = user_data;
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(info->manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(info->manager);
   TpAccount *account = info->account;
   const gchar *path_suffix = tp_account_get_path_suffix(account);
   const gchar *vcard_field = get_tp_account_vcard_field(account, priv);
@@ -433,7 +436,7 @@ osso_abook_account_manager_create_roster(struct account_info *info)
 {
   OssoABookAccountManager *manager = info->manager;
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   TpAccount *account = info->account;
   const gchar *vcard_field = get_tp_account_vcard_field(account, priv);
   const gchar *path_suffix = tp_account_get_path_suffix(account);
@@ -574,10 +577,10 @@ osso_abook_account_manager_roster_manager_stop(OssoABookRosterManager *manager)
 
 static GList *
 osso_abook_account_manager_roster_manager_list_rosters(
-    OssoABookRosterManager *manager)
+  OssoABookRosterManager *manager)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(manager));
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(manager));
   GList *rosters = NULL;
   GHashTableIter iter;
   struct account_info *info;
@@ -595,12 +598,13 @@ osso_abook_account_manager_roster_manager_list_rosters(
 
 static OssoABookRoster *
 osso_abook_account_manager_roster_manager_get_roster(
-    OssoABookRosterManager *manager, const char *account_name)
+  OssoABookRosterManager *manager,
+  const char *account_name)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(manager));
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(manager));
   struct account_info *info =
-      g_hash_table_lookup(priv->rosters, account_name);
+    g_hash_table_lookup(priv->rosters, account_name);
 
   if (info)
     return info->roster;
@@ -610,7 +614,7 @@ osso_abook_account_manager_roster_manager_get_roster(
 
 static void
 osso_abook_account_manager_roster_manager_iface_init(
-    OssoABookRosterManagerIface *iface)
+  OssoABookRosterManagerIface *iface)
 {
   iface->start = osso_abook_account_manager_roster_manager_start;
   iface->stop = osso_abook_account_manager_roster_manager_stop;
@@ -627,9 +631,9 @@ static void
 osso_abook_account_manager_dispose(GObject *object)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(object));
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(object));
 
-  if ( priv->error )
+  if (priv->error)
     g_clear_error(&priv->error);
 
   if (priv->account_ready_id)
@@ -675,7 +679,7 @@ static void
 osso_abook_account_manager_finalize(GObject *object)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(object));
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(object));
 
   if (priv->query)
     e_book_query_unref(priv->query);
@@ -699,7 +703,7 @@ osso_abook_account_manager_account_created(OssoABookAccountManager *manager,
                                            TpAccount *account)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   struct account_info *info;
 
   info = g_hash_table_lookup(priv->rosters,
@@ -730,11 +734,12 @@ osso_abook_account_manager_account_removed(OssoABookAccountManager *manager,
                                            TpAccount *account)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   struct account_info *info;
 
   info = g_hash_table_lookup(priv->rosters,
                              tp_account_get_path_suffix(account));
+
   if (!info)
     return;
 
@@ -746,7 +751,7 @@ osso_abook_account_manager_account_removed(OssoABookAccountManager *manager,
     {
       if (info->is_removed)
       {
-        ESource *source = e_book_get_source (book);
+        ESource *source = e_book_get_source(book);
 
         if (source)
           OSSO_ABOOK_NOTE(TP, "removing %s", e_source_get_uid(source));
@@ -767,7 +772,7 @@ osso_abook_account_manager_get_property(GObject *object, guint property_id,
 {
   OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(object);
 
-  switch ( property_id )
+  switch (property_id)
   {
     case PROP_PRESENCE:
     {
@@ -777,40 +782,40 @@ osso_abook_account_manager_get_property(GObject *object, guint property_id,
     case PROP_ACTIVE_ACCOUNTS_ONLY:
     {
       g_value_set_boolean(
-            value,
-            osso_abook_account_manager_is_active_accounts_only(manager));
+        value,
+        osso_abook_account_manager_is_active_accounts_only(manager));
       break;
     }
     case PROP_ALLOWED_ACCOUNTS:
     {
       g_value_set_pointer(
-            value, osso_abook_account_manager_get_allowed_accounts(manager));
+        value, osso_abook_account_manager_get_allowed_accounts(manager));
       break;
     }
     case PROP_ALLOWED_CAPABILITIES:
     {
       g_value_set_flags(
-            value,
-            osso_abook_account_manager_get_allowed_capabilities(manager));
+        value,
+        osso_abook_account_manager_get_allowed_capabilities(manager));
       break;
     }
     case PROP_REQUIRED_CAPABILITIES:
     {
       g_value_set_flags(
-            value,
-            osso_abook_account_manager_get_required_capabilities(manager));
+        value,
+        osso_abook_account_manager_get_required_capabilities(manager));
       break;
     }
     case PROP_ACCOUNT_PROTOCOL:
     {
       g_value_set_string(
-            value, osso_abook_account_manager_get_account_protocol(manager));
+        value, osso_abook_account_manager_get_account_protocol(manager));
       break;
     }
     case PROP_RUNNING:
     {
       OssoABookAccountManagerPrivate *priv =
-          OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+        OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
 
       g_value_set_boolean(value, priv->is_running);
       break;
@@ -827,7 +832,7 @@ static gboolean
 accept_account(struct account_info *info)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(info->manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(info->manager);
   OssoABookCapsFlags caps = OSSO_ABOOK_CAPS_NONE;
   TpConnection *connection;
   const gchar *protocol_name;
@@ -858,18 +863,18 @@ accept_account(struct account_info *info)
   if (priv->allowed_capabilities != (caps | priv->allowed_capabilities))
   {
     OSSO_ABOOK_NOTE(
-          TP, "rejecting account %s for unallowed caps: allowed=%d, found=%x",
-          tp_account_get_path_suffix(info->account),
-          priv->allowed_capabilities, caps);
+      TP, "rejecting account %s for unallowed caps: allowed=%d, found=%x",
+      tp_account_get_path_suffix(info->account),
+      priv->allowed_capabilities, caps);
     return FALSE;
   }
 
   if (priv->required_capabilities != (caps & priv->required_capabilities))
   {
     OSSO_ABOOK_NOTE(
-          TP, "rejecting account %s for missing caps: required=%x, found=%x",
-          tp_account_get_path_suffix(info->account),
-          priv->required_capabilities, caps);
+      TP, "rejecting account %s for missing caps: required=%x, found=%x",
+      tp_account_get_path_suffix(info->account),
+      priv->required_capabilities, caps);
     return FALSE;
   }
 
@@ -879,11 +884,11 @@ accept_account(struct account_info *info)
       !g_str_equal(priv->account_protocol, protocol_name))
   {
     OSSO_ABOOK_NOTE(
-          TP,
-          "rejecting account %s for being the wrong protocol: required='%s', found='%s'",
-          tp_account_get_path_suffix(info->account),
-          priv->account_protocol,
-          protocol_name);
+      TP,
+      "rejecting account %s for being the wrong protocol: required='%s', found='%s'",
+      tp_account_get_path_suffix(info->account),
+      priv->account_protocol,
+      protocol_name);
     return FALSE;
   }
 
@@ -913,7 +918,8 @@ update_visibility(struct account_info *info)
     return FALSE;
 
   OSSO_ABOOK_NOTE(TP, "visibility changed for %s (%d)",
-      tp_account_get_path_suffix(info->account), !!info->is_visible);
+                  tp_account_get_path_suffix(info->account),
+                  !!info->is_visible);
 
   if (info->is_visible)
     g_signal_emit(info->manager, signals[ACCOUNT_CREATED], 0, info->account);
@@ -940,7 +946,7 @@ osso_abook_account_manager_set_property(GObject *object, guint property_id,
                                         const GValue *value, GParamSpec *pspec)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(object));
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(object));
 
   switch (property_id)
   {
@@ -996,78 +1002,78 @@ osso_abook_account_manager_class_init(OssoABookAccountManagerClass *klass)
   klass->account_created = osso_abook_account_manager_account_created;
 
   g_object_class_install_property(
-        object_class, PROP_PRESENCE,
-        g_param_spec_uint(
-          "presence",
-          "Presence",
-          "Current presence status of this session",
-          0, G_MAXUINT, 0,
-          GTK_PARAM_READABLE));
+    object_class, PROP_PRESENCE,
+    g_param_spec_uint(
+      "presence",
+      "Presence",
+      "Current presence status of this session",
+      0, G_MAXUINT, 0,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_ACTIVE_ACCOUNTS_ONLY,
-        g_param_spec_boolean(
-          "active-accounts-only",
-          "Active Accounts Only",
-          "Don't report accounts which are disabled",
-          TRUE,
-          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    object_class, PROP_ACTIVE_ACCOUNTS_ONLY,
+    g_param_spec_boolean(
+      "active-accounts-only",
+      "Active Accounts Only",
+      "Don't report accounts which are disabled",
+      TRUE,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(
-        object_class, PROP_ALLOWED_ACCOUNTS,
-        g_param_spec_pointer(
-          "allowed-accounts",
-          "Allowed Accounts",
-          "Accounts which may appear in the model (if all additional filters allow them)",
-          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    object_class, PROP_ALLOWED_ACCOUNTS,
+    g_param_spec_pointer(
+      "allowed-accounts",
+      "Allowed Accounts",
+      "Accounts which may appear in the model (if all additional filters allow them)",
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(
-        object_class, PROP_ALLOWED_CAPABILITIES,
-        g_param_spec_flags(
-          "allowed-capabilities",
-          "Account Capabilities",
-          "Set of of accepted account capabilities",
-          OSSO_ABOOK_TYPE_CAPS_FLAGS, DEFAULT_ALLOWED_CAPABILITIES,
-          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    object_class, PROP_ALLOWED_CAPABILITIES,
+    g_param_spec_flags(
+      "allowed-capabilities",
+      "Account Capabilities",
+      "Set of of accepted account capabilities",
+      OSSO_ABOOK_TYPE_CAPS_FLAGS, DEFAULT_ALLOWED_CAPABILITIES,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(
-        object_class, PROP_REQUIRED_CAPABILITIES,
-        g_param_spec_flags(
-          "required-capabilities",
-          "Required Account Capabilities",
-          "Set of of required account capabilities",
-          OSSO_ABOOK_TYPE_CAPS_FLAGS, 0,
-          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    object_class, PROP_REQUIRED_CAPABILITIES,
+    g_param_spec_flags(
+      "required-capabilities",
+      "Required Account Capabilities",
+      "Set of of required account capabilities",
+      OSSO_ABOOK_TYPE_CAPS_FLAGS, 0,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(
-        object_class, PROP_ACCOUNT_PROTOCOL,
-        g_param_spec_string(
-          "account-protocol",
-          "Account Protocol",
-          "Accepted account protocol (NULL for all protocols)",
-          NULL,
-          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    object_class, PROP_ACCOUNT_PROTOCOL,
+    g_param_spec_string(
+      "account-protocol",
+      "Account Protocol",
+      "Accepted account protocol (NULL for all protocols)",
+      NULL,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_override_property(object_class, PROP_RUNNING, "running");
 
   signals[ACCOUNT_CREATED] =
-      g_signal_new("account-created", OSSO_ABOOK_TYPE_ACCOUNT_MANAGER,
-                   G_SIGNAL_RUN_FIRST,
-                   G_STRUCT_OFFSET(OssoABookAccountManagerClass,
-                                   account_created),
-                   0, NULL, g_cclosure_marshal_VOID__OBJECT,
-                   G_TYPE_NONE,
-                   1, TP_TYPE_ACCOUNT);
-  signals[ACCOUNT_CHANGED]=
-      g_signal_new("account-changed", OSSO_ABOOK_TYPE_ACCOUNT_MANAGER,
-                   G_SIGNAL_DETAILED | G_SIGNAL_RUN_FIRST,
-                   G_STRUCT_OFFSET(OssoABookAccountManagerClass,
-                                   account_changed),
-                   0, NULL, osso_abook_marshal_VOID__OBJECT_UINT_BOXED,
-                   G_TYPE_NONE,
-                   3, TP_TYPE_ACCOUNT, G_TYPE_UINT, G_TYPE_VALUE);
-  signals[ACCOUNT_REMOVED]=
-      g_signal_new("account-removed", OSSO_ABOOK_TYPE_ACCOUNT_MANAGER,
-                   G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET(OssoABookAccountManagerClass,
-                                   account_removed),
-                   0, NULL, g_cclosure_marshal_VOID__OBJECT,
-                   G_TYPE_NONE,
-                   1, TP_TYPE_ACCOUNT);
+    g_signal_new("account-created", OSSO_ABOOK_TYPE_ACCOUNT_MANAGER,
+                 G_SIGNAL_RUN_FIRST,
+                 G_STRUCT_OFFSET(OssoABookAccountManagerClass,
+                                 account_created),
+                 0, NULL, g_cclosure_marshal_VOID__OBJECT,
+                 G_TYPE_NONE,
+                 1, TP_TYPE_ACCOUNT);
+  signals[ACCOUNT_CHANGED] =
+    g_signal_new("account-changed", OSSO_ABOOK_TYPE_ACCOUNT_MANAGER,
+                 G_SIGNAL_DETAILED | G_SIGNAL_RUN_FIRST,
+                 G_STRUCT_OFFSET(OssoABookAccountManagerClass,
+                                 account_changed),
+                 0, NULL, osso_abook_marshal_VOID__OBJECT_UINT_BOXED,
+                 G_TYPE_NONE,
+                 3, TP_TYPE_ACCOUNT, G_TYPE_UINT, G_TYPE_VALUE);
+  signals[ACCOUNT_REMOVED] =
+    g_signal_new("account-removed", OSSO_ABOOK_TYPE_ACCOUNT_MANAGER,
+                 G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(OssoABookAccountManagerClass,
+                                 account_removed),
+                 0, NULL, g_cclosure_marshal_VOID__OBJECT,
+                 G_TYPE_NONE,
+                 1, TP_TYPE_ACCOUNT);
 }
 
 static void
@@ -1075,7 +1081,7 @@ get_roster_overrides(OssoABookAccountManagerPrivate *priv)
 {
   GKeyFile *keyfile = g_key_file_new();
   gchar *fname =
-      g_build_filename(osso_abook_get_work_dir(), "rosters.conf", NULL);
+    g_build_filename(osso_abook_get_work_dir(), "rosters.conf", NULL);
   gchar **groups;
   gchar **group;
 
@@ -1085,7 +1091,7 @@ get_roster_overrides(OssoABookAccountManagerPrivate *priv)
   g_free(fname);
   groups = g_key_file_get_groups(keyfile, NULL);
 
-  for(group = groups; *group; group++)
+  for (group = groups; *group; group++)
   {
     gchar *uri;
     const gchar *g = *group;
@@ -1096,12 +1102,12 @@ get_roster_overrides(OssoABookAccountManagerPrivate *priv)
       if (!priv->override_rosters)
       {
         priv->override_rosters =
-            g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+          g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
       }
 
       g_hash_table_insert(
-            priv->override_rosters,
-            g_strchomp(g_strchug(g_strdup(&g[strlen(OVERRIDE)]))), uri);
+        priv->override_rosters,
+        g_strchomp(g_strchug(g_strdup(&g[strlen(OVERRIDE)]))), uri);
     }
   }
 
@@ -1122,11 +1128,11 @@ emit_account_changed(struct account_info *info, GQuark property, GValue *value)
 
 static void
 status_changed_cb(TpAccount *account, guint old_status,
-                  guint       new_status,
-                  guint       reason,
-                  gchar      *dbus_error_name,
+                  guint new_status,
+                  guint reason,
+                  gchar *dbus_error_name,
                   GHashTable *details,
-                  gpointer    user_data)
+                  gpointer user_data)
 {
   struct account_info *info = user_data;
   GValue value = G_VALUE_INIT;
@@ -1139,15 +1145,15 @@ status_changed_cb(TpAccount *account, guint old_status,
 
 static void
 update_presence_status(TpAccount *account,
-                       guint      presence,
-                       gchar     *status,
-                       gchar     *status_message,
-                       gpointer   user_data)
+                       guint presence,
+                       gchar *status,
+                       gchar *status_message,
+                       gpointer user_data)
 {
   struct account_info *info = user_data;
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(info->manager);
-  GArray *array = g_array_sized_new (FALSE, FALSE, sizeof(GValue), 3);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(info->manager);
+  GArray *array = g_array_sized_new(FALSE, FALSE, sizeof(GValue), 3);
   struct account_info *roster_info;
   GHashTableIter iter;
   GValue value = G_VALUE_INIT;
@@ -1178,7 +1184,7 @@ update_presence_status(TpAccount *account,
   while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&roster_info))
   {
     TpConnectionPresenceType _presence =
-        tp_account_get_current_presence(roster_info->account, NULL, NULL);
+      tp_account_get_current_presence(roster_info->account, NULL, NULL);
 
     _presence = default_presence_convert(_presence);
 
@@ -1232,8 +1238,8 @@ account_connection_cb(GObject *gobject, GParamSpec *pspec, gpointer user_data)
                   tp_account_get_path_suffix(info->account));
 
   g_signal_handlers_disconnect_matched(
-        info->account, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-        account_connection_cb, info);
+    info->account, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+    account_connection_cb, info);
 
   info->is_visible = accept_account(info);
 
@@ -1248,7 +1254,7 @@ account_enabled_cb(TpAccountManager *am, TpAccount *account, gpointer user_data)
 {
   OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(user_data);
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   const gchar *path_suffix = tp_account_get_path_suffix(account);
   const gchar *protocol_name;
   gchar *vcard_field_id;
@@ -1268,11 +1274,10 @@ account_enabled_cb(TpAccountManager *am, TpAccount *account, gpointer user_data)
   if (!IS_EMPTY(protocol_name))
   {
     GList *protocol_rosters = g_list_copy(
-          g_hash_table_lookup(priv->protocol_rosters, protocol_name));
+      g_hash_table_lookup(priv->protocol_rosters, protocol_name));
 
     g_hash_table_insert(priv->protocol_rosters, g_strdup(protocol_name),
                         g_list_prepend(protocol_rosters, info));
-
   }
 
   vcard_field_id = create_account_vcard_field_id(info, priv);
@@ -1314,7 +1319,7 @@ account_removed_cb(TpAccountManager *am, TpAccount *account,
 {
   OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(user_data);
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   const gchar *path_suffix = tp_account_get_path_suffix(account);
   struct account_info *info;
   const gchar *protocol_name;
@@ -1333,11 +1338,10 @@ account_removed_cb(TpAccountManager *am, TpAccount *account,
   if (!IS_EMPTY(protocol_name))
   {
     GList *protocol_rosters = g_list_copy(
-          g_hash_table_lookup(priv->protocol_rosters, protocol_name));
+      g_hash_table_lookup(priv->protocol_rosters, protocol_name));
 
     g_hash_table_insert(priv->protocol_rosters, g_strdup(protocol_name),
                         g_list_remove(protocol_rosters, info));
-
   }
 
   vcard_field_id = create_account_vcard_field_id(info, priv);
@@ -1383,7 +1387,7 @@ am_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
   TpAccountManager *am = (TpAccountManager *)object;
   OssoABookAccountManager *manager = user_data;
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   GList *accounts, *l;
   GError *error = NULL;
 
@@ -1392,7 +1396,7 @@ am_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
   if (priv->error)
     g_clear_error(&priv->error);
 
-  if (!tp_proxy_prepare_finish (object, res, &error))
+  if (!tp_proxy_prepare_finish(object, res, &error))
   {
     OSSO_ABOOK_WARN("Error preparing AM: %s\n", error->message);
 
@@ -1408,7 +1412,7 @@ am_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
       account_validity_changed_cb(am, l->data, TRUE, manager);
     }
 
-    g_list_free_full (accounts, g_object_unref);
+    g_list_free_full(accounts, g_object_unref);
   }
 
   priv->is_ready = TRUE;
@@ -1419,21 +1423,21 @@ static void
 get_accounts(OssoABookAccountManager *manager)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
 
-  tp_proxy_prepare_async (priv->tp_am, NULL, am_prepared_cb, manager);
+  tp_proxy_prepare_async(priv->tp_am, NULL, am_prepared_cb, manager);
 
   priv->account_ready_id =
-      g_signal_connect(priv->tp_am, "account-validity-changed",
-                       G_CALLBACK(account_validity_changed_cb), manager);
+    g_signal_connect(priv->tp_am, "account-validity-changed",
+                     G_CALLBACK(account_validity_changed_cb), manager);
 
   priv->account_removed_id =
-      g_signal_connect(priv->tp_am, "account-removed",
-                       G_CALLBACK(account_removed_cb), manager);
+    g_signal_connect(priv->tp_am, "account-removed",
+                     G_CALLBACK(account_removed_cb), manager);
 
   priv->account_enabled_id =
-      g_signal_connect(priv->tp_am, "account-enabled",
-                       G_CALLBACK(account_enabled_cb), manager);
+    g_signal_connect(priv->tp_am, "account-enabled",
+                     G_CALLBACK(account_enabled_cb), manager);
 }
 
 static void
@@ -1441,14 +1445,14 @@ cms_ready_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 {
   OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(user_data);
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
   GError *error = NULL;
-  GList *cms = tp_list_connection_managers_finish (res, &error);
+  GList *cms = tp_list_connection_managers_finish(res, &error);
 
   if (error != NULL)
   {
     OSSO_ABOOK_WARN("Error getting list of CMs: %s", error->message);
-    g_error_free (error);
+    g_error_free(error);
   }
   else if (cms == NULL)
     OSSO_ABOOK_WARN("No Telepathy connection managers found");
@@ -1501,9 +1505,10 @@ create_account_manager(TpDBusDaemon *tp_dbus)
 
   factory = tp_simple_client_factory_new(tp_dbus);
   tp_simple_client_factory_add_account_features(factory, account_features);
-  tp_simple_client_factory_add_connection_features(factory, connection_features);
+  tp_simple_client_factory_add_connection_features(factory,
+                                                   connection_features);
 
-  manager = tp_account_manager_new_with_factory (factory);
+  manager = tp_account_manager_new_with_factory(factory);
   tp_account_manager_set_default(manager);
 
   g_object_unref(factory);
@@ -1515,16 +1520,16 @@ static void
 osso_abook_account_manager_init(OssoABookAccountManager *manager)
 {
   OssoABookAccountManagerPrivate *priv =
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
 
   priv->rosters = g_hash_table_new_full(
-        g_str_hash, g_str_equal, g_free, (GDestroyNotify)account_info_unref);
+    g_str_hash, g_str_equal, g_free, (GDestroyNotify)account_info_unref);
   priv->protocol_rosters = g_hash_table_new_full(
-        g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_list_free);
+    g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_list_free);
   priv->account_by_vcard_field = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                        g_free, NULL);
   priv->protocols =
-      g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
+    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
 
   priv->tp_dbus = tp_dbus_daemon_dup(NULL);
   priv->tp_am = create_account_manager(priv->tp_dbus);
@@ -1548,7 +1553,7 @@ osso_abook_account_manager_get_presence(OssoABookAccountManager *manager)
 
 gboolean
 osso_abook_account_manager_is_active_accounts_only(
-    OssoABookAccountManager *manager)
+  OssoABookAccountManager *manager)
 {
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1559,8 +1564,7 @@ osso_abook_account_manager_is_active_accounts_only(
 }
 
 GList *
-osso_abook_account_manager_get_allowed_accounts(
-    OssoABookAccountManager *manager)
+osso_abook_account_manager_get_allowed_accounts(OssoABookAccountManager *manager)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
 
@@ -1569,7 +1573,8 @@ osso_abook_account_manager_get_allowed_accounts(
 
 void
 osso_abook_account_manager_set_allowed_accounts(
-    OssoABookAccountManager *manager, GList *accounts)
+  OssoABookAccountManager *manager,
+  GList *accounts)
 {
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1583,7 +1588,7 @@ osso_abook_account_manager_set_allowed_accounts(
 
 OssoABookCapsFlags
 osso_abook_account_manager_get_allowed_capabilities(
-    OssoABookAccountManager *manager)
+  OssoABookAccountManager *manager)
 {
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1592,12 +1597,12 @@ osso_abook_account_manager_get_allowed_capabilities(
                        DEFAULT_ALLOWED_CAPABILITIES);
 
   return OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->allowed_capabilities;
-
 }
 
 void
 osso_abook_account_manager_set_allowed_capabilities(
-    OssoABookAccountManager *manager, OssoABookCapsFlags caps)
+  OssoABookAccountManager *manager,
+  OssoABookCapsFlags caps)
 {
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1611,7 +1616,7 @@ osso_abook_account_manager_set_allowed_capabilities(
 
 OssoABookCapsFlags
 osso_abook_account_manager_get_required_capabilities(
-    OssoABookAccountManager *manager)
+  OssoABookAccountManager *manager)
 {
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1623,7 +1628,8 @@ osso_abook_account_manager_get_required_capabilities(
 
 void
 osso_abook_account_manager_set_required_capabilities(
-    OssoABookAccountManager *manager, OssoABookCapsFlags caps)
+  OssoABookAccountManager *manager,
+  OssoABookCapsFlags caps)
 {
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1636,8 +1642,7 @@ osso_abook_account_manager_set_required_capabilities(
 }
 
 const char *
-osso_abook_account_manager_get_account_protocol(
-    OssoABookAccountManager *manager)
+osso_abook_account_manager_get_account_protocol(OssoABookAccountManager *manager)
 {
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1649,7 +1654,8 @@ osso_abook_account_manager_get_account_protocol(
 
 void
 osso_abook_account_manager_set_account_protocol(
-    OssoABookAccountManager *manager, const char *protocol)
+  OssoABookAccountManager *manager,
+  const char *protocol)
 {
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1707,7 +1713,7 @@ static gboolean
 match_vcard_field(gpointer key, gpointer value, gpointer user_data)
 {
   const gchar *vcf = tp_protocol_get_vcard_field(value);
-  gboolean rv  = FALSE;
+  gboolean rv = FALSE;
 
   if (vcf)
   {
@@ -1722,7 +1728,8 @@ match_vcard_field(gpointer key, gpointer value, gpointer user_data)
 
 gboolean
 osso_abook_account_manager_has_primary_vcard_field(
-    OssoABookAccountManager *manager, const char *vcard_field)
+  OssoABookAccountManager *manager,
+  const char *vcard_field)
 {
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1731,14 +1738,15 @@ osso_abook_account_manager_has_primary_vcard_field(
   g_return_val_if_fail(NULL != vcard_field, FALSE);
 
   return
-      g_hash_table_find(
-        OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols,
-        match_vcard_field, (gpointer)vcard_field) != NULL;
+    g_hash_table_find(
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols,
+    match_vcard_field, (gpointer)vcard_field) != NULL;
 }
 
 gboolean
 osso_abook_account_manager_has_secondary_vcard_field(
-    OssoABookAccountManager *manager, const char *vcard_field)
+  OssoABookAccountManager *manager,
+  const char *vcard_field)
 {
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1747,14 +1755,15 @@ osso_abook_account_manager_has_secondary_vcard_field(
   g_return_val_if_fail(NULL != vcard_field, FALSE);
 
   return g_list_find_custom(
-        OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->uri_schemes,
-        vcard_field, (GCompareFunc)&strcmp) != NULL;
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->uri_schemes,
+    vcard_field, (GCompareFunc)&strcmp) != NULL;
 }
 
 TpAccount *
 osso_abook_account_manager_lookup_by_vcard_field(
-    OssoABookAccountManager *manager, const char *vcard_field,
-    const char *vcard_value)
+  OssoABookAccountManager *manager,
+  const char *vcard_field,
+  const char *vcard_value)
 {
   OssoABookAccountManagerPrivate *priv;
   gchar *id;
@@ -1779,7 +1788,7 @@ osso_abook_account_manager_lookup_by_vcard_field(
   g_free(id);
 
   if (info)
-      account = info->account;
+    account = info->account;
 
   return account;
 }
@@ -1820,7 +1829,7 @@ _tp_account_is_enabled(TpAccount *account, gpointer user_data)
 
 GList *
 osso_abook_account_manager_list_enabled_accounts(
-    OssoABookAccountManager *manager)
+  OssoABookAccountManager *manager)
 {
   return osso_abook_account_manager_list_accounts(manager,
                                                   _tp_account_is_enabled, NULL);
@@ -1882,10 +1891,10 @@ osso_abook_account_manager_list_protocols(OssoABookAccountManager *manager,
 
     if (attr_name)
     {
-       const gchar *vcf = tp_protocol_get_vcard_field(protocol);
+      const gchar *vcf = tp_protocol_get_vcard_field(protocol);
 
-       if (strcmp(attr_name, vcf))
-         continue;
+      if (strcmp(attr_name, vcf))
+        continue;
     }
 
     if (g_list_find(protocols, protocol))
@@ -1901,12 +1910,13 @@ osso_abook_account_manager_list_protocols(OssoABookAccountManager *manager,
 
 TpProtocol *
 osso_abook_account_manager_get_account_protocol_object(
-    OssoABookAccountManager *manager, TpAccount *account)
+  OssoABookAccountManager *manager,
+  TpAccount *account)
 {
   g_return_val_if_fail(account != NULL, NULL);
 
   return osso_abook_account_manager_get_protocol_object(
-        manager, tp_account_get_protocol_name(account));
+    manager, tp_account_get_protocol_name(account));
 }
 
 GList *
@@ -1958,7 +1968,8 @@ osso_abook_account_manager_get_protocol_object(OssoABookAccountManager *manager,
 
 TpProtocol *
 osso_abook_account_manager_get_protocol_object_by_vcard_field(
-    OssoABookAccountManager *manager, const char *vcard_field)
+  OssoABookAccountManager *manager,
+  const char *vcard_field)
 {
   TpProtocol *protocol;
 
@@ -1969,9 +1980,9 @@ osso_abook_account_manager_get_protocol_object_by_vcard_field(
   g_return_val_if_fail(NULL != vcard_field, NULL);
 
   protocol =
-      g_hash_table_find(
-        OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols,
-        match_vcard_field, (gpointer)vcard_field);
+    g_hash_table_find(
+      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols,
+      match_vcard_field, (gpointer)vcard_field);
 
   if (protocol)
     g_object_ref(protocol);
@@ -1995,7 +2006,7 @@ osso_abook_account_manager_get_protocols(OssoABookAccountManager *manager)
   g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
 
   return g_hash_table_get_values(
-        OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols);
+    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols);
 }
 
 GList *
@@ -2022,7 +2033,7 @@ osso_abook_account_manager_list_by_vcard_field(OssoABookAccountManager *manager,
     if (vcf && !strcmp(vcard_field, vcf))
     {
       GList *rosters = osso_abook_account_manager_list_by_protocol(
-            manager, tp_protocol_get_name(protocol));
+        manager, tp_protocol_get_name(protocol));
 
       rv = g_list_concat(rosters, rv);
     }

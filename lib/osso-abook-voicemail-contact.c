@@ -1,20 +1,21 @@
-#include "osso-abook-voicemail-contact.h"
-#include "osso-abook-gconf-contact.h"
 #include "osso-abook-avatar.h"
+#include "osso-abook-gconf-contact.h"
 #include "osso-abook-settings.h"
+#include "osso-abook-voicemail-contact.h"
 
 #include "config.h"
 
-static void osso_abook_voicemail_contact_osso_abook_avatar_iface_init(
-    OssoABookAvatarIface *iface);
+static void
+osso_abook_voicemail_contact_osso_abook_avatar_iface_init(
+  OssoABookAvatarIface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(
   OssoABookVoicemailContact,
   osso_abook_voicemail_contact,
   OSSO_ABOOK_TYPE_GCONF_CONTACT,
   G_IMPLEMENT_INTERFACE(
-      OSSO_ABOOK_TYPE_AVATAR,
-      osso_abook_voicemail_contact_osso_abook_avatar_iface_init);
+    OSSO_ABOOK_TYPE_AVATAR,
+    osso_abook_voicemail_contact_osso_abook_avatar_iface_init);
 );
 
 static const char *
@@ -25,10 +26,10 @@ osso_abook_voicemail_contact_get_fallback_icon_name(OssoABookAvatar *avatar)
 
 static void
 osso_abook_voicemail_contact_osso_abook_avatar_iface_init(
-    OssoABookAvatarIface *iface)
+  OssoABookAvatarIface *iface)
 {
   iface->get_fallback_icon_name =
-      osso_abook_voicemail_contact_get_fallback_icon_name;
+    osso_abook_voicemail_contact_get_fallback_icon_name;
 }
 
 static void
@@ -44,7 +45,7 @@ osso_abook_voicemail_contact_async_commit(OssoABookContact *contact,
                                           gpointer user_data)
 {
   return OSSO_ABOOK_CONTACT_CLASS(osso_abook_voicemail_contact_parent_class)->
-      async_commit(contact, book, callback, user_data);
+         async_commit(contact, book, callback, user_data);
 }
 
 static char *
@@ -64,14 +65,14 @@ osso_abook_voicemail_contact_class_init(OssoABookVoicemailContactClass *klass)
 {
   OssoABookContactClass *contact_class = OSSO_ABOOK_CONTACT_CLASS(klass);
   OssoABookGconfContactClass *gconf_contact_class =
-      OSSO_ABOOK_GCONF_CONTACT_CLASS(klass);
+    OSSO_ABOOK_GCONF_CONTACT_CLASS(klass);
 
   contact_class->async_commit = osso_abook_voicemail_contact_async_commit;
   contact_class->get_default_name =
-      osso_abook_voicemail_contact_get_default_name;
+    osso_abook_voicemail_contact_get_default_name;
 
   gconf_contact_class->get_gconf_key =
-      osso_abook_voicemail_contact_get_gconf_key;
+    osso_abook_voicemail_contact_get_gconf_key;
 }
 
 OssoABookVoicemailContact *
@@ -84,6 +85,7 @@ OssoABookVoicemailContact *
 osso_abook_voicemail_contact_get_default()
 {
   static OssoABookVoicemailContact *contact = NULL;
+
   if (contact)
     return g_object_ref(contact);
 
@@ -96,12 +98,12 @@ osso_abook_voicemail_contact_get_default()
 
 char *
 osso_abook_voicemail_contact_get_preferred_number(
-    OssoABookVoicemailContact *contact)
+  OssoABookVoicemailContact *contact)
 {
   char *tel;
 
   g_return_val_if_fail(
-        OSSO_ABOOK_IS_VOICEMAIL_CONTACT(contact) || !contact, NULL);
+    OSSO_ABOOK_IS_VOICEMAIL_CONTACT(contact) || !contact, NULL);
 
   if (!contact)
     contact = osso_abook_voicemail_contact_get_default();

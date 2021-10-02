@@ -1,12 +1,12 @@
 #include <gtk/gtkprivate.h>
 
-#include "osso-abook-roster.h"
-#include "osso-abook-waitable.h"
-#include "osso-abook-utils-private.h"
-#include "osso-abook-enums.h"
-#include "osso-abook-debug.h"
 #include "eds.h"
 #include "osso-abook-account-manager.h"
+#include "osso-abook-debug.h"
+#include "osso-abook-enums.h"
+#include "osso-abook-roster.h"
+#include "osso-abook-utils-private.h"
+#include "osso-abook-waitable.h"
 
 #include "config.h"
 
@@ -52,11 +52,11 @@ struct _OssoABookRosterPrivate
 typedef struct _OssoABookRosterPrivate OssoABookRosterPrivate;
 
 #define OSSO_ABOOK_ROSTER_PRIVATE(roster) \
-                ((OssoABookRosterPrivate *)osso_abook_roster_get_instance_private(roster))
+  ((OssoABookRosterPrivate *)osso_abook_roster_get_instance_private(roster))
 
 static void
-osso_abook_roster_osso_abook_waitable_iface_init(
-    OssoABookWaitableIface *result, gpointer data);
+osso_abook_roster_osso_abook_waitable_iface_init(OssoABookWaitableIface *result,
+                                                 gpointer data);
 
 static void
 osso_abook_roster_set_book_view(OssoABookRoster *roster, EBookView *book_view);
@@ -66,8 +66,8 @@ G_DEFINE_TYPE_WITH_CODE(
   osso_abook_roster,
   G_TYPE_OBJECT,
   G_IMPLEMENT_INTERFACE(
-      OSSO_ABOOK_TYPE_WAITABLE,
-      osso_abook_roster_osso_abook_waitable_iface_init);
+    OSSO_ABOOK_TYPE_WAITABLE,
+    osso_abook_roster_osso_abook_waitable_iface_init);
   G_ADD_PRIVATE(OssoABookRoster);
 );
 
@@ -111,8 +111,7 @@ osso_abook_roster_osso_abook_waitable_iface_init(OssoABookWaitableIface *result,
 
 static void
 osso_abook_roster_init(OssoABookRoster *roster)
-{
-}
+{}
 
 static void
 osso_abook_roster_set_property(GObject *object, guint property_id,
@@ -145,8 +144,9 @@ osso_abook_roster_set_property(GObject *object, guint property_id,
 
       if (osso_abook_roster_is_running(roster))
       {
-        g_warning("Changing the name order of %s doesn't have any effect until the roster is restarted.",
-                  osso_abook_roster_get_book_uri(roster));
+        g_warning(
+          "Changing the name order of %s doesn't have any effect until the roster is restarted.",
+          osso_abook_roster_get_book_uri(roster));
       }
 
       if (name_order != priv->name_order)
@@ -155,7 +155,7 @@ osso_abook_roster_set_property(GObject *object, guint property_id,
       break;
     }
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -193,7 +193,7 @@ osso_abook_roster_get_property(GObject *object, guint property_id,
       g_value_set_boolean(value, osso_abook_roster_is_running(roster));
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -276,28 +276,29 @@ osso_abook_roster_contacts_removed(OssoABookRoster *roster, const char **uids)
 
 static void
 osso_abook_roster_status_message(OssoABookRoster *roster, const char *message)
-{
-}
+{}
 
 static void
 osso_abook_roster_sequence_complete(OssoABookRoster *roster,
                                     EBookViewStatus status)
-{
-}
+{}
 
 static void
 osso_abook_roster_real_start(OssoABookRoster *roster)
 {
   OssoABookRosterPrivate *priv = OSSO_ABOOK_ROSTER_PRIVATE(roster);
+
 #if 0
   const gchar *sort_order;
 #endif
+
   if (!priv->book_view)
     return;
 
   OSSO_ABOOK_NOTE(EDS, "starting book view for %s (view=%p)\n",
                   osso_abook_roster_get_book_uri(roster), priv->book_view);
 #if 0
+
   switch (priv->name_order)
   {
     case OSSO_ABOOK_NAME_ORDER_FIRST:
@@ -317,7 +318,8 @@ osso_abook_roster_real_start(OssoABookRoster *roster)
 
   e_book_view_set_sort_order(priv->book_view, sort_order);
 #else
-  #pragma message("FIXME!!! - e_book_view_set_sort_order is Maemo specific, find how to do it upstream")
+  #pragma \
+  message("FIXME!!! - e_book_view_set_sort_order is Maemo specific, find how to do it upstream")
 #endif
 
   e_book_view_start(priv->book_view);
@@ -351,119 +353,119 @@ osso_abook_roster_class_init(OssoABookRosterClass *klass)
   klass->stop = osso_abook_roster_real_stop;
 
   g_object_class_install_property(
-        object_class, PROP_NAME,
-        g_param_spec_string(
-                 "name",
-                 "Name",
-                 "The name of this roster",
-                 0,
-                 GTK_PARAM_READWRITE | G_PARAM_PRIVATE | G_PARAM_CONSTRUCT_ONLY)
-        );
+    object_class, PROP_NAME,
+    g_param_spec_string(
+      "name",
+      "Name",
+      "The name of this roster",
+      0,
+      GTK_PARAM_READWRITE | G_PARAM_PRIVATE | G_PARAM_CONSTRUCT_ONLY)
+  );
   g_object_class_install_property(
-        object_class, PROP_ACCOUNT,
-        g_param_spec_object(
-                 "account",
-                 "Account",
-                 "The Telepathy account of this roster",
-                 TP_TYPE_ACCOUNT,
-                 GTK_PARAM_READABLE));
+    object_class, PROP_ACCOUNT,
+    g_param_spec_object(
+      "account",
+      "Account",
+      "The Telepathy account of this roster",
+      TP_TYPE_ACCOUNT,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_VCARD_FIELD,
-        g_param_spec_string(
-                 "vcard-field",
-                 "VCard Field",
-                 "Name of the vCard field associated with this roster",
-                 0,
-                 GTK_PARAM_READWRITE | G_PARAM_PRIVATE | G_PARAM_CONSTRUCT_ONLY)
-        );
+    object_class, PROP_VCARD_FIELD,
+    g_param_spec_string(
+      "vcard-field",
+      "VCard Field",
+      "Name of the vCard field associated with this roster",
+      0,
+      GTK_PARAM_READWRITE | G_PARAM_PRIVATE | G_PARAM_CONSTRUCT_ONLY)
+  );
   g_object_class_install_property(
-        object_class, PROP_BOOK_VIEW,
-        g_param_spec_object(
-                 "book-view",
-                 "Master Book View",
-                 "The master address book view",
-                 E_TYPE_BOOK_VIEW,
-                 GTK_PARAM_READWRITE | G_PARAM_PRIVATE));
+    object_class, PROP_BOOK_VIEW,
+    g_param_spec_object(
+      "book-view",
+      "Master Book View",
+      "The master address book view",
+      E_TYPE_BOOK_VIEW,
+      GTK_PARAM_READWRITE | G_PARAM_PRIVATE));
   g_object_class_install_property(
-        object_class, PROP_BOOK_URI,
-        g_param_spec_string(
-                 "book-uri",
-                 "Book URI",
-                 "The URI of the master address book",
-                 0,
-                 GTK_PARAM_READABLE));
+    object_class, PROP_BOOK_URI,
+    g_param_spec_string(
+      "book-uri",
+      "Book URI",
+      "The URI of the master address book",
+      0,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_MASTER_BOOK,
-        g_param_spec_object(
-                 "book",
-                 "Master Book",
-                 "The master address book",
-                 E_TYPE_BOOK,
-                 GTK_PARAM_READWRITE | G_PARAM_PRIVATE | G_PARAM_CONSTRUCT_ONLY)
-        );
+    object_class, PROP_MASTER_BOOK,
+    g_param_spec_object(
+      "book",
+      "Master Book",
+      "The master address book",
+      E_TYPE_BOOK,
+      GTK_PARAM_READWRITE | G_PARAM_PRIVATE | G_PARAM_CONSTRUCT_ONLY)
+  );
   g_object_class_install_property(
-        object_class, PROP_NAME_ORDER,
-        g_param_spec_enum(
-                  "name-order",
-                  "Name Order",
-                  "The preferred order for contacts-added signals",
-                  OSSO_ABOOK_TYPE_NAME_ORDER,
-                  0,
-                  GTK_PARAM_READWRITE | G_PARAM_PRIVATE | G_PARAM_CONSTRUCT));
+    object_class, PROP_NAME_ORDER,
+    g_param_spec_enum(
+      "name-order",
+      "Name Order",
+      "The preferred order for contacts-added signals",
+      OSSO_ABOOK_TYPE_NAME_ORDER,
+      0,
+      GTK_PARAM_READWRITE | G_PARAM_PRIVATE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(
-        object_class, PROP_RUNNING,
-        g_param_spec_boolean(
-                  "running",
-                  "Running",
-                  "Wether this roster is emitting events already",
-                  FALSE,
-                  GTK_PARAM_READABLE));
+    object_class, PROP_RUNNING,
+    g_param_spec_boolean(
+      "running",
+      "Running",
+      "Wether this roster is emitting events already",
+      FALSE,
+      GTK_PARAM_READABLE));
 
   signals[CONTACTS_ADDED] =
-      g_signal_new("contacts-added",
-                   OSSO_ABOOK_TYPE_ROSTER,
-                   G_SIGNAL_RUN_CLEANUP | G_SIGNAL_RUN_LAST |
-                   G_SIGNAL_RUN_FIRST,
-                   G_STRUCT_OFFSET(OssoABookRosterClass, contacts_added),
-                   0, NULL, g_cclosure_marshal_VOID__POINTER,
-                   G_TYPE_NONE,
-                   1, G_TYPE_POINTER);
+    g_signal_new("contacts-added",
+                 OSSO_ABOOK_TYPE_ROSTER,
+                 G_SIGNAL_RUN_CLEANUP | G_SIGNAL_RUN_LAST |
+                 G_SIGNAL_RUN_FIRST,
+                 G_STRUCT_OFFSET(OssoABookRosterClass, contacts_added),
+                 0, NULL, g_cclosure_marshal_VOID__POINTER,
+                 G_TYPE_NONE,
+                 1, G_TYPE_POINTER);
   signals[CONTACTS_CHANGED] =
-      g_signal_new("contacts-changed",
-                   OSSO_ABOOK_TYPE_ROSTER,
-                   G_SIGNAL_DETAILED | G_SIGNAL_RUN_CLEANUP |
-                   G_SIGNAL_RUN_LAST | G_SIGNAL_RUN_FIRST,
-                   G_STRUCT_OFFSET(OssoABookRosterClass, contacts_changed),
-                   0, NULL, g_cclosure_marshal_VOID__POINTER,
-                   G_TYPE_NONE,
-                   1, G_TYPE_POINTER);
+    g_signal_new("contacts-changed",
+                 OSSO_ABOOK_TYPE_ROSTER,
+                 G_SIGNAL_DETAILED | G_SIGNAL_RUN_CLEANUP |
+                 G_SIGNAL_RUN_LAST | G_SIGNAL_RUN_FIRST,
+                 G_STRUCT_OFFSET(OssoABookRosterClass, contacts_changed),
+                 0, NULL, g_cclosure_marshal_VOID__POINTER,
+                 G_TYPE_NONE,
+                 1, G_TYPE_POINTER);
   signals[CONTACTS_REMOVED] =
-      g_signal_new("contacts-removed",
-                   OSSO_ABOOK_TYPE_ROSTER,
-                   G_SIGNAL_RUN_CLEANUP | G_SIGNAL_RUN_LAST |
-                   G_SIGNAL_RUN_FIRST,
-                   G_STRUCT_OFFSET(OssoABookRosterClass, contacts_removed),
-                   0, NULL, g_cclosure_marshal_VOID__POINTER,
-                   G_TYPE_NONE,
-                   1, G_TYPE_POINTER);
+    g_signal_new("contacts-removed",
+                 OSSO_ABOOK_TYPE_ROSTER,
+                 G_SIGNAL_RUN_CLEANUP | G_SIGNAL_RUN_LAST |
+                 G_SIGNAL_RUN_FIRST,
+                 G_STRUCT_OFFSET(OssoABookRosterClass, contacts_removed),
+                 0, NULL, g_cclosure_marshal_VOID__POINTER,
+                 G_TYPE_NONE,
+                 1, G_TYPE_POINTER);
   signals[SEQUENCE_COMPLETE] =
-      g_signal_new("sequence-complete",
-                   OSSO_ABOOK_TYPE_ROSTER,
-                   G_SIGNAL_RUN_CLEANUP | G_SIGNAL_RUN_LAST |
-                   G_SIGNAL_RUN_FIRST,
-                   G_STRUCT_OFFSET(OssoABookRosterClass, sequence_complete),
-                   0, NULL, g_cclosure_marshal_VOID__UINT,
-                   G_TYPE_NONE,
-                   1, G_TYPE_UINT);
+    g_signal_new("sequence-complete",
+                 OSSO_ABOOK_TYPE_ROSTER,
+                 G_SIGNAL_RUN_CLEANUP | G_SIGNAL_RUN_LAST |
+                 G_SIGNAL_RUN_FIRST,
+                 G_STRUCT_OFFSET(OssoABookRosterClass, sequence_complete),
+                 0, NULL, g_cclosure_marshal_VOID__UINT,
+                 G_TYPE_NONE,
+                 1, G_TYPE_UINT);
   signals[STATUS_MESSAGE] =
-      g_signal_new("status-message",
-                   OSSO_ABOOK_TYPE_ROSTER,
-                   G_SIGNAL_RUN_CLEANUP | G_SIGNAL_RUN_LAST |
-                   G_SIGNAL_RUN_FIRST,
-                   G_STRUCT_OFFSET(OssoABookRosterClass, status_message),
-                   0, NULL, g_cclosure_marshal_VOID__STRING,
-                   G_TYPE_NONE,
-                   1, G_TYPE_STRING);
+    g_signal_new("status-message",
+                 OSSO_ABOOK_TYPE_ROSTER,
+                 G_SIGNAL_RUN_CLEANUP | G_SIGNAL_RUN_LAST |
+                 G_SIGNAL_RUN_FIRST,
+                 G_STRUCT_OFFSET(OssoABookRosterClass, status_message),
+                 0, NULL, g_cclosure_marshal_VOID__STRING,
+                 G_TYPE_NONE,
+                 1, G_TYPE_STRING);
 
   master = g_quark_from_static_string("master");
 }
@@ -491,7 +493,7 @@ contacts_added_cb(EBookView *view, GList *vcards, OssoABookRoster *roster)
   {
     gchar *vcs = e_vcard_to_string(E_VCARD(l->data), EVC_FORMAT_VCARD_30);
     OssoABookContact *contact = osso_abook_contact_new_from_vcard(
-          e_contact_get_const(l->data, E_CONTACT_UID), vcs);
+      e_contact_get_const(l->data, E_CONTACT_UID), vcs);
 
     OSSO_ABOOK_DUMP_VCARD_STRING(EDS, vcs, "adding");
     g_free(vcs);
@@ -516,7 +518,7 @@ contacts_changed_cb(EBookView *view, GList *vcards, OssoABookRoster *roster)
   {
     gchar *vcard = e_vcard_to_string(E_VCARD(l->data), EVC_FORMAT_VCARD_30);
     OssoABookContact *contact = osso_abook_contact_new_from_vcard(
-          e_contact_get_const(l->data, E_CONTACT_UID), vcard);
+      e_contact_get_const(l->data, E_CONTACT_UID), vcard);
 
     g_free(vcard);
 
@@ -623,7 +625,7 @@ osso_abook_roster_set_book_view(OssoABookRoster *roster, EBookView *book_view)
     not in upstream EDS
 
     e_book_view_set_parse_vcards(priv->book_view, FALSE);
-*/
+ */
     _osso_abook_book_view_set_freezable(priv->book_view, TRUE);
     g_signal_connect(priv->book_view, "contacts-added",
                      G_CALLBACK(contacts_added_cb), roster);
@@ -639,6 +641,7 @@ osso_abook_roster_set_book_view(OssoABookRoster *roster, EBookView *book_view)
     g_signal_connect_swapped(e_book_view_get_book(priv->book_view),
                              "backend-died", G_CALLBACK(backend_died_cb),
                              roster);
+
     if (priv->is_running)
       osso_abook_roster_real_start(roster);
   }
@@ -656,7 +659,7 @@ osso_abook_roster_get_book(OssoABookRoster *roster)
   OssoABookRosterPrivate *priv;
   EBook *book;
 
-  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER (roster), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER(roster), NULL);
 
   priv = OSSO_ABOOK_ROSTER_PRIVATE(roster);
 
@@ -671,7 +674,7 @@ osso_abook_roster_get_book(OssoABookRoster *roster)
 const char *
 osso_abook_roster_get_name(OssoABookRoster *roster)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER (roster), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER(roster), NULL);
 
   return OSSO_ABOOK_ROSTER_PRIVATE(roster)->name;
 }
@@ -679,7 +682,7 @@ osso_abook_roster_get_name(OssoABookRoster *roster)
 OssoABookNameOrder
 osso_abook_roster_get_name_order(OssoABookRoster *roster)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER (roster),
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER(roster),
                        OSSO_ABOOK_NAME_ORDER_FIRST);
 
   return OSSO_ABOOK_ROSTER_PRIVATE(roster)->name_order;
@@ -688,7 +691,7 @@ osso_abook_roster_get_name_order(OssoABookRoster *roster)
 const char *
 osso_abook_roster_get_vcard_field(OssoABookRoster *roster)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER (roster), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER(roster), NULL);
 
   return OSSO_ABOOK_ROSTER_PRIVATE(roster)->vcard_field;
 }
@@ -696,7 +699,7 @@ osso_abook_roster_get_vcard_field(OssoABookRoster *roster)
 EBookView *
 osso_abook_roster_get_book_view(OssoABookRoster *roster)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER (roster), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER(roster), NULL);
 
   return OSSO_ABOOK_ROSTER_PRIVATE(roster)->book_view;
 }
@@ -706,13 +709,13 @@ osso_abook_roster_get_book_uri(OssoABookRoster *roster)
 {
   EBook *book;
 
-  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER (roster), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER(roster), NULL);
 
   book = osso_abook_roster_get_book(roster);
 
   if (book)
   {
-    ESource *source = e_book_get_source (book);
+    ESource *source = e_book_get_source(book);
 
     if (source)
       return e_source_get_uid(source);
@@ -724,7 +727,7 @@ osso_abook_roster_get_book_uri(OssoABookRoster *roster)
 gboolean
 osso_abook_roster_is_running(OssoABookRoster *roster)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER (roster), FALSE);
+  g_return_val_if_fail(OSSO_ABOOK_IS_ROSTER(roster), FALSE);
 
   return OSSO_ABOOK_ROSTER_PRIVATE(roster)->is_running;
 }
@@ -837,7 +840,7 @@ osso_abook_roster_get_protocol(OssoABookRoster *roster)
   if (account)
   {
     TpProtocol *protocol =
-        osso_abook_account_manager_get_account_protocol_object(NULL, account);
+      osso_abook_account_manager_get_account_protocol_object(NULL, account);
 
     return g_object_ref(protocol);
   }

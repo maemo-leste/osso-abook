@@ -2,8 +2,8 @@
 
 #include "config.h"
 
-#include "osso-abook-contact-view.h"
 #include "osso-abook-all-group.h"
+#include "osso-abook-contact-view.h"
 
 struct _OssoABookContactViewPrivate
 {
@@ -14,12 +14,14 @@ struct _OssoABookContactViewPrivate
 
 typedef struct _OssoABookContactViewPrivate OssoABookContactViewPrivate;
 
-enum {
+enum
+{
   PROP_MINIMUM_SELECTION = 0x1,
   PROP_MAXIMUM_SELECTION
 };
 
-enum {
+enum
+{
   CONTACT_ACTIVATED,
   SELECTION_CHANGED,
   LAST_SIGNAL
@@ -38,7 +40,7 @@ osso_abook_contact_view_dispose(GObject *object)
 {
   OssoABookContactView *view = OSSO_ABOOK_CONTACT_VIEW(object);
   OssoABookContactViewPrivate *priv =
-      osso_abook_contact_view_get_instance_private(view);
+    osso_abook_contact_view_get_instance_private(view);
 
   if (priv->master_contact)
   {
@@ -82,7 +84,6 @@ hildon_row_tapped_cb(GtkTreeView *tree_view, GtkTreePath *path,
     if (master_contact)
       g_object_unref(master_contact);
   }
-
 }
 
 static void
@@ -118,7 +119,7 @@ osso_abook_contact_view_set_property(GObject *object, guint property_id,
 {
   OssoABookContactView *view = OSSO_ABOOK_CONTACT_VIEW(object);
   OssoABookContactViewPrivate *priv =
-      osso_abook_contact_view_get_instance_private(view);
+    osso_abook_contact_view_get_instance_private(view);
 
   switch (property_id)
   {
@@ -131,7 +132,7 @@ osso_abook_contact_view_set_property(GObject *object, guint property_id,
 
       priv->maximum_selection = g_value_get_uint(value);
       selection = osso_abook_tree_view_get_tree_selection(
-            OSSO_ABOOK_TREE_VIEW(view));
+        OSSO_ABOOK_TREE_VIEW(view));
 
       if (priv->maximum_selection < 2)
       {
@@ -151,10 +152,11 @@ osso_abook_contact_view_set_property(GObject *object, guint property_id,
                                          HILDON_UI_MODE_EDIT);
         gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
       }
+
       break;
     }
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -163,7 +165,7 @@ static void
 osso_abook_contact_view_get_property(GObject *object, guint property_id,
                                      GValue *value, GParamSpec *pspec)
 {
-  OssoABookContactView *view =  (OssoABookContactView *)object;
+  OssoABookContactView *view = (OssoABookContactView *)object;
 
   switch (property_id)
   {
@@ -176,7 +178,7 @@ osso_abook_contact_view_get_property(GObject *object, guint property_id,
                        osso_abook_contact_view_get_maximum_selection(view));
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -192,49 +194,49 @@ osso_abook_contact_view_class_init(OssoABookContactViewClass *klass)
   object_class->get_property = osso_abook_contact_view_get_property;
 
   g_object_class_install_property(
-        object_class, PROP_MINIMUM_SELECTION,
-        g_param_spec_uint(
-                 "minimum-selection",
-                 "Minimum Selection",
-                 "The minimum number of rows to be selected",
-                 1,
-                 G_MAXUINT,
-                 1,
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_MINIMUM_SELECTION,
+    g_param_spec_uint(
+      "minimum-selection",
+      "Minimum Selection",
+      "The minimum number of rows to be selected",
+      1,
+      G_MAXUINT,
+      1,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_MAXIMUM_SELECTION,
-        g_param_spec_uint(
-                 "maximum-selection",
-                 "Maximum Selection",
-                 "The maximum number of rows to be selected",
-                 1,
-                 G_MAXUINT,
-                 1,
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_MAXIMUM_SELECTION,
+    g_param_spec_uint(
+      "maximum-selection",
+      "Maximum Selection",
+      "The maximum number of rows to be selected",
+      1,
+      G_MAXUINT,
+      1,
+      GTK_PARAM_READWRITE));
 
   signals[CONTACT_ACTIVATED] =
-      g_signal_new("contact-activated",
-                   OSSO_ABOOK_TYPE_CONTACT_VIEW, G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET(OssoABookContactViewClass,
-                                   contact_activated),
-                   0, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE,
-                   1, OSSO_ABOOK_TYPE_CONTACT);
+    g_signal_new("contact-activated",
+                 OSSO_ABOOK_TYPE_CONTACT_VIEW, G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(OssoABookContactViewClass,
+                                 contact_activated),
+                 0, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE,
+                 1, OSSO_ABOOK_TYPE_CONTACT);
   signals[SELECTION_CHANGED] =
-      g_signal_new("selection-changed",
-                   OSSO_ABOOK_TYPE_CONTACT_VIEW,
-                   G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET(OssoABookContactViewClass,
-                                   selection_changed),
-                   0, NULL, g_cclosure_marshal_VOID__UINT,
-                   G_TYPE_NONE,
-                   1, G_TYPE_UINT);
+    g_signal_new("selection-changed",
+                 OSSO_ABOOK_TYPE_CONTACT_VIEW,
+                 G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(OssoABookContactViewClass,
+                                 selection_changed),
+                 0, NULL, g_cclosure_marshal_VOID__UINT,
+                 G_TYPE_NONE,
+                 1, G_TYPE_UINT);
 }
 
 static void
 osso_abook_contact_view_init(OssoABookContactView *view)
 {
   OssoABookContactViewPrivate *priv =
-      osso_abook_contact_view_get_instance_private(view);
+    osso_abook_contact_view_get_instance_private(view);
 
   priv->maximum_selection = 1;
   priv->minimum_selection = 1;
@@ -307,7 +309,7 @@ osso_abook_contact_view_new_basic(HildonUIMode mode,
                                   OssoABookContactModel *model)
 {
   OssoABookFilterModel *filter_model =
-      osso_abook_filter_model_new(OSSO_ABOOK_LIST_STORE(model));
+    osso_abook_filter_model_new(OSSO_ABOOK_LIST_STORE(model));
   GtkWidget *view;
 
   osso_abook_filter_model_set_group(filter_model, osso_abook_all_group_get());

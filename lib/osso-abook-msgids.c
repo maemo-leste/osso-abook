@@ -18,11 +18,11 @@
  */
 #include "config.h"
 
-#include <locale.h>
 #include <libintl.h>
+#include <locale.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <glib.h>
 #include <libxml/xmlreader.h>
@@ -82,7 +82,8 @@ osso_abook_msgids_locate(const char *locale, const char *domain)
     g_free(path);
     path = NULL;
 
-    while (!strchr("@._", *p) && (p-- > loc));
+    while (!strchr("@._", *p) && (p-- > loc))
+      ;
 
     if (p >= loc)
       *p-- = 0;
@@ -149,12 +150,12 @@ osso_abook_msgids_get_table(const char *locale, const char *domain)
         if (!msgids_table)
         {
           msgids_table = g_hash_table_new_full(
-                g_str_hash, g_str_equal, g_free,
-                (GDestroyNotify)g_hash_table_unref);
+            g_str_hash, g_str_equal, g_free,
+            (GDestroyNotify)g_hash_table_unref);
         }
 
         mo_strings = g_hash_table_new_full(
-              g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_free);
+          g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_free);
 
         g_hash_table_insert(msgids_table, g_strdup(mo_file_path), mo_strings);
 
@@ -219,14 +220,14 @@ process_iso_3166_node(xmlTextReaderPtr reader, GHashTable *iso_3166)
   if (!name || xmlStrcmp(name, BAD_CAST "iso_3166_entry"))
     return;
 
-  while (xmlTextReaderMoveToNextAttribute (reader) == 1)
+  while (xmlTextReaderMoveToNextAttribute(reader) == 1)
   {
     if (!xmlStrcmp(xmlTextReaderConstName(reader), BAD_CAST "name"))
     {
       g_hash_table_insert(
-            iso_3166,
-            g_strdup((const gchar *)xmlTextReaderConstValue(reader)),
-            GINT_TO_POINTER(1));
+        iso_3166,
+        g_strdup((const gchar *)xmlTextReaderConstValue(reader)),
+        GINT_TO_POINTER(1));
       break;
     }
   }
@@ -240,14 +241,14 @@ parse_iso_3166(GHashTable *iso_3166)
 
   reader = xmlReaderForFile(ISO_3166_XML_PATH, NULL, 0);
 
-  g_return_val_if_fail (reader != NULL, FALSE);
+  g_return_val_if_fail(reader != NULL, FALSE);
 
   while ((ret = xmlTextReaderRead(reader)) == 1)
     process_iso_3166_node(reader, iso_3166);
 
   xmlFreeTextReader(reader);
 
-  g_return_val_if_fail (ret == 0, FALSE);
+  g_return_val_if_fail(ret == 0, FALSE);
 
   return TRUE;
 }
@@ -265,6 +266,7 @@ country_name_cmp(country_name *n1, country_name *n2)
 {
   return strcmp(n1->name_coll, n2->name_coll);
 }
+
 static void
 sort_countries(country_name *names, size_t count)
 {
@@ -275,7 +277,7 @@ GStrv
 osso_abook_msgids_get_countries()
 {
   GHashTable *iso_3166 =
-      g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
   country_name *names;
   country_name *name;
   const gchar *msgid;
@@ -286,8 +288,8 @@ osso_abook_msgids_get_countries()
 
   if (!parse_iso_3166(iso_3166))
   {
-        g_hash_table_destroy(iso_3166);
-        return NULL;
+    g_hash_table_destroy(iso_3166);
+    return NULL;
   }
 
   num = g_hash_table_size(iso_3166);

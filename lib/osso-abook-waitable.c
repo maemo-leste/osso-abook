@@ -20,15 +20,14 @@ struct _OssoABookWaitableClosure
 };
 
 G_DEFINE_INTERFACE(
-    OssoABookWaitable,
-    osso_abook_waitable,
-    G_TYPE_INVALID
+  OssoABookWaitable,
+  osso_abook_waitable,
+  G_TYPE_INVALID
 );
 
 static void
 osso_abook_waitable_default_init(OssoABookWaitableIface *iface)
-{
-}
+{}
 
 static void
 osso_abook_waitable_destroy_closure(OssoABookWaitableClosure *closure)
@@ -45,7 +44,7 @@ osso_abook_waitable_cancel(OssoABookWaitable *waitable,
 {
   OssoABookWaitableIface *iface;
 
-  g_return_val_if_fail(OSSO_ABOOK_IS_WAITABLE (waitable), FALSE);
+  g_return_val_if_fail(OSSO_ABOOK_IS_WAITABLE(waitable), FALSE);
   g_return_val_if_fail(closure != NULL, FALSE);
 
   iface = OSSO_ABOOK_WAITABLE_GET_IFACE(waitable);
@@ -69,8 +68,7 @@ osso_abook_waitable_call_when_ready(OssoABookWaitable *waitable,
   OssoABookWaitableClosure *closure;
   const GError *error = NULL;
 
-
-  g_return_val_if_fail(OSSO_ABOOK_IS_WAITABLE (waitable), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_WAITABLE(waitable), NULL);
   g_return_val_if_fail(callback != NULL, NULL);
 
   iface = OSSO_ABOOK_WAITABLE_GET_IFACE(waitable);
@@ -102,7 +100,7 @@ osso_abook_waitable_is_ready(OssoABookWaitable *waitable, GError **error)
   const GError *err = NULL;
   gboolean rv;
 
-  g_return_val_if_fail(OSSO_ABOOK_IS_WAITABLE (waitable), FALSE);
+  g_return_val_if_fail(OSSO_ABOOK_IS_WAITABLE(waitable), FALSE);
 
   iface = OSSO_ABOOK_WAITABLE_GET_IFACE(waitable);
 
@@ -166,12 +164,12 @@ waitable_notify_cb(gpointer user_data)
 void
 osso_abook_waitable_notify(OssoABookWaitable *waitable, const GError *error)
 {
-  g_return_if_fail(OSSO_ABOOK_IS_WAITABLE (waitable));
+  g_return_if_fail(OSSO_ABOOK_IS_WAITABLE(waitable));
 
   if (osso_abook_waitable_is_ready(waitable, NULL))
   {
     struct waitable_notify_data *data =
-        g_slice_new0(struct waitable_notify_data);
+      g_slice_new0(struct waitable_notify_data);
 
     data->waitable = g_object_ref(waitable);
 
@@ -205,7 +203,7 @@ osso_abook_waitable_run(OssoABookWaitable *waitable, GMainContext *context,
 {
   WaitableRunClosure closure;
 
-  g_return_if_fail(OSSO_ABOOK_IS_WAITABLE (waitable));
+  g_return_if_fail(OSSO_ABOOK_IS_WAITABLE(waitable));
 
   closure.error = error;
   closure.loop = g_main_loop_new(context, TRUE);

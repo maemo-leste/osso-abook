@@ -17,19 +17,19 @@
  *
  */
 
-#include "osso-abook-quarks.h"
 #include "osso-abook-contact.h"
+#include "osso-abook-quarks.h"
 
 #define QUARK(name, string) \
-GQuark osso_abook_quark_vca_##name (void) \
-{ \
-  static GQuark quark = 0; \
+  GQuark osso_abook_quark_vca_ ## name(void) \
+  { \
+    static GQuark quark = 0; \
   \
-  if (!quark) \
-    quark = g_quark_from_static_string(string); \
+    if (!quark) \
+      quark = g_quark_from_static_string(string); \
   \
-  return quark; \
-}
+    return quark; \
+  }
 
 QUARK(email, EVC_EMAIL)
 QUARK(tel, EVC_TEL)

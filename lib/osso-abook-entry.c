@@ -66,17 +66,17 @@ _expose_event_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data)
   gint height;
   gint width;
 
-  if (GTK_ENTRY(widget)->text_area != event->any.window )
+  if (GTK_ENTRY(widget)->text_area != event->any.window)
     return FALSE;
 
-  if ( !data->icon )
+  if (!data->icon)
   {
     GtkIconTheme *theme =
-        gtk_icon_theme_get_for_screen(gtk_widget_get_screen(widget));
+      gtk_icon_theme_get_for_screen(gtk_widget_get_screen(widget));
     gint size = hildon_get_icon_pixel_size(
-          gtk_icon_size_from_name("hildon-stylus"));
+      gtk_icon_size_from_name("hildon-stylus"));
     data->icon =
-        gtk_icon_theme_load_icon(theme, data->icon_name, size, 0, NULL);
+      gtk_icon_theme_load_icon(theme, data->icon_name, size, 0, NULL);
 
     if (!data->icon)
       return FALSE;
@@ -141,11 +141,11 @@ _osso_abook_entry_remove_icon(GtkEntry *entry)
     return;
 
   g_signal_handlers_disconnect_matched(
-        entry, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-        _expose_event_cb, data);
+    entry, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+    _expose_event_cb, data);
   g_signal_handlers_disconnect_matched(
-        entry, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-        _style_set_cb, data);
+    entry, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+    _style_set_cb, data);
   gtk_entry_set_inner_border(GTK_ENTRY(entry), NULL);
   g_object_set_data(G_OBJECT(entry), "icon-data", NULL);
 }

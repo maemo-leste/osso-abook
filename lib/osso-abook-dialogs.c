@@ -21,8 +21,8 @@
 
 #include "config.h"
 
-#include "osso-abook-roster.h"
 #include "osso-abook-gconf-contact.h"
+#include "osso-abook-roster.h"
 #include "osso-abook-utils-private.h"
 
 #include "osso-abook-dialogs.h"
@@ -32,9 +32,9 @@ get_delete_confirmation_description(OssoABookContact *contact)
 {
   GList *contacts = g_list_prepend(NULL, contact);
   gchar *confirmation = _osso_abook_get_delete_confirmation_string(
-        contacts, TRUE, "addr_nc_notification16",
-        "addr_nc_notification_im_username",
-        "addr_nc_notification_im_username_several_services");
+    contacts, TRUE, "addr_nc_notification16",
+    "addr_nc_notification_im_username",
+    "addr_nc_notification_im_username_several_services");
 
   g_list_free(contacts);
 
@@ -71,7 +71,7 @@ delete_contact_removed_cb(OssoABookRoster *roster, const char **uids,
 
   while (*uids)
   {
-    if (!strcmp(*uids, uid) )
+    if (!strcmp(*uids, uid))
     {
       gtk_dialog_response(dialog, GTK_RESPONSE_CANCEL);
       break;
@@ -80,6 +80,7 @@ delete_contact_removed_cb(OssoABookRoster *roster, const char **uids,
     uids++;
   }
 }
+
 gboolean
 osso_abook_delete_contact_dialog_run(GtkWindow *parent, OssoABookRoster *roster,
                                      OssoABookContact *contact)
@@ -107,11 +108,11 @@ osso_abook_delete_contact_dialog_run(GtkWindow *parent, OssoABookRoster *roster,
                      G_CALLBACK(delete_contact_removed_cb), note);
     response = gtk_dialog_run(GTK_DIALOG(note));
     g_signal_handlers_disconnect_matched(
-          roster, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-          delete_contact_changed_cb, note);
+      roster, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+      delete_contact_changed_cb, note);
     g_signal_handlers_disconnect_matched(
-          roster, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-          delete_contact_removed_cb, note);
+      roster, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+      delete_contact_removed_cb, note);
   }
   else
   {

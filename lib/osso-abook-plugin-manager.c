@@ -22,8 +22,8 @@
 
 #include "config.h"
 
-#include "osso-abook-plugin.h"
 #include "osso-abook-plugin-manager.h"
+#include "osso-abook-plugin.h"
 
 /* FIXME multiarch, pkgconfig variable? */
 #define PLUGINS_DIR "/usr/lib/osso-addressbook/plugins"
@@ -42,7 +42,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define OSSO_ABOOK_PLUGIN_MANAGER_PRIVATE(manager) \
-  ((OssoABookPluginManagerPrivate *)osso_abook_plugin_manager_get_instance_private(manager))
+  ((OssoABookPluginManagerPrivate *) \
+   osso_abook_plugin_manager_get_instance_private(manager))
 
 static GObject *plugin_manager = NULL;
 
@@ -56,7 +57,7 @@ static void
 osso_abook_plugin_manager_load_plugins(OssoABookPluginManager *manager)
 {
   OssoABookPluginManagerPrivate *priv =
-      OSSO_ABOOK_PLUGIN_MANAGER_PRIVATE(manager);
+    OSSO_ABOOK_PLUGIN_MANAGER_PRIVATE(manager);
   GDir *dir;
   const gchar *filename;
   int i;
@@ -81,7 +82,7 @@ osso_abook_plugin_manager_load_plugins(OssoABookPluginManager *manager)
 
   while ((filename = g_dir_read_name(dir)))
   {
-    if ( g_str_has_suffix(filename, ".so") )
+    if (g_str_has_suffix(filename, ".so"))
     {
       gchar *plugin_filename = g_build_filename(PLUGINS_DIR, filename, NULL);
       OssoABookPlugin *plugin = osso_abook_plugin_new(plugin_filename);
@@ -101,7 +102,7 @@ osso_abook_plugin_manager_load_plugins(OssoABookPluginManager *manager)
 
   g_dir_close(dir);
 
-  priv->menu_plugins = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,
+  priv->menu_plugins = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
                                              menu_plugins_destroy);
 
   all_types = g_type_children(OSSO_ABOOK_TYPE_MENU_EXTENSION, &n_children);
@@ -150,11 +151,10 @@ osso_abook_plugin_manager_load_plugins(OssoABookPluginManager *manager)
 }
 
 static GObject *
-osso_abook_plugin_manager_constructor(
-    GType type, guint n_construct_properties,
-    GObjectConstructParam *construct_properties)
+osso_abook_plugin_manager_constructor(GType type,
+                                      guint n_construct_properties,
+                                      GObjectConstructParam *construct_properties)
 {
-
   if (plugin_manager)
   {
     g_object_ref(plugin_manager);
@@ -162,12 +162,12 @@ osso_abook_plugin_manager_constructor(
   }
 
   plugin_manager = G_OBJECT_CLASS(osso_abook_plugin_manager_parent_class)->
-      constructor(type, n_construct_properties, construct_properties);
+    constructor(type, n_construct_properties, construct_properties);
 
   g_object_add_weak_pointer(plugin_manager, (gpointer *)&plugin_manager);
 
   osso_abook_plugin_manager_load_plugins(
-        (OssoABookPluginManager *)plugin_manager);
+    (OssoABookPluginManager *)plugin_manager);
 
   return plugin_manager;
 }
@@ -176,7 +176,7 @@ static void
 osso_abook_plugin_manager_finalize(GObject *object)
 {
   OssoABookPluginManagerPrivate *priv =
-      OSSO_ABOOK_PLUGIN_MANAGER_PRIVATE(OSSO_ABOOK_PLUGIN_MANAGER(object));
+    OSSO_ABOOK_PLUGIN_MANAGER_PRIVATE(OSSO_ABOOK_PLUGIN_MANAGER(object));
   GHashTable *menu_plugins = priv->menu_plugins;
 
   if (menu_plugins)
@@ -189,14 +189,14 @@ static void
 osso_abook_plugin_manager_class_init(OssoABookPluginManagerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS(klass);
+
   object_class->constructor = osso_abook_plugin_manager_constructor;
   object_class->finalize = osso_abook_plugin_manager_finalize;
 }
 
 static void
 osso_abook_plugin_manager_init(OssoABookPluginManager *plugin_manager)
-{
-}
+{}
 
 OssoABookPluginManager *
 osso_abook_plugin_manager_new(void)
@@ -221,12 +221,13 @@ collect_params(GType extension_type, const char *property_name, va_list va)
   GValue *value;
   int num_params = 16;
   struct extension_parameters *parameters =
-      g_new(struct extension_parameters, 1);
+    g_new(struct extension_parameters, 1);
 
   parameters->names = g_new(const char *, num_params);
   parameters->values = g_new(GValue, num_params);
 
-  GObjectClass *klass = g_type_class_ref(extension_type);;
+  GObjectClass *klass = g_type_class_ref(extension_type);
+  ;
 
   do
   {
@@ -267,7 +268,6 @@ collect_params(GType extension_type, const char *property_name, va_list va)
   }
   while (property_name);
 
-
 out:
   g_type_class_unref(klass);
 
@@ -276,8 +276,10 @@ out:
 
 GList *
 osso_abook_plugin_manager_create_menu_extensions(
-    OssoABookPluginManager *manager, GType extension_type,
-    const char *first_property_name, ...)
+  OssoABookPluginManager *manager,
+  GType extension_type,
+  const char *first_property_name,
+  ...)
 {
   struct extension_parameters *parameters = NULL;
   const gchar *menu_name = NULL;
@@ -288,7 +290,7 @@ osso_abook_plugin_manager_create_menu_extensions(
   int i;
 
   g_return_val_if_fail(
-        g_type_is_a(extension_type, OSSO_ABOOK_TYPE_MENU_EXTENSION), NULL);
+    g_type_is_a(extension_type, OSSO_ABOOK_TYPE_MENU_EXTENSION), NULL);
   g_return_val_if_fail(OSSO_ABOOK_IS_PLUGIN_MANAGER(manager), NULL);
 
   va_start(va, first_property_name);
@@ -297,7 +299,6 @@ osso_abook_plugin_manager_create_menu_extensions(
 
   if (first_property_name)
   {
-
     parameters = collect_params(extension_type, first_property_name, va);
 
     for (i = 0; i < parameters->num; i++)
@@ -308,7 +309,6 @@ osso_abook_plugin_manager_create_menu_extensions(
 
         if (priv->menu_plugins)
           types = g_hash_table_lookup(priv->menu_plugins, menu_name);
-
       }
     }
   }
@@ -324,7 +324,7 @@ osso_abook_plugin_manager_create_menu_extensions(
       if (g_type_is_a(type, extension_type))
       {
         GObject *object = g_object_new_with_properties(
-              type, parameters->num, parameters->names, parameters->values);
+          type, parameters->num, parameters->names, parameters->values);
 
         extenstions = g_list_prepend(extenstions, object);
       }

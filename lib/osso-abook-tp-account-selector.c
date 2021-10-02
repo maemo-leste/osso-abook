@@ -32,7 +32,8 @@ struct _OssoABookTpAccountSelectorPrivate
   int selection_mode;
 };
 
-typedef struct _OssoABookTpAccountSelectorPrivate OssoABookTpAccountSelectorPrivate;
+typedef struct _OssoABookTpAccountSelectorPrivate
+  OssoABookTpAccountSelectorPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(
   OssoABookTpAccountSelector,
@@ -41,14 +42,16 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define PRIVATE(selector) \
-  ((OssoABookTpAccountSelectorPrivate *)osso_abook_tp_account_selector_get_instance_private(((OssoABookTpAccountSelector *)selector)))
+  ((OssoABookTpAccountSelectorPrivate *) \
+   osso_abook_tp_account_selector_get_instance_private((( \
+                                                          OssoABookTpAccountSelector \
+                                                          *)selector)))
 
 enum
 {
   PROP_MODEL = 1,
   PROP_SELECTION_MODE
 };
-
 
 static void
 cell_data_func(GtkCellLayout *cell_layout, GtkCellRenderer *cell,
@@ -72,7 +75,9 @@ static void
 style_set_cb(GtkWidget *widget, GtkStyle *previous_style, gpointer user_data)
 {
   GList *cells = gtk_cell_layout_get_cells(GTK_CELL_LAYOUT(
-        hildon_touch_selector_get_column(HILDON_TOUCH_SELECTOR(widget), 0)));
+                                             hildon_touch_selector_get_column(
+                                               HILDON_TOUCH_SELECTOR(
+                                                 widget), 0)));
 
   if (cells)
   {
@@ -135,9 +140,9 @@ osso_abook_tp_account_selector_set_property(GObject *object, guint property_id,
       gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(col), cell_pixbuf, FALSE);
       gtk_cell_layout_reorder(GTK_CELL_LAYOUT(col), cell_pixbuf, 0);
       gtk_cell_layout_set_attributes(
-            GTK_CELL_LAYOUT(col), cell_pixbuf,
-            "icon-name", OSSO_ABOOK_TP_ACCOUNT_MODEL_COL_ICON_NAME,
-            NULL);
+        GTK_CELL_LAYOUT(col), cell_pixbuf,
+        "icon-name", OSSO_ABOOK_TP_ACCOUNT_MODEL_COL_ICON_NAME,
+        NULL);
       hildon_touch_selector_set_column_selection_mode(selector,
                                                       priv->selection_mode);
       hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog), selector);
@@ -152,7 +157,7 @@ osso_abook_tp_account_selector_set_property(GObject *object, guint property_id,
       priv->selection_mode = g_value_get_int(value);
 
       selector =
-          hildon_picker_dialog_get_selector(HILDON_PICKER_DIALOG(dialog));
+        hildon_picker_dialog_get_selector(HILDON_PICKER_DIALOG(dialog));
 
       if (selector)
       {
@@ -174,7 +179,7 @@ static void
 osso_abook_tp_account_selector_get_property(GObject *object, guint property_id,
                                             GValue *value, GParamSpec *pspec)
 {
-  switch(property_id)
+  switch (property_id)
   {
     case PROP_MODEL:
     {
@@ -184,10 +189,10 @@ osso_abook_tp_account_selector_get_property(GObject *object, guint property_id,
     case PROP_SELECTION_MODE:
     {
       HildonTouchSelector *selector =
-          hildon_picker_dialog_get_selector(HILDON_PICKER_DIALOG(object));
+        hildon_picker_dialog_get_selector(HILDON_PICKER_DIALOG(object));
 
       g_value_set_int(
-            value, hildon_touch_selector_get_column_selection_mode(selector));
+        value, hildon_touch_selector_get_column_selection_mode(selector));
       break;
     }
     default:
@@ -213,8 +218,7 @@ osso_abook_tp_account_selector_dispose(GObject *object)
 }
 
 static void
-osso_abook_tp_account_selector_class_init(
-    OssoABookTpAccountSelectorClass *klass)
+osso_abook_tp_account_selector_class_init(OssoABookTpAccountSelectorClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
@@ -223,21 +227,21 @@ osso_abook_tp_account_selector_class_init(
   object_class->dispose = osso_abook_tp_account_selector_dispose;
 
   g_object_class_install_property(
-        object_class, PROP_MODEL,
-        g_param_spec_object(
-          "model",
-          "Model",
-          "The OssoABookMcAccountModel to display",
-          OSSO_ABOOK_TYPE_TP_ACCOUNT_MODEL,
-          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PROP_MODEL,
+    g_param_spec_object(
+      "model",
+      "Model",
+      "The OssoABookMcAccountModel to display",
+      OSSO_ABOOK_TYPE_TP_ACCOUNT_MODEL,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property(
-        object_class, PROP_SELECTION_MODE,
-        g_param_spec_int(
-          "selection-mode",
-          "Dialog selection mode",
-          "The dialog's selection mode (eg, single, multi)",
-          0, 1, 0,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_SELECTION_MODE,
+    g_param_spec_int(
+      "selection-mode",
+      "Dialog selection mode",
+      "The dialog's selection mode (eg, single, multi)",
+      0, 1, 0,
+      GTK_PARAM_READWRITE));
 }
 
 static void
@@ -246,7 +250,6 @@ osso_abook_tp_account_selector_init(OssoABookTpAccountSelector *dialog)
   PRIVATE(dialog)->model = NULL;
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CANCEL);
 }
-
 
 GtkWidget *
 osso_abook_tp_account_selector_new(GtkWindow *parent,
@@ -268,8 +271,8 @@ osso_abook_tp_account_selector_get_account(OssoABookTpAccountSelector *dialog)
   TpAccount *account = NULL;
 
   g_return_val_if_fail(
-        osso_abook_tp_account_selector_get_selection_mode (dialog) ==
-        HILDON_TOUCH_SELECTOR_SELECTION_MODE_SINGLE, NULL);
+    osso_abook_tp_account_selector_get_selection_mode(dialog) ==
+    HILDON_TOUCH_SELECTOR_SELECTION_MODE_SINGLE, NULL);
 
   accounts = osso_abook_tp_account_selector_get_accounts(dialog);
 
@@ -298,7 +301,7 @@ osso_abook_tp_account_selector_get_accounts(OssoABookTpAccountSelector *dialog)
     return NULL;
 
   rows = hildon_touch_selector_get_selected_rows(
-        HILDON_TOUCH_SELECTOR(selector), 0);
+    HILDON_TOUCH_SELECTOR(selector), 0);
 
   for (l = rows; l; l = l->next)
   {
@@ -345,7 +348,7 @@ osso_abook_tp_account_selector_set_model(OssoABookTpAccountSelector *dialog,
 
 HildonTouchSelectorSelectionMode
 osso_abook_tp_account_selector_get_selection_mode(
-    OssoABookTpAccountSelector *dialog)
+  OssoABookTpAccountSelector *dialog)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_TP_ACCOUNT_SELECTOR(dialog),
                        HILDON_TOUCH_SELECTOR_SELECTION_MODE_SINGLE);
@@ -355,7 +358,8 @@ osso_abook_tp_account_selector_get_selection_mode(
 
 void
 osso_abook_mc_account_selector_set_selection_mode(
-    OssoABookTpAccountSelector *dialog, HildonTouchSelectorSelectionMode mode)
+  OssoABookTpAccountSelector *dialog,
+  HildonTouchSelectorSelectionMode mode)
 {
   g_return_if_fail(OSSO_ABOOK_IS_TP_ACCOUNT_SELECTOR(dialog));
 

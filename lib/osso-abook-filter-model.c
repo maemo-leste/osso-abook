@@ -1,5 +1,5 @@
-#include <hildon/hildon.h>
 #include <gtk/gtkprivate.h>
+#include <hildon/hildon.h>
 
 #include <string.h>
 
@@ -38,23 +38,26 @@ struct _OssoABookFilterModelPrivate
 typedef struct _OssoABookFilterModelPrivate OssoABookFilterModelPrivate;
 
 #define OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model) \
-  ((OssoABookFilterModelPrivate *)osso_abook_filter_model_get_instance_private(model))
+  ((OssoABookFilterModelPrivate *)osso_abook_filter_model_get_instance_private( \
+     model))
 
 static void
 osso_abook_filter_model_gtk_tree_sortable_iface_init(
-    GtkTreeSortableIface *g_iface, gpointer iface_data);
+  GtkTreeSortableIface *g_iface,
+  gpointer iface_data);
 
 static void
 osso_abook_filter_model_osso_abook_row_model_iface_init(
-    OssoABookRowModelIface *g_iface, gpointer iface_data);
+  OssoABookRowModelIface *g_iface,
+  gpointer iface_data);
 
 G_DEFINE_TYPE_WITH_CODE(
   OssoABookFilterModel,
   osso_abook_filter_model,
   GTK_TYPE_TREE_MODEL_FILTER,
   G_IMPLEMENT_INTERFACE(
-      GTK_TYPE_TREE_SORTABLE,
-      osso_abook_filter_model_gtk_tree_sortable_iface_init);
+    GTK_TYPE_TREE_SORTABLE,
+    osso_abook_filter_model_gtk_tree_sortable_iface_init);
   G_IMPLEMENT_INTERFACE(
     OSSO_ABOOK_TYPE_ROW_MODEL,
     osso_abook_filter_model_osso_abook_row_model_iface_init);
@@ -65,7 +68,7 @@ static gboolean
 osso_abook_filter_model_has_default_sort_func(GtkTreeSortable *sortable)
 {
   GtkTreeModel *model =
-      gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(sortable));
+    gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(sortable));
 
   return gtk_tree_sortable_has_default_sort_func(GTK_TREE_SORTABLE(model));
 }
@@ -76,7 +79,7 @@ osso_abook_filter_model_get_sort_column_id(GtkTreeSortable *sortable,
                                            GtkSortType *order)
 {
   GtkTreeModel *model =
-      gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(sortable));
+    gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(sortable));
 
   return gtk_tree_sortable_get_sort_column_id(GTK_TREE_SORTABLE(model),
                                               sort_column_id, order);
@@ -88,7 +91,7 @@ osso_abook_filter_model_set_sort_column_id(GtkTreeSortable *sortable,
                                            GtkSortType order)
 {
   GtkTreeModel *model =
-      gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(sortable));
+    gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(sortable));
 
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(model),
                                        sort_column_id, order);
@@ -101,7 +104,7 @@ osso_abook_filter_model_set_sort_func(GtkTreeSortable *sortable,
                                       gpointer data, GDestroyNotify destroy)
 {
   GtkTreeModel *model =
-      gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(sortable));
+    gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(sortable));
 
   gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(model), sort_column_id,
                                   func, data, destroy);
@@ -114,7 +117,7 @@ osso_abook_filter_model_set_default_sort_func(GtkTreeSortable *sortable,
                                               GDestroyNotify destroy)
 {
   GtkTreeModel *model =
-      gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(sortable));
+    gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(sortable));
 
   gtk_tree_sortable_set_default_sort_func(GTK_TREE_SORTABLE(model), func, data,
                                           destroy);
@@ -122,15 +125,16 @@ osso_abook_filter_model_set_default_sort_func(GtkTreeSortable *sortable,
 
 static void
 osso_abook_filter_model_gtk_tree_sortable_iface_init(
-    GtkTreeSortableIface *g_iface, gpointer iface_data)
+  GtkTreeSortableIface *g_iface,
+  gpointer iface_data)
 {
   g_iface->has_default_sort_func =
-      osso_abook_filter_model_has_default_sort_func;
+    osso_abook_filter_model_has_default_sort_func;
   g_iface->get_sort_column_id = osso_abook_filter_model_get_sort_column_id;
   g_iface->set_sort_column_id = osso_abook_filter_model_set_sort_column_id;
   g_iface->set_sort_func = osso_abook_filter_model_set_sort_func;
   g_iface->set_default_sort_func =
-      osso_abook_filter_model_set_default_sort_func;
+    osso_abook_filter_model_set_default_sort_func;
 }
 
 static gboolean
@@ -140,7 +144,7 @@ osso_abook_filter_model_row_get_iter(OssoABookRowModel *model,
   gboolean rv;
   GtkTreeIter child_iter;
   OssoABookFilterModelPrivate *priv =
-      OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE((OssoABookFilterModel *)model);
+    OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE((OssoABookFilterModel *)model);
 
   g_return_val_if_fail(priv != NULL, FALSE);
   g_return_val_if_fail(iter != NULL, FALSE);
@@ -150,7 +154,7 @@ osso_abook_filter_model_row_get_iter(OssoABookRowModel *model,
   if (rv)
   {
     rv = gtk_tree_model_filter_convert_child_iter_to_iter(
-          (GtkTreeModelFilter *)model, iter, &child_iter);
+      (GtkTreeModelFilter *)model, iter, &child_iter);
   }
 
   return rv;
@@ -163,13 +167,13 @@ osso_abook_filter_model_iter_get_row(OssoABookRowModel *model,
   GtkTreeIter child_iter;
   gpointer rv;
   OssoABookFilterModelPrivate *priv =
-      OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE((OssoABookFilterModel *)model);
+    OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE((OssoABookFilterModel *)model);
 
   g_return_val_if_fail(priv != NULL, NULL);
   g_return_val_if_fail(iter != NULL, NULL);
 
   gtk_tree_model_filter_convert_iter_to_child_iter(
-        (GtkTreeModelFilter *)model, &child_iter, iter);
+    (GtkTreeModelFilter *)model, &child_iter, iter);
   rv = osso_abook_list_store_iter_get_row(priv->base_model, &child_iter);
 
   return rv;
@@ -177,7 +181,8 @@ osso_abook_filter_model_iter_get_row(OssoABookRowModel *model,
 
 static void
 osso_abook_filter_model_osso_abook_row_model_iface_init(
-    OssoABookRowModelIface *g_iface, gpointer iface_data)
+  OssoABookRowModelIface *g_iface,
+  gpointer iface_data)
 {
   g_iface->row_get_iter = osso_abook_filter_model_row_get_iter;
   g_iface->iter_get_row = osso_abook_filter_model_iter_get_row;
@@ -190,7 +195,6 @@ osso_abook_filter_model_real_set_text(OssoABookFilterModel *model,
 static void
 remove_group(OssoABookFilterModelPrivate *model)
 {
-
   if (model->group)
   {
     g_signal_handler_disconnect(model->group, model->refilter_contact_id);
@@ -204,7 +208,7 @@ osso_abook_filter_model_dispose(GObject *object)
 {
   OssoABookFilterModel *model = (OssoABookFilterModel *)object;
   OssoABookFilterModelPrivate *priv =
-      OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
+    OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
 
   remove_group(priv);
 
@@ -233,7 +237,7 @@ osso_abook_filter_model_fimalize(GObject *object)
 {
   OssoABookFilterModel *model = (OssoABookFilterModel *)object;
   OssoABookFilterModelPrivate *priv =
-      OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
+    OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
 
   if (priv->visible_destroy)
     priv->visible_destroy(priv->visible_data);
@@ -249,7 +253,7 @@ osso_abook_filter_model_get_property(GObject *object, guint property_id,
 {
   OssoABookFilterModel *model = (OssoABookFilterModel *)object;
   OssoABookFilterModelPrivate *priv =
-      OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
+    OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
 
   switch (property_id)
   {
@@ -266,7 +270,7 @@ osso_abook_filter_model_get_property(GObject *object, guint property_id,
       g_value_set_object(value, priv->group);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -283,15 +287,15 @@ osso_abook_filter_model_set_base_model(OssoABookFilterModel *model,
 {
   OssoABookFilterModelPrivate *priv;
 
-  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL (model));
-  g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE (base_model));
+  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model));
+  g_return_if_fail(OSSO_ABOOK_IS_LIST_STORE(base_model));
 
   priv = OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
   priv->base_model = base_model;
   priv->sort_column_changed_id =
-      g_signal_connect_object(G_OBJECT(base_model), "sort-column-changed",
-                              G_CALLBACK(sort_column_changed_cb),
-                              G_OBJECT(model), 0);
+    g_signal_connect_object(G_OBJECT(base_model), "sort-column-changed",
+                            G_CALLBACK(sort_column_changed_cb),
+                            G_OBJECT(model), 0);
 }
 
 static void
@@ -300,7 +304,7 @@ osso_abook_filter_model_set_property(GObject *object, guint property_id,
 {
   OssoABookFilterModel *model = (OssoABookFilterModel *)object;
   OssoABookFilterModelPrivate *priv =
-      OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
+    OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
 
   switch (property_id)
   {
@@ -312,17 +316,19 @@ osso_abook_filter_model_set_property(GObject *object, guint property_id,
                                             priv->prefix);
       break;
     case PROP_PREFIX:
+
       if (priv->prefix != g_value_get_boolean(value))
       {
         priv->prefix = !priv->prefix;
         g_object_notify(G_OBJECT(model), "prefix");
       }
+
       break;
     case PROP_GROUP:
       osso_abook_filter_model_set_group(model, g_value_get_object(value));
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -339,37 +345,37 @@ osso_abook_filter_model_class_init(OssoABookFilterModelClass *klass)
   object_class->finalize = osso_abook_filter_model_fimalize;
 
   g_object_class_install_property(
-        object_class, PROP_BASE_MODEL,
-        g_param_spec_object(
-                 "base-model",
-                 "Base model",
-                 "The contained OssoABookListStore.",
-                 OSSO_ABOOK_TYPE_LIST_STORE,
-                 GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PROP_BASE_MODEL,
+    g_param_spec_object(
+      "base-model",
+      "Base model",
+      "The contained OssoABookListStore.",
+      OSSO_ABOOK_TYPE_LIST_STORE,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property(
-        object_class, PROP_TEXT,
-        g_param_spec_string(
-                 "text",
-                 "Text",
-                 "The text to be filtered on.",
-                 NULL,
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_TEXT,
+    g_param_spec_string(
+      "text",
+      "Text",
+      "The text to be filtered on.",
+      NULL,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_PREFIX,
-        g_param_spec_boolean(
-                 "prefix",
-                 "Prefix",
-                 "Wether or not only prefixes are matched.",
-                 FALSE,
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_PREFIX,
+    g_param_spec_boolean(
+      "prefix",
+      "Prefix",
+      "Wether or not only prefixes are matched.",
+      FALSE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_GROUP,
-        g_param_spec_object(
-                 "group",
-                 "Group",
-                 "The group to be filtered on.",
-                 OSSO_ABOOK_TYPE_GROUP,
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_GROUP,
+    g_param_spec_object(
+      "group",
+      "Group",
+      "The group to be filtered on.",
+      OSSO_ABOOK_TYPE_GROUP,
+      GTK_PARAM_READWRITE));
 }
 
 static gunichar *
@@ -395,7 +401,7 @@ _osso_abook_utf8_strcasestrip(const char *text)
     gsize i;
     gunichar d[G_UNICHAR_MAX_DECOMPOSITION_LENGTH];
     gsize l = g_unichar_fully_decompose(
-          g_utf8_get_char(p), FALSE, d, G_N_ELEMENTS(d));
+      g_utf8_get_char(p), FALSE, d, G_N_ELEMENTS(d));
 
     for (i = 0; i < l; i++)
     {
@@ -407,7 +413,7 @@ _osso_abook_utf8_strcasestrip(const char *text)
         buf = g_realloc(buf, (bufsize + 1) * sizeof(gunichar));
       }
 
-      switch(g_unichar_type(uch))
+      switch (g_unichar_type(uch))
       {
         case G_UNICODE_TITLECASE_LETTER:
         case G_UNICODE_UPPERCASE_LETTER:
@@ -451,13 +457,13 @@ _osso_abook_utf8_strstrcasestrip(const char *str1, const gunichar *str2,
     gsize i;
     gunichar d[G_UNICHAR_MAX_DECOMPOSITION_LENGTH];
     gsize l = g_unichar_fully_decompose(
-          g_utf8_get_char(p), FALSE, d, G_N_ELEMENTS(d));
+      g_utf8_get_char(p), FALSE, d, G_N_ELEMENTS(d));
 
     for (i = 0; i < l; i++)
     {
       gunichar uch = d[i];
 
-      switch(g_unichar_type(uch))
+      switch (g_unichar_type(uch))
       {
         case G_UNICODE_TITLECASE_LETTER:
         case G_UNICODE_UPPERCASE_LETTER:
@@ -519,13 +525,13 @@ _osso_abook_utf8_strstartswithcasestrip(const char *str1, const gunichar *str2,
     gsize i;
     gunichar d[G_UNICHAR_MAX_DECOMPOSITION_LENGTH];
     gsize l = g_unichar_fully_decompose(
-          g_utf8_get_char(p), FALSE, d, G_N_ELEMENTS(d));
+      g_utf8_get_char(p), FALSE, d, G_N_ELEMENTS(d));
 
     for (i = 0; i < l; i++)
     {
       gunichar uch = d[i];
 
-      switch(g_unichar_type(uch))
+      switch (g_unichar_type(uch))
       {
         case G_UNICODE_TITLECASE_LETTER:
         case G_UNICODE_UPPERCASE_LETTER:
@@ -577,13 +583,13 @@ osso_abook_filter_model_real_set_text(OssoABookFilterModel *model,
 {
   gboolean old_prefix;
   OssoABookFilterModelPrivate *priv =
-      OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
+    OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
 
   g_free(priv->text);
   priv->text = NULL;
   clear_bits(priv);
 
-  if (text &&  *text )
+  if (text && *text)
   {
     gchar **bits;
     gchar **bit;
@@ -606,7 +612,7 @@ osso_abook_filter_model_real_set_text(OssoABookFilterModel *model,
   }
 
   old_prefix = priv->prefix;
-  priv->prefix = prefix ;
+  priv->prefix = prefix;
 
   if (priv->text)
   {
@@ -626,6 +632,7 @@ osso_abook_filter_model_real_set_text(OssoABookFilterModel *model,
   {
     g_object_notify(G_OBJECT(model), "prefix");
   }
+
   g_object_notify(G_OBJECT(model), "text");
 }
 
@@ -699,12 +706,12 @@ static void
 osso_abook_filter_model_init(OssoABookFilterModel *model)
 {
   OssoABookFilterModelPrivate *priv =
-      OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
+    OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
 
   priv->base_model = NULL;
   priv->text = NULL;
   priv->prefix = FALSE;
-  priv->show_unnamed= FALSE;
+  priv->show_unnamed = FALSE;
   priv->bits = NULL;
   priv->group = NULL;
   priv->refilter_freezed = FALSE;
@@ -730,7 +737,7 @@ osso_abook_filter_model_set_visible_func(OssoABookFilterModel *model,
 {
   OssoABookFilterModelPrivate *priv;
 
-  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL (model));
+  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model));
 
   priv = OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
 
@@ -747,7 +754,7 @@ osso_abook_filter_model_set_visible_func(OssoABookFilterModel *model,
 OssoABookGroup *
 osso_abook_filter_model_get_group(OssoABookFilterModel *model)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_FILTER_MODEL (model), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model), NULL);
 
   return OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model)->group;
 }
@@ -755,7 +762,7 @@ osso_abook_filter_model_get_group(OssoABookFilterModel *model)
 const char *
 osso_abook_filter_model_get_text(OssoABookFilterModel *model)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_FILTER_MODEL (model), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model), NULL);
 
   return OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model)->text;
 }
@@ -763,7 +770,7 @@ osso_abook_filter_model_get_text(OssoABookFilterModel *model)
 void
 osso_abook_filter_model_set_text(OssoABookFilterModel *model, const char *text)
 {
-  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL (model));
+  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model));
 
   osso_abook_filter_model_real_set_text(model, text, FALSE);
 }
@@ -771,7 +778,7 @@ osso_abook_filter_model_set_text(OssoABookFilterModel *model, const char *text)
 gboolean
 osso_abook_filter_model_get_prefix(OssoABookFilterModel *model)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_FILTER_MODEL (model), FALSE);
+  g_return_val_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model), FALSE);
 
   return OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model)->prefix;
 }
@@ -780,7 +787,7 @@ void
 osso_abook_filter_model_set_prefix(OssoABookFilterModel *model,
                                    const char *prefix)
 {
-  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL (model));
+  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model));
 
   osso_abook_filter_model_real_set_text(model, prefix, TRUE);
 }
@@ -788,7 +795,7 @@ osso_abook_filter_model_set_prefix(OssoABookFilterModel *model,
 void
 osso_abook_filter_model_freeze_refilter(OssoABookFilterModel *model)
 {
-  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL (model));
+  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model));
 
   OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model)->refilter_freezed = TRUE;
 }
@@ -798,7 +805,7 @@ osso_abook_filter_model_thaw_refilter(OssoABookFilterModel *model)
 {
   OssoABookFilterModelPrivate *priv;
 
-  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL (model));
+  g_return_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model));
 
   priv = OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
 
@@ -817,7 +824,7 @@ osso_abook_filter_model_is_row_visible(OssoABookFilterModel *model,
 {
   OssoABookFilterModelPrivate *priv;
 
-  g_return_val_if_fail(OSSO_ABOOK_IS_FILTER_MODEL (model), FALSE);
+  g_return_val_if_fail(OSSO_ABOOK_IS_FILTER_MODEL(model), FALSE);
   g_return_val_if_fail(iter != NULL, FALSE);
 
   priv = OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
@@ -854,22 +861,21 @@ osso_abook_filter_model_set_group(OssoABookFilterModel *model,
 
   if (group)
   {
-
     priv->group = g_object_ref(group);
 
     if (priv->base_model)
     {
       osso_abook_list_store_set_group_sort_func(
-            priv->base_model, osso_abook_group_get_sort_func(group),
-            g_object_ref(group), g_object_unref);
+        priv->base_model, osso_abook_group_get_sort_func(group),
+        g_object_ref(group), g_object_unref);
     }
 
     priv->refilter_contact_id =
-        g_signal_connect(priv->group, "refilter-contact",
-                         G_CALLBACK(refilter_contact_cb), priv);
+      g_signal_connect(priv->group, "refilter-contact",
+                       G_CALLBACK(refilter_contact_cb), priv);
     priv->refilter_group_id =
-        g_signal_connect(priv->group, "refilter-group",
-                         G_CALLBACK(refilter_group_cb), model);
+      g_signal_connect(priv->group, "refilter-group",
+                       G_CALLBACK(refilter_group_cb), model);
   }
 
   osso_abook_filter_model_refilter(model, priv);
@@ -916,7 +922,7 @@ osso_abook_filter_model_get_markup(OssoABookFilterModel *model,
     {
       const char *q;
 
-      for (p = text; ; p = q + 1)
+      for (p = text;; p = q + 1)
       {
         q = _osso_abook_utf8_strstrcasestrip(p, bit->data, &bytes_read);
 

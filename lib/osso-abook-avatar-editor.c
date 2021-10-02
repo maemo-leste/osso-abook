@@ -35,7 +35,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define PRIVATE(editor) \
-  ((OssoABookAvatarEditorPrivate *)osso_abook_avatar_editor_get_instance_private(((OssoABookAvatarEditor *)editor)))
+  ((OssoABookAvatarEditorPrivate *)osso_abook_avatar_editor_get_instance_private((( \
+                                                                                    OssoABookAvatarEditor \
+                                                                                    *) \
+                                                                                  editor)))
 
 static gboolean
 osso_abook_avatar_editor_button_press_event(GtkWidget *widget,
@@ -94,10 +97,11 @@ static void
 osso_abook_avatar_editor_class_init(OssoABookAvatarEditorClass *klass)
 {
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
+
   widget_class->button_press_event =
-      osso_abook_avatar_editor_button_press_event;
+    osso_abook_avatar_editor_button_press_event;
   widget_class->motion_notify_event =
-      osso_abook_avatar_editor_motion_notify_event;
+    osso_abook_avatar_editor_motion_notify_event;
 }
 
 static void

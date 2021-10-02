@@ -20,17 +20,17 @@
 #include "osso-abook-icon-sizes.h"
 
 #define ICON_SIZE(f, name, size) \
-GtkIconSize f(void) \
-{ \
-  static GtkIconSize icon_size = GTK_ICON_SIZE_INVALID; \
-\
-  if (icon_size == GTK_ICON_SIZE_INVALID) \
+  GtkIconSize f(void) \
   { \
-    icon_size = gtk_icon_size_register(name, size, size); \
-  } \
+    static GtkIconSize icon_size = GTK_ICON_SIZE_INVALID; \
 \
-  return icon_size; \
-}
+    if (icon_size == GTK_ICON_SIZE_INVALID) \
+    { \
+      icon_size = gtk_icon_size_register(name, size, size); \
+    } \
+\
+    return icon_size; \
+  }
 
 ICON_SIZE(osso_abook_icon_size_avatar_chooser,
           "osso-abook-icon-size-avatar-chooser",

@@ -8,22 +8,22 @@
 typedef OssoABookCapsIface OssoABookCapsInterface;
 
 G_DEFINE_INTERFACE(
-    OssoABookCaps,
-    osso_abook_caps,
-    G_TYPE_OBJECT
+  OssoABookCaps,
+  osso_abook_caps,
+  G_TYPE_OBJECT
 );
 
 static void
 osso_abook_caps_default_init(OssoABookCapsIface *iface)
 {
   g_object_interface_install_property(
-        iface,
-        g_param_spec_uint(
-                 "capabilities",
-                 "Capabilities",
-                 "The actual capabilities",
-                 0, G_MAXUINT, 0,
-                 GTK_PARAM_READABLE));
+    iface,
+    g_param_spec_uint(
+      "capabilities",
+      "Capabilities",
+      "The actual capabilities",
+      0, G_MAXUINT, 0,
+      GTK_PARAM_READABLE));
 }
 
 OssoABookCapsFlags
@@ -85,8 +85,8 @@ osso_abook_caps_from_tp_connection(TpConnection *connection)
 
   g_return_val_if_fail(TP_IS_CONNECTION(connection), rv);
   g_return_val_if_fail(
-        tp_proxy_is_prepared(connection, TP_CONNECTION_FEATURE_CAPABILITIES),
-        rv);
+    tp_proxy_is_prepared(connection, TP_CONNECTION_FEATURE_CAPABILITIES),
+    rv);
 
   caps = tp_connection_get_capabilities(connection);
 

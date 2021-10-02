@@ -1,5 +1,5 @@
-#include <gtk/gtkprivate.h>
 #include <gconf/gconf-client.h>
+#include <gtk/gtkprivate.h>
 
 #include "config.h"
 
@@ -18,7 +18,8 @@ struct _OssoABookGconfContactPrivate
 typedef struct _OssoABookGconfContactPrivate OssoABookGconfContactPrivate;
 
 #define OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(contact) \
-                ((OssoABookGconfContactPrivate *)osso_abook_gconf_contact_get_instance_private(contact))
+  ((OssoABookGconfContactPrivate *)osso_abook_gconf_contact_get_instance_private( \
+     contact))
 
 G_DEFINE_TYPE_WITH_PRIVATE(
   OssoABookGconfContact,
@@ -36,7 +37,7 @@ osso_abook_gconf_contact_set_property(GObject *object, guint property_id,
                                       const GValue *value, GParamSpec *pspec)
 {
   OssoABookGconfContactPrivate *priv =
-      OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(OSSO_ABOOK_GCONF_CONTACT(object));
+    OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(OSSO_ABOOK_GCONF_CONTACT(object));
 
   switch (property_id)
   {
@@ -48,7 +49,7 @@ osso_abook_gconf_contact_set_property(GObject *object, guint property_id,
     }
     default:
     {
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
     }
   }
@@ -59,7 +60,7 @@ osso_abook_gconf_contact_get_property(GObject *object, guint property_id,
                                       GValue *value, GParamSpec *pspec)
 {
   OssoABookGconfContactPrivate *priv =
-      OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(OSSO_ABOOK_GCONF_CONTACT(object));
+    OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(OSSO_ABOOK_GCONF_CONTACT(object));
 
   switch (property_id)
   {
@@ -70,7 +71,7 @@ osso_abook_gconf_contact_get_property(GObject *object, guint property_id,
     }
     default:
     {
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
     }
   }
@@ -80,12 +81,12 @@ static void
 osso_abook_gconf_contact_constructed(GObject *object)
 {
   GObjectClass *object_class =
-      G_OBJECT_CLASS(osso_abook_gconf_contact_parent_class);
+    G_OBJECT_CLASS(osso_abook_gconf_contact_parent_class);
   OssoABookGconfContactClass *contact_class =
-      OSSO_ABOOK_GCONF_CONTACT_GET_CLASS(object);
+    OSSO_ABOOK_GCONF_CONTACT_GET_CLASS(object);
   OssoABookGconfContact *contact = OSSO_ABOOK_GCONF_CONTACT(object);
   OssoABookGconfContactPrivate *priv =
-      OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(contact);
+    OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(contact);
 
   if (!priv->key)
   {
@@ -104,7 +105,7 @@ static void
 osso_abook_gconf_contact_finalize(GObject *object)
 {
   OssoABookGconfContactPrivate *priv =
-      OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(OSSO_ABOOK_GCONF_CONTACT(object));
+    OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(OSSO_ABOOK_GCONF_CONTACT(object));
 
   g_free(priv->key);
 
@@ -118,7 +119,7 @@ static EBookStatus
 set_gconf_string(OssoABookGconfContact *contact, const gchar *s)
 {
   OssoABookGconfContactPrivate *priv =
-      OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(contact);
+    OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(contact);
 
   if (gconf_client_set_string(priv->gconf, priv->key, s, NULL))
     return E_BOOK_ERROR_OK;
@@ -190,7 +191,7 @@ osso_abook_gconf_contact_async_remove(OssoABookContact *contact, EBook *book,
                                       gpointer user_data)
 {
   EBookStatus status =
-      set_gconf_user_deleted(OSSO_ABOOK_GCONF_CONTACT(contact));
+    set_gconf_user_deleted(OSSO_ABOOK_GCONF_CONTACT(contact));
 
   if (callback)
     callback(book, status, user_data);
@@ -219,7 +220,7 @@ osso_abook_gconf_contact_async_remove_many(GList *contacts, EBook *book,
       status = contact_status;
   }
 
-  if ( callback )
+  if (callback)
     callback(book, status, user_data);
 
   return status == E_BOOK_ERROR_OK;
@@ -242,20 +243,20 @@ osso_abook_gconf_contact_class_init(OssoABookGconfContactClass *klass)
   contact_class->async_remove_many = osso_abook_gconf_contact_async_remove_many;
 
   g_object_class_install_property(
-        object_class, PROP_KEY,
-        g_param_spec_string(
-          "key",
-          "Key",
-          "The gconf key",
-          NULL,
-          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PROP_KEY,
+    g_param_spec_string(
+      "key",
+      "Key",
+      "The gconf key",
+      NULL,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
 osso_abook_gconf_contact_init(OssoABookGconfContact *contact)
 {
   OssoABookGconfContactPrivate *priv =
-      OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(contact);
+    OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(contact);
 
   priv->gconf = osso_abook_get_gconf_client();
 }
@@ -280,7 +281,7 @@ static void
 load_from_vcs(OssoABookGconfContact *self, const char *vcs)
 {
   OssoABookGconfContactPrivate *priv =
-      OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(self);
+    OSSO_ABOOK_GCONF_CONTACT_GET_PRIVATE(self);
   const char *uid;
   OssoABookContact *contact;
 

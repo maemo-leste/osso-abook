@@ -21,33 +21,37 @@
 
 #include "config.h"
 
-#include "osso-abook-contact-subscriptions.h"
 #include "osso-abook-contact-filter.h"
+#include "osso-abook-contact-subscriptions.h"
 
-struct _OssoABookContactSubscriptionsPrivate {
+struct _OssoABookContactSubscriptionsPrivate
+{
   GHashTable *uids;
   guint emit_idle_id;
 };
-typedef struct _OssoABookContactSubscriptionsPrivate OssoABookContactSubscriptionsPrivate;
+typedef struct _OssoABookContactSubscriptionsPrivate
+  OssoABookContactSubscriptionsPrivate;
 
 static void
 osso_abook_contact_subscriptions_contact_filter_iface_init(
-    OssoABookContactFilterIface *iface);
+  OssoABookContactFilterIface *iface);
 
 #define OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(subscriptions) \
-                ((OssoABookContactSubscriptionsPrivate *)osso_abook_contact_subscriptions_get_instance_private(subscriptions))
+  ((OssoABookContactSubscriptionsPrivate *) \
+   osso_abook_contact_subscriptions_get_instance_private(subscriptions))
 
 G_DEFINE_TYPE_WITH_CODE(
   OssoABookContactSubscriptions,
   osso_abook_contact_subscriptions,
   G_TYPE_OBJECT,
   G_IMPLEMENT_INTERFACE(
-      OSSO_ABOOK_TYPE_CONTACT_FILTER,
-      osso_abook_contact_subscriptions_contact_filter_iface_init);
+    OSSO_ABOOK_TYPE_CONTACT_FILTER,
+    osso_abook_contact_subscriptions_contact_filter_iface_init);
   G_ADD_PRIVATE(OssoABookContactSubscriptions);
 );
 
-enum {
+enum
+{
   CONTACT_FILTER_CHANGED,
   LAST_SIGNAL
 };
@@ -56,26 +60,28 @@ static guint signals[LAST_SIGNAL] = {};
 
 static OssoABookContactFilterFlags
 osso_abook_contact_subscriptions_contact_filter_get_flags(
-    OssoABookContactFilter *filter)
+  OssoABookContactFilter *filter)
 {
   return OSSO_ABOOK_CONTACT_FILTER_ONLY_READS_UID;
 }
 
 static gboolean
 osso_abook_contact_subscriptions_contact_filter_accept(
-    OssoABookContactFilter *filter, const char *uid, OssoABookContact *contact)
+  OssoABookContactFilter *filter,
+  const char *uid,
+  OssoABookContact *contact)
 {
-  OssoABookContactSubscriptions * subscriptions =
-      OSSO_ABOOK_CONTACT_SUBSCRIPTIONS(filter);
+  OssoABookContactSubscriptions *subscriptions =
+    OSSO_ABOOK_CONTACT_SUBSCRIPTIONS(filter);
   OssoABookContactSubscriptionsPrivate *priv =
-      OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(subscriptions);
+    OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(subscriptions);
 
   return g_hash_table_lookup(priv->uids, uid) != NULL;
 }
 
 static void
 osso_abook_contact_subscriptions_contact_filter_iface_init(
-    OssoABookContactFilterIface *iface)
+  OssoABookContactFilterIface *iface)
 {
   iface->get_flags = osso_abook_contact_subscriptions_contact_filter_get_flags;
   iface->accept = osso_abook_contact_subscriptions_contact_filter_accept;
@@ -84,10 +90,10 @@ osso_abook_contact_subscriptions_contact_filter_iface_init(
 static void
 osso_abook_contact_subscriptions_finalize(GObject *object)
 {
-  OssoABookContactSubscriptions * subscriptions =
-      OSSO_ABOOK_CONTACT_SUBSCRIPTIONS(object);
+  OssoABookContactSubscriptions *subscriptions =
+    OSSO_ABOOK_CONTACT_SUBSCRIPTIONS(object);
   OssoABookContactSubscriptionsPrivate *priv =
-      OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(subscriptions);
+    OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(subscriptions);
 
   g_hash_table_destroy(priv->uids);
 
@@ -95,24 +101,24 @@ osso_abook_contact_subscriptions_finalize(GObject *object)
     g_source_remove(priv->emit_idle_id);
 
   G_OBJECT_CLASS(
-        osso_abook_contact_subscriptions_parent_class)->finalize(object);
+    osso_abook_contact_subscriptions_parent_class)->finalize(object);
 }
 
 static void
 osso_abook_contact_subscriptions_class_init(
-    OssoABookContactSubscriptionsClass *klass)
+  OssoABookContactSubscriptionsClass *klass)
 {
   G_OBJECT_CLASS(klass)->finalize = osso_abook_contact_subscriptions_finalize;
 
   signals[CONTACT_FILTER_CHANGED] =
-      g_signal_lookup("contact-filter-changed", OSSO_ABOOK_TYPE_CONTACT_FILTER);
+    g_signal_lookup("contact-filter-changed", OSSO_ABOOK_TYPE_CONTACT_FILTER);
 }
 
 static void
 osso_abook_contact_subscriptions_init(OssoABookContactSubscriptions *self)
 {
   OssoABookContactSubscriptionsPrivate *priv =
-      OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(self);
+    OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(self);
 
   priv->uids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 }
@@ -122,7 +128,7 @@ emit_contact_filter_changed(gpointer user_data)
 {
   OssoABookContactSubscriptions *subscriptions = user_data;
   OssoABookContactSubscriptionsPrivate *priv =
-      OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(subscriptions);
+    OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(subscriptions);
 
   priv->emit_idle_id = 0;
   g_signal_emit(subscriptions, signals[CONTACT_FILTER_CHANGED], 0);
@@ -134,18 +140,19 @@ static void
 idle_emit_contact_filter_changed(OssoABookContactSubscriptions *subscriptions)
 {
   OssoABookContactSubscriptionsPrivate *priv =
-      OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(subscriptions);
+    OSSO_ABOOK_CONTACT_SUBSCRIPTIONS_PRIVATE(subscriptions);
 
   if (!priv->emit_idle_id)
   {
     priv->emit_idle_id =
-        gdk_threads_add_idle(emit_contact_filter_changed, subscriptions);
+      gdk_threads_add_idle(emit_contact_filter_changed, subscriptions);
   }
 }
 
 void
 osso_abook_contact_subscriptions_add(
-    OssoABookContactSubscriptions *subscriptions, const char *uid)
+  OssoABookContactSubscriptions *subscriptions,
+  const char *uid)
 {
   OssoABookContactSubscriptionsPrivate *priv;
 
@@ -159,7 +166,8 @@ osso_abook_contact_subscriptions_add(
 
 gboolean
 osso_abook_contact_subscriptions_remove(
-    OssoABookContactSubscriptions *subscriptions, const char *uid)
+  OssoABookContactSubscriptions *subscriptions,
+  const char *uid)
 {
   OssoABookContactSubscriptionsPrivate *priv;
 

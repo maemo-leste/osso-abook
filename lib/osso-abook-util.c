@@ -17,21 +17,21 @@
  *
  */
 
+#include <errno.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-#include <math.h>
-#include <errno.h>
 #include <glib/gstdio.h>
+#include <math.h>
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
 
 #include "config.h"
 
-#include "osso-abook-util.h"
-#include "osso-abook-filter-model.h"
-#include "osso-abook-utils-private.h"
-#include "osso-abook-avatar-image.h"
 #include "osso-abook-account-manager.h"
+#include "osso-abook-avatar-image.h"
+#include "osso-abook-filter-model.h"
+#include "osso-abook-util.h"
+#include "osso-abook-utils-private.h"
 
 struct OssoABookAsyncPixbufData
 {
@@ -49,7 +49,7 @@ struct OssoABookAsyncPixbufData
 gboolean
 osso_abook_screen_is_landscape_mode(GdkScreen *screen)
 {
-  g_return_val_if_fail(GDK_IS_SCREEN (screen), TRUE);
+  g_return_val_if_fail(GDK_IS_SCREEN(screen), TRUE);
 
   return gdk_screen_get_width(screen) > gdk_screen_get_height(screen);
 }
@@ -93,7 +93,7 @@ osso_abook_pannable_area_new(void)
                "mov-mode", HILDON_MOVEMENT_MODE_VERT,
                NULL);
   g_signal_connect(area, "size-request",
-                   G_CALLBACK(osso_abook_pannable_area_size_request),NULL);
+                   G_CALLBACK(osso_abook_pannable_area_size_request), NULL);
 
   return area;
 }
@@ -148,7 +148,8 @@ const char *
 osso_abook_get_work_dir()
 {
   static gchar *work_dir = NULL;
-  if ( !work_dir )
+
+  if (!work_dir)
     work_dir = g_build_filename(g_get_home_dir(), ".osso-abook", NULL);
 
   return work_dir;
@@ -160,7 +161,7 @@ osso_abook_system_book_dup_singleton(gboolean open, GError **error)
   static EBook *book;
   static gboolean is_opened;
 
-  if (!book )
+  if (!book)
   {
     ESourceRegistry *registry = e_source_registry_new_sync(NULL, error);
     ESource *source;
@@ -273,7 +274,7 @@ osso_abook_tp_account_get_bound_name(TpAccount *account)
 {
   const gchar *bound_name;
 
-  g_return_val_if_fail(TP_IS_ACCOUNT (account), NULL);
+  g_return_val_if_fail(TP_IS_ACCOUNT(account), NULL);
 
   bound_name = tp_account_get_normalized_name(account);
 
@@ -307,57 +308,70 @@ e_normalize_phone_number (const char *phone_number)
   const char *p;
 
   /* see cui_utils_normalize_number() of rtcom-call-ui for reference */
-  g_return_val_if_fail (NULL != phone_number, NULL);
+  g_return_val_if_fail(NULL != phone_number, NULL);
 
-  result = g_string_new (NULL);
+  result = g_string_new(NULL);
 
-  for (p = phone_number; *p; ++p) {
-    switch (*p) {
+  for (p = phone_number; *p; ++p)
+  {
+    switch (*p)
+    {
       case 'p': case 'P':
+      {
         /* Normalize this characters to P -
-                         * pause for one second. */
-        g_string_append_c (result, 'P');
+         * pause for one second. */
+        g_string_append_c(result, 'P');
         break;
+      }
 
       case 'w': case 'W':
+      {
         /* Normalize this characters to W -
-                         * wait until confirmation. */
-        g_string_append_c (result, 'W');
+         * wait until confirmation. */
+        g_string_append_c(result, 'W');
         break;
+      }
 
       case 'x': case 'X':
+      {
         /* Normalize this characters to X -
-                         * alias for 'W' it seems */
-        g_string_append_c (result, 'X');
+         * alias for 'W' it seems */
+        g_string_append_c(result, 'X');
         break;
+      }
 
       case '+':
+      {
         /* Plus only is valid on begin of phone numbers and
-                         * after number suppression prefix */
-        if (0 == result->len ||
-            strcmp (result->str, "*31#") ||
-            strcmp (result->str, "#31#"))
-          g_string_append_c (result, *p);
+         * after number suppression prefix */
+        if ((0 == result->len) ||
+            strcmp(result->str, "*31#") ||
+            strcmp(result->str, "#31#"))
+          g_string_append_c(result, *p);
 
         break;
+      }
 
       case ',': case '.': case '(': case ')':
       case '-': case ' ': case '\t': case '/':
+      {
         /* Skip commonly used delimiters */
         break;
+      }
 
       case '#': case '*':
       case '0': case '1': case '2': case '3': case '4':
       case '5': case '6': case '7': case '8': case '9':
       default:
+      {
         /* Directly accept all other characters. */
-        g_string_append_c (result, *p);
+        g_string_append_c(result, *p);
         break;
-
+      }
     }
   }
 
-  return g_string_free (result, FALSE);
+  return g_string_free(result, FALSE);
 }
 
 EBookQuery *
@@ -374,7 +388,7 @@ osso_abook_query_phone_number(const char *phone_number, gboolean fuzzy_match)
   qs[0] = e_book_query_vcard_field_test("TEL", E_BOOK_QUERY_IS, phone_number);
   len = strcspn(phone_number, OSSO_ABOOK_DTMF_CHARS);
 
-  if (len < strlen(phone_number) )
+  if (len < strlen(phone_number))
   {
     phone_num = g_strndup(phone_number, len);
 
@@ -435,7 +449,7 @@ sort_phone_number_matches(struct phone_sort_data *a, struct phone_sort_data *b)
   int w1 = a->weigth;
   int w2 = b->weigth;
 
-  if ( w1 > w2 )
+  if (w1 > w2)
     return -1;
 
   if (w1 < w2)
@@ -456,7 +470,7 @@ osso_abook_sort_phone_number_matches(GList *matches, const char *phone_number)
 
   norm_phone_num = e_normalize_phone_number(phone_number);
   norm_phone_num_unprefixed =
-      &norm_phone_num[strcspn(norm_phone_num, OSSO_ABOOK_DTMF_CHARS) - 1];
+    &norm_phone_num[strcspn(norm_phone_num, OSSO_ABOOK_DTMF_CHARS) - 1];
 
   for (l = matches; l; l = l->next)
   {
@@ -473,7 +487,7 @@ osso_abook_sort_phone_number_matches(GList *matches, const char *phone_number)
     l->data = data;
 
     for (attr = e_vcard_get_attributes(E_VCARD(data->contact)); attr;
-                                       attr = attr->next)
+         attr = attr->next)
     {
       if (!strcmp(e_vcard_attribute_get_name(attr->data), "TEL"))
       {
@@ -556,7 +570,8 @@ osso_abook_sort_phone_number_matches(GList *matches, const char *phone_number)
 GtkWidget *
 osso_abook_avatar_button_new(OssoABookAvatar *avatar, int size)
 {
-  GtkWidget *avatar_image = osso_abook_avatar_image_new_with_avatar(avatar, size);
+  GtkWidget *avatar_image =
+    osso_abook_avatar_image_new_with_avatar(avatar, size);
   GtkWidget *button = hildon_gtk_button_new(HILDON_SIZE_AUTO_WIDTH);
 
   gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
@@ -580,8 +595,7 @@ _size_prepared_cb(GdkPixbufLoader *loader, gint width, gint height,
   int req_width = data->width;
   int req_height = data->height;
 
-
-  if (req_width > 0 && req_height > 0)
+  if ((req_width > 0) && (req_height > 0))
   {
     if (data->preserve_aspect_ratio)
     {
@@ -600,7 +614,6 @@ _size_prepared_cb(GdkPixbufLoader *loader, gint width, gint height,
     gdk_pixbuf_loader_set_size(loader, width, height);
   }
 
-
   if (!data->maximum_size)
     return;
 
@@ -611,7 +624,7 @@ _size_prepared_cb(GdkPixbufLoader *loader, gint width, gint height,
     if (format && gdk_pixbuf_format_is_scalable(format))
     {
       double coeff =
-          sqrt((double)(width * height) / (double)data->maximum_size);
+        sqrt((double)(width * height) / (double)data->maximum_size);
 
       gdk_pixbuf_loader_set_size(loader, coeff * (double)width,
                                  coeff * (double)height);
@@ -620,11 +633,11 @@ _size_prepared_cb(GdkPixbufLoader *loader, gint width, gint height,
     {
       g_simple_async_result_set_handle_cancellation(data->async_result, FALSE);
       g_simple_async_result_set_error(
-            data->async_result,
-            gdk_pixbuf_error_quark(),
-            gdk_pixbuf_error_quark(),
-            "Image exceeds arbitary size limit of %.1f mebipixels",
-            (((double)data->maximum_size) / 1024.f) / 1024.f);
+        data->async_result,
+        gdk_pixbuf_error_quark(),
+        gdk_pixbuf_error_quark(),
+        "Image exceeds arbitary size limit of %.1f mebipixels",
+        (((double)data->maximum_size) / 1024.f) / 1024.f);
       g_cancellable_cancel(data->cancellable);
     }
   }
@@ -645,8 +658,8 @@ async_pixbuf_data_destroy(struct OssoABookAsyncPixbufData *data)
   if (data->pixbuf_loader)
   {
     g_signal_handlers_disconnect_matched(
-          data->pixbuf_loader, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0,
-          NULL, _size_prepared_cb, data);
+      data->pixbuf_loader, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0,
+      NULL, _size_prepared_cb, data);
     gdk_pixbuf_loader_close(data->pixbuf_loader, NULL);
     g_object_unref(data->pixbuf_loader);
   }
@@ -670,8 +683,8 @@ _async_pixbuf_stream_closed_cb(GObject *source_object, GAsyncResult *res,
       if (pixbuf)
       {
         g_simple_async_result_set_op_res_gpointer(
-              data->async_result,  g_object_ref(pixbuf),
-              (GDestroyNotify)&g_object_unref);
+          data->async_result, g_object_ref(pixbuf),
+          (GDestroyNotify)&g_object_unref);
       }
     }
   }
@@ -718,7 +731,7 @@ _async_pixbuf_bytes_read_cb(GObject *source_object, GAsyncResult *res,
   GError *error = NULL;
   gssize size = g_input_stream_read_finish(in, res, &error);
 
-  if (size > 0 &&
+  if ((size > 0) &&
       gdk_pixbuf_loader_write(data->pixbuf_loader, data->buf, size, &error))
   {
     g_input_stream_read_async(in, data->buf, sizeof(data->buf),
@@ -764,10 +777,10 @@ osso_abook_load_pixbuf_at_scale_async(GFile *file, int width, int height,
                                       gpointer user_data)
 {
   struct OssoABookAsyncPixbufData *data =
-      g_new0(struct OssoABookAsyncPixbufData, 1);
+    g_new0(struct OssoABookAsyncPixbufData, 1);
 
   g_return_if_fail(G_IS_FILE(file));
-  g_return_if_fail(!cancellable || G_IS_CANCELLABLE (cancellable));
+  g_return_if_fail(!cancellable || G_IS_CANCELLABLE(cancellable));
   g_return_if_fail(callback);
 
   data->maximum_size = maximum_size;
@@ -799,7 +812,7 @@ osso_abook_load_pixbuf_finish(GFile *file, GAsyncResult *result, GError **error)
   g_return_val_if_fail(G_IS_FILE(file), NULL);
 
   source_tag = g_simple_async_result_get_source_tag(
-        G_SIMPLE_ASYNC_RESULT(result));
+    G_SIMPLE_ASYNC_RESULT(result));
 
   g_return_val_if_fail(osso_abook_load_pixbuf_async == source_tag, NULL);
 
@@ -807,7 +820,7 @@ osso_abook_load_pixbuf_finish(GFile *file, GAsyncResult *result, GError **error)
                                              error))
   {
     pixbuf = g_simple_async_result_get_op_res_gpointer(
-          G_SIMPLE_ASYNC_RESULT(result));
+      G_SIMPLE_ASYNC_RESULT(result));
   }
 
   if (pixbuf)
@@ -873,8 +886,8 @@ osso_abook_set_window_flag(GtkWindow *window, const char *flag, gboolean value)
 
   g_object_set_data(G_OBJECT(window), flag, value ? "1" : "0");
   g_signal_handlers_disconnect_matched(
-        window, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-        realized_cb, NULL);
+    window, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+    realized_cb, NULL);
   g_signal_connect_after(window, "realize",
                          G_CALLBACK(realized_cb), NULL);
 
@@ -922,8 +935,8 @@ static void
 destroyed_cb(GtkWidget *widget, gpointer user_data)
 {
   g_signal_handlers_disconnect_matched(
-        user_data, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-        screen_size_changed_cb, widget);
+    user_data, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+    screen_size_changed_cb, widget);
 }
 
 void
@@ -946,7 +959,6 @@ osso_abook_attach_screen_size_handler(GtkWindow *window)
   }
 }
 
-
 gboolean
 osso_abook_file_set_contents(const char *filename, const void *contents,
                              gssize length, GError **error)
@@ -959,7 +971,7 @@ osso_abook_file_set_contents(const char *filename, const void *contents,
   { \
     int _errno = errno; \
     g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(_errno), \
-    msg " '%s': %s", tmp_name, g_strerror(_errno)); \
+                msg " '%s': %s", tmp_name, g_strerror(_errno)); \
   }
 
   if (fd != -1)
@@ -1011,8 +1023,7 @@ account_get_display_string(TpAccount *account, const char *username,
 
   g_return_val_if_fail(TP_IS_ACCOUNT(account), NULL);
 
-
-  if ( !format )
+  if (!format)
     format = "%s\n%s";
 
   display_name = tp_account_get_display_name(account);
@@ -1024,7 +1035,7 @@ account_get_display_string(TpAccount *account, const char *username,
     if (protocol)
     {
       TpProtocol *protocol_object =
-          osso_abook_account_manager_get_protocol_object(NULL, protocol);
+        osso_abook_account_manager_get_protocol_object(NULL, protocol);
 
       if (protocol_object)
         display_name = tp_protocol_get_english_name(protocol_object);
@@ -1044,13 +1055,13 @@ account_get_display_string(TpAccount *account, const char *username,
     GtkStyle *style = gtk_rc_get_style_by_paths(gtk_settings_get_default(),
                                                 NULL, NULL, GTK_TYPE_LABEL);
 
-    if (gtk_style_lookup_color(style, "SecondaryTextColor", &color) )
+    if (gtk_style_lookup_color(style, "SecondaryTextColor", &color))
       snprintf(foreground, sizeof(foreground), "#%02x%02x%02x",
                color.red >> 8, color.green >> 8, color.blue >> 8);
 
     display_string = g_markup_printf_escaped(
-          "%s\n<span size=\"x-small\" foreground=\"%s\">%s</span>",
-          display_name, foreground, username);
+      "%s\n<span size=\"x-small\" foreground=\"%s\">%s</span>",
+      display_name, foreground, username);
   }
   else
     display_string = g_strdup_printf(format, display_name, username);

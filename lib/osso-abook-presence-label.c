@@ -47,7 +47,8 @@ enum
 };
 
 #define OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label) \
-                ((OssoABookPresenceLabelPrivate *)osso_abook_presence_label_get_instance_private(label))
+  ((OssoABookPresenceLabelPrivate *) \
+   osso_abook_presence_label_get_instance_private(label))
 
 static const char *obj = "\xEF\xBF\xBC"; /* (U+FFFC) */
 
@@ -74,7 +75,7 @@ static void
 presence_type_changed_cb(OssoABookPresenceLabel *label)
 {
   OssoABookPresenceLabelPrivate *priv =
-      OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
+    OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
   const char *status;
 
   icon_free(priv);
@@ -100,8 +101,8 @@ presence_free(gpointer data, OssoABookPresenceLabelPrivate *priv)
     return;
 
   g_signal_handlers_disconnect_matched(
-        priv->presence, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
-        0, 0, NULL, presence_type_changed_cb, data);
+    priv->presence, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+    0, 0, NULL, presence_type_changed_cb, data);
   g_object_unref(priv->presence);
   priv->presence = NULL;
 }
@@ -112,7 +113,7 @@ osso_abook_presence_label_set_property(GObject *object, guint property_id,
 {
   OssoABookPresenceLabel *label = OSSO_ABOOK_PRESENCE_LABEL(object);
   OssoABookPresenceLabelPrivate *priv =
-      OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
+    OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
 
   switch (property_id)
   {
@@ -150,7 +151,7 @@ osso_abook_presence_label_get_property(GObject *object, guint property_id,
 {
   OssoABookPresenceLabel *label = OSSO_ABOOK_PRESENCE_LABEL(object);
   OssoABookPresenceLabelPrivate *priv =
-      OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
+    OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
 
   switch (property_id)
   {
@@ -162,7 +163,7 @@ osso_abook_presence_label_get_property(GObject *object, guint property_id,
     case LABEL:
     {
       G_OBJECT_CLASS(g_type_class_peek(pspec->owner_type))->
-          get_property(object, pspec->param_id, value, pspec);
+      get_property(object, pspec->param_id, value, pspec);
       break;
     }
     default:
@@ -178,7 +179,7 @@ osso_abook_presence_label_dispose(GObject *object)
 {
   OssoABookPresenceLabel *label = OSSO_ABOOK_PRESENCE_LABEL(object);
   OssoABookPresenceLabelPrivate *priv =
-      OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
+    OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
 
   presence_free(object, priv);
   icon_free(priv);
@@ -191,9 +192,9 @@ osso_abook_presence_label_expose_event(GtkWidget *widget, GdkEventExpose *event)
 {
   OssoABookPresenceLabel *label = OSSO_ABOOK_PRESENCE_LABEL(widget);
   OssoABookPresenceLabelPrivate *priv =
-      OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
+    OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
   GtkWidgetClass *widget_class =
-      GTK_WIDGET_CLASS(osso_abook_presence_label_parent_class);
+    GTK_WIDGET_CLASS(osso_abook_presence_label_parent_class);
   PangoAttrList *attrs = gtk_label_get_attributes(GTK_LABEL(widget));
   PangoAttrIterator *iter;
   PangoAttribute *attr;
@@ -242,7 +243,7 @@ osso_abook_presence_label_expose_event(GtkWidget *widget, GdkEventExpose *event)
   len = strlen(text);
   idx = attr->start_index;
 
-  if (idx >= len || strncmp(&text[idx], obj, 3))
+  if ((idx >= len) || strncmp(&text[idx], obj, 3))
   {
     gchar *s = strstr(text, obj);
 
@@ -265,7 +266,7 @@ osso_abook_presence_label_expose_event(GtkWidget *widget, GdkEventExpose *event)
   {
     const char *icon_name = NULL;
     GtkIconTheme *theme =
-        gtk_icon_theme_get_for_screen(gtk_widget_get_screen(widget));
+      gtk_icon_theme_get_for_screen(gtk_widget_get_screen(widget));
 
     if (priv->presence)
       icon_name = osso_abook_presence_get_icon_name(priv->presence);
@@ -274,7 +275,7 @@ osso_abook_presence_label_expose_event(GtkWidget *widget, GdkEventExpose *event)
       icon_name = "general_presence_offline";
 
     priv->icon = gtk_icon_theme_load_icon(
-          theme, icon_name, HILDON_ICON_PIXEL_SIZE_XSMALL, 0, NULL);
+      theme, icon_name, HILDON_ICON_PIXEL_SIZE_XSMALL, 0, NULL);
   }
 
   widget_class->expose_event(widget, event);
@@ -298,12 +299,12 @@ osso_abook_presence_label_expose_event(GtkWidget *widget, GdkEventExpose *event)
     x += (pos.x + PANGO_SCALE_2) / PANGO_SCALE;
 
     y += (pos.y + PANGO_SCALE_2 + baseline - (height * PANGO_SCALE))
-        / PANGO_SCALE;
+      / PANGO_SCALE;
 
     if (pos.x > 0)
     {
       x += ((pos.width - (width * PANGO_SCALE)) / 2 + PANGO_SCALE_2)
-          / PANGO_SCALE;
+        / PANGO_SCALE;
     }
 
     gdk_draw_pixbuf(widget->window, 0, priv->icon, 0, 0, x, y, width, height,
@@ -327,9 +328,9 @@ osso_abook_presence_label_style_set(GtkWidget *widget, GtkStyle *previous_style)
 {
   OssoABookPresenceLabel *label = OSSO_ABOOK_PRESENCE_LABEL(widget);
   OssoABookPresenceLabelPrivate *priv =
-      OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
+    OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
   GtkWidgetClass *widget_class =
-      GTK_WIDGET_CLASS(osso_abook_presence_label_parent_class);
+    GTK_WIDGET_CLASS(osso_abook_presence_label_parent_class);
   PangoAttrList *attr;
 
   widget_class->style_set(widget, previous_style);
@@ -354,13 +355,13 @@ osso_abook_presence_label_class_init(OssoABookPresenceLabelClass *klass)
   widget_class->style_set = osso_abook_presence_label_style_set;
 
   g_object_class_install_property(
-        object_class, PRESENCE,
-        g_param_spec_object(
-                 "presence",
-                 "Presence",
-                 "The presence to display",
-                 OSSO_ABOOK_TYPE_PRESENCE,
-                 GTK_PARAM_READWRITE));
+    object_class, PRESENCE,
+    g_param_spec_object(
+      "presence",
+      "Presence",
+      "The presence to display",
+      OSSO_ABOOK_TYPE_PRESENCE,
+      GTK_PARAM_READWRITE));
   g_object_class_override_property(object_class, LABEL, "label");
 }
 
@@ -373,7 +374,7 @@ osso_abook_presence_label_init(OssoABookPresenceLabel *label)
 GtkWidget *
 osso_abook_presence_label_new(OssoABookPresence *presence)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_PRESENCE (presence) || !presence, NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_PRESENCE(presence) || !presence, NULL);
 
   return g_object_new(OSSO_ABOOK_TYPE_PRESENCE_LABEL,
                       "presence", presence,
@@ -381,7 +382,8 @@ osso_abook_presence_label_new(OssoABookPresence *presence)
 }
 
 void
-osso_abook_presence_label_set_presence(OssoABookPresenceLabel *label, OssoABookPresence *presence)
+osso_abook_presence_label_set_presence(OssoABookPresenceLabel *label,
+                                       OssoABookPresence *presence)
 {
   g_return_if_fail(OSSO_ABOOK_IS_PRESENCE_LABEL(label));
   g_return_if_fail(OSSO_ABOOK_IS_PRESENCE(presence) || !presence);

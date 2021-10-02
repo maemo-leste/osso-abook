@@ -20,8 +20,8 @@
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon.h>
 
-#include <math.h>
 #include <libintl.h>
+#include <math.h>
 
 #include "config.h"
 
@@ -38,7 +38,8 @@ struct _OssoABookAvatarEditorDialogPrivate
   int zoom_steps;
 };
 
-typedef struct _OssoABookAvatarEditorDialogPrivate OssoABookAvatarEditorDialogPrivate;
+typedef struct _OssoABookAvatarEditorDialogPrivate
+  OssoABookAvatarEditorDialogPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(
   OssoABookAvatarEditorDialog,
@@ -47,7 +48,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define PRIVATE(dialog) \
-  ((OssoABookAvatarEditorDialogPrivate *)osso_abook_avatar_editor_dialog_get_instance_private(((OssoABookAvatarEditorDialog *)dialog)))
+  ((OssoABookAvatarEditorDialogPrivate *) \
+   osso_abook_avatar_editor_dialog_get_instance_private((( \
+                                                           OssoABookAvatarEditorDialog \
+                                                           *)dialog)))
 
 enum
 {
@@ -61,7 +65,7 @@ static void
 change_adjustment(GtkAdjustment *adjustment, gpointer user_data)
 {
   gdouble step = (adjustment->upper - adjustment->lower) /
-      (gdouble)PRIVATE(user_data)->zoom_steps;
+    (gdouble)PRIVATE(user_data)->zoom_steps;
 
   if (fabs(step - adjustment->step_increment) > step / 1000.0f)
   {
@@ -75,7 +79,7 @@ static OssoABookAvatarImage *
 get_avatar_image(OssoABookAvatarEditorDialogPrivate *priv)
 {
   return osso_abook_avatar_editor_get_image(
-        OSSO_ABOOK_AVATAR_EDITOR(priv->avatar_editor));
+    OSSO_ABOOK_AVATAR_EDITOR(priv->avatar_editor));
 }
 
 static GtkAdjustment *
@@ -118,7 +122,7 @@ static void
 adjustment_set_value(GtkAdjustment *adjustment, double steps)
 {
   gtk_adjustment_set_value(
-        adjustment, adjustment->value + steps * adjustment->step_increment);
+    adjustment, adjustment->value + steps * adjustment->step_increment);
 }
 
 static void
@@ -202,7 +206,7 @@ osso_abook_avatar_editor_dialog_get_property(GObject *object, guint property_id,
 
 static void
 osso_abook_avatar_editor_dialog_class_init(
-    OssoABookAvatarEditorDialogClass *klass)
+  OssoABookAvatarEditorDialogClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
@@ -210,29 +214,29 @@ osso_abook_avatar_editor_dialog_class_init(
   object_class->get_property = osso_abook_avatar_editor_dialog_get_property;
 
   g_object_class_install_property(
-        object_class, PROP_PIXBUF,
-        g_param_spec_object(
-          "pixbuf", "Pixbuf", "The image to edit",
-          GDK_TYPE_PIXBUF,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_PIXBUF,
+    g_param_spec_object(
+      "pixbuf", "Pixbuf", "The image to edit",
+      GDK_TYPE_PIXBUF,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_AVATAR_SIZE,
-        g_param_spec_int(
-          "avatar-size", "Avatar Size", "The size of the avatar image",
-          1, G_MAXINT, OSSO_ABOOK_PIXEL_SIZE_AVATAR_LARGE,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_AVATAR_SIZE,
+    g_param_spec_int(
+      "avatar-size", "Avatar Size", "The size of the avatar image",
+      1, G_MAXINT, OSSO_ABOOK_PIXEL_SIZE_AVATAR_LARGE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_ZOOM_STEPS,
-        g_param_spec_int(
-          "zoom-steps", "Zoom Steps", "The number of zooming steps",
-          1, G_MAXINT, 20,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_ZOOM_STEPS,
+    g_param_spec_int(
+      "zoom-steps", "Zoom Steps", "The number of zooming steps",
+      1, G_MAXINT, 20,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_MAXIMUM_ZOOM,
-        g_param_spec_double(
-          "maximum-zoom", "Maximum Zoom", "The maximum allowed zoom level",
-          1.0f, G_MAXDOUBLE, 2.0f,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_MAXIMUM_ZOOM,
+    g_param_spec_double(
+      "maximum-zoom", "Maximum Zoom", "The maximum allowed zoom level",
+      1.0f, G_MAXDOUBLE, 2.0f,
+      GTK_PARAM_READWRITE));
 }
 
 static void
@@ -356,14 +360,14 @@ osso_abook_avatar_editor_dialog_new(GtkWindow *parent, GdkPixbuf *pixbuf)
   g_return_val_if_fail(GDK_IS_PIXBUF(pixbuf), NULL);
 
   return g_object_new(
-        OSSO_ABOOK_TYPE_AVATAR_EDITOR_DIALOG,
-        "title", g_dgettext("osso-addressbook", "addr_ti_crop_avatar_title"),
-        "modal", TRUE,
-        "transient-for", parent,
-        "destroy-with-parent", TRUE,
-        "has-separator", FALSE,
-        "pixbuf", pixbuf,
-        NULL);
+    OSSO_ABOOK_TYPE_AVATAR_EDITOR_DIALOG,
+    "title", g_dgettext("osso-addressbook", "addr_ti_crop_avatar_title"),
+    "modal", TRUE,
+    "transient-for", parent,
+    "destroy-with-parent", TRUE,
+    "has-separator", FALSE,
+    "pixbuf", pixbuf,
+    NULL);
 }
 
 void
@@ -386,17 +390,18 @@ osso_abook_avatar_editor_dialog_get_pixbuf(OssoABookAvatarEditorDialog *dialog)
 
 GdkPixbuf *
 osso_abook_avatar_editor_dialog_get_scaled_pixbuf(
-    OssoABookAvatarEditorDialog *dialog)
+  OssoABookAvatarEditorDialog *dialog)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_EDITOR_DIALOG(dialog), NULL);
 
   return osso_abook_avatar_image_get_scaled_pixbuf(
-        get_avatar_image(PRIVATE(dialog)));
+    get_avatar_image(PRIVATE(dialog)));
 }
 
 void
 osso_abook_avatar_editor_dialog_set_avatar_size(
-    OssoABookAvatarEditorDialog *dialog, int size)
+  OssoABookAvatarEditorDialog *dialog,
+  int size)
 {
   g_return_if_fail(OSSO_ABOOK_IS_AVATAR_EDITOR_DIALOG(dialog));
 
@@ -404,7 +409,8 @@ osso_abook_avatar_editor_dialog_set_avatar_size(
 }
 
 int
-osso_abook_avatar_editor_dialog_get_avatar_size(OssoABookAvatarEditorDialog *dialog)
+osso_abook_avatar_editor_dialog_get_avatar_size(
+  OssoABookAvatarEditorDialog *dialog)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_EDITOR_DIALOG(dialog),
                        OSSO_ABOOK_PIXEL_SIZE_AVATAR_LARGE);
@@ -414,7 +420,8 @@ osso_abook_avatar_editor_dialog_get_avatar_size(OssoABookAvatarEditorDialog *dia
 
 void
 osso_abook_avatar_editor_dialog_set_zoom_steps(
-    OssoABookAvatarEditorDialog *dialog, int steps)
+  OssoABookAvatarEditorDialog *dialog,
+  int steps)
 {
   g_return_if_fail(OSSO_ABOOK_IS_AVATAR_EDITOR_DIALOG(dialog));
 
@@ -423,7 +430,7 @@ osso_abook_avatar_editor_dialog_set_zoom_steps(
 
 int
 osso_abook_avatar_editor_dialog_get_zoom_steps(
-    OssoABookAvatarEditorDialog *dialog)
+  OssoABookAvatarEditorDialog *dialog)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_EDITOR_DIALOG(dialog), 20);
 
@@ -432,7 +439,8 @@ osso_abook_avatar_editor_dialog_get_zoom_steps(
 
 void
 osso_abook_avatar_editor_dialog_set_maximum_zoom(
-    OssoABookAvatarEditorDialog *dialog, double zoom)
+  OssoABookAvatarEditorDialog *dialog,
+  double zoom)
 {
   g_return_if_fail(OSSO_ABOOK_IS_AVATAR_EDITOR_DIALOG(dialog));
 
@@ -441,7 +449,7 @@ osso_abook_avatar_editor_dialog_set_maximum_zoom(
 
 double
 osso_abook_avatar_editor_dialog_get_maximum_zoom(
-    OssoABookAvatarEditorDialog *dialog)
+  OssoABookAvatarEditorDialog *dialog)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_AVATAR_EDITOR_DIALOG(dialog), 2.0f);
 

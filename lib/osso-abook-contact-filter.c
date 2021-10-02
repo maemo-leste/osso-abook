@@ -24,9 +24,9 @@
 typedef OssoABookContactFilterIface OssoABookContactFilterInterface;
 
 G_DEFINE_INTERFACE(
-    OssoABookContactFilter,
-    osso_abook_contact_filter,
-    G_TYPE_OBJECT
+  OssoABookContactFilter,
+  osso_abook_contact_filter,
+  G_TYPE_OBJECT
 );
 
 static void

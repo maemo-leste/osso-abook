@@ -5,16 +5,16 @@
 
 #include "config.h"
 
-#include "osso-abook-tree-view.h"
-#include "osso-abook-utils-private.h"
-#include "osso-abook-debug.h"
-#include "osso-abook-row-model.h"
 #include "osso-abook-avatar-cache.h"
-#include "osso-abook-util.h"
-#include "osso-abook-roster.h"
+#include "osso-abook-debug.h"
 #include "osso-abook-enums.h"
-#include "osso-abook-waitable.h"
+#include "osso-abook-roster.h"
+#include "osso-abook-row-model.h"
+#include "osso-abook-tree-view.h"
+#include "osso-abook-util.h"
 #include "osso-abook-utils-private.h"
+#include "osso-abook-utils-private.h"
+#include "osso-abook-waitable.h"
 
 struct _OssoABookTreeViewPrivate
 {
@@ -91,7 +91,7 @@ G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(
 );
 
 #define OSSO_ABOOK_TREE_VIEW_PRIVATE(view) \
-                osso_abook_tree_view_get_instance_private(view)
+  osso_abook_tree_view_get_instance_private(view)
 
 static void
 notify_avatar_image_cb(OssoABookContact *contact, GdkPixbuf *image,
@@ -134,20 +134,20 @@ destroy_contact_data(gpointer data)
   if (contact_data->contact)
   {
     g_signal_handlers_disconnect_matched(
-          contact_data->contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
-          0, 0, NULL, notify_avatar_image_cb, contact_data);
+      contact_data->contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+      0, 0, NULL, notify_avatar_image_cb, contact_data);
 
     g_object_weak_unref(
-          G_OBJECT(contact_data->contact), contact_finalyzed_cb, contact_data);
+      G_OBJECT(contact_data->contact), contact_finalyzed_cb, contact_data);
   }
 
   if (contact_data->avatar)
   {
     g_signal_handlers_disconnect_matched(
-          contact_data->avatar, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
-          0, 0, NULL, notify_avatar_image_cb, contact_data);
+      contact_data->avatar, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+      0, 0, NULL, notify_avatar_image_cb, contact_data);
     g_object_weak_unref(
-          G_OBJECT(contact_data->avatar), avatar_finalyzed_cb, contact_data);
+      G_OBJECT(contact_data->avatar), avatar_finalyzed_cb, contact_data);
   }
 
   g_slice_free(OssoABookTreeViewContact, contact_data);
@@ -166,7 +166,7 @@ osso_abook_tree_view_init(OssoABookTreeView *view)
   priv->row_queue1 = g_queue_new();
   priv->row_queue2 = g_queue_new();
   priv->contact_data = g_hash_table_new_full(
-        g_direct_hash, g_direct_equal, NULL, destroy_contact_data);
+    g_direct_hash, g_direct_equal, NULL, destroy_contact_data);
 }
 
 static void
@@ -197,6 +197,7 @@ get_cached_avatar_image(OssoABookTreeView *view,
 
   rv = g_hash_table_lookup_extended(priv->contact_data, contact, NULL,
                                     (gpointer *)&contact_data);
+
   if (avatar_image && contact_data)
     *avatar_image = contact_data->avatar_image;
 
@@ -207,7 +208,9 @@ static GtkIconSize
 get_icon_finger_size(OssoABookTreeViewPrivate *priv, gint *hildon_size)
 {
   if (hildon_size)
-    *hildon_size = hildon_get_icon_pixel_size(HILDON_ICON_SIZE_FINGER);;
+    *hildon_size = hildon_get_icon_pixel_size(HILDON_ICON_SIZE_FINGER);
+
+  ;
 
   return HILDON_ICON_SIZE_FINGER;
 }
@@ -225,8 +228,8 @@ static GdkPixbuf *
 get_avatar_fallback_image(OssoABookTreeView *view, OssoABookAvatar *avatar)
 {
   return _osso_abook_get_cached_icon(
-        view, osso_abook_avatar_get_fallback_icon_name(avatar),
-        hildon_get_icon_pixel_size(HILDON_ICON_SIZE_FINGER));
+    view, osso_abook_avatar_get_fallback_icon_name(avatar),
+    hildon_get_icon_pixel_size(HILDON_ICON_SIZE_FINGER));
 }
 
 static GdkPixbuf *
@@ -242,8 +245,8 @@ create_avatar_image(OssoABookTreeView *view, OssoABookContact *contact)
     if (!osso_abook_avatar_is_user_selected(avatar))
     {
       GList *contacts = osso_abook_contact_find_roster_contacts_for_account(
-            contact, NULL,
-            tp_account_get_path_suffix(priv->aggregation_account));
+        contact, NULL,
+        tp_account_get_path_suffix(priv->aggregation_account));
 
       if (contacts)
         avatar = OSSO_ABOOK_AVATAR(contacts->data);
@@ -276,7 +279,7 @@ create_avatar_image(OssoABookTreeView *view, OssoABookContact *contact)
     const guint8 *border_color = get_avatar_border_color(priv);
 
     avatar_image = osso_abook_avatar_get_image_rounded(
-          avatar, size, size, TRUE, priv->avatar_radius, border_color);
+      avatar, size, size, TRUE, priv->avatar_radius, border_color);
 
     if (!avatar_image)
       avatar_image = get_avatar_fallback_image(view, avatar);
@@ -336,7 +339,7 @@ sync_tree_idle(gpointer user_data)
       if (create_avatar_image(view, contact))
       {
         gtk_tree_model_row_changed(
-              GTK_TREE_MODEL(priv->base_model), path, &iter);
+          GTK_TREE_MODEL(priv->base_model), path, &iter);
       }
     }
 
@@ -363,7 +366,7 @@ sync_tree(OssoABookTreeView *view)
   if (!priv->show_tree_id)
   {
     priv->show_tree_id =
-        gdk_threads_add_idle_full(310, sync_tree_idle, view, NULL);
+      gdk_threads_add_idle_full(310, sync_tree_idle, view, NULL);
   }
 
   priv->index = 0;
@@ -390,9 +393,9 @@ show_empty_widget(OssoABookTreeViewPrivate *priv)
   if (priv->filter_model)
   {
     const char *filter_text =
-        osso_abook_filter_model_get_text(priv->filter_model);
+      osso_abook_filter_model_get_text(priv->filter_model);
     OssoABookGroup *group =
-        osso_abook_filter_model_get_group(priv->filter_model);
+      osso_abook_filter_model_get_group(priv->filter_model);
 
     if (filter_text && *filter_text)
       empty_text = _("addr_ia_search_not_found");
@@ -405,13 +408,13 @@ show_empty_widget(OssoABookTreeViewPrivate *priv)
     GtkWidget *empty_label;
 
     if (!empty_text)
-        empty_text = priv->empty_text;
+      empty_text = priv->empty_text;
 
     empty_label = gtk_label_new(empty_text);
     gtk_misc_set_alignment(GTK_MISC(empty_label), 0.5, 0.5);
     hildon_helper_set_logical_font(empty_label, "LargeSystemFont");
     hildon_helper_set_logical_color(
-          empty_label, GTK_RC_FG, GTK_STATE_NORMAL, "SecondaryTextColor");
+      empty_label, GTK_RC_FG, GTK_STATE_NORMAL, "SecondaryTextColor");
     empty_widget = gtk_hbox_new(FALSE, 0);
     gtk_container_set_border_width(GTK_CONTAINER(empty_widget), 24);
     gtk_container_add(GTK_CONTAINER(empty_widget), empty_label);
@@ -419,8 +422,8 @@ show_empty_widget(OssoABookTreeViewPrivate *priv)
 
   OSSO_ABOOK_NOTE(GTK, "showing empty widget %s",
                   GTK_IS_LABEL(empty_widget) ?
-                    gtk_label_get_text(GTK_LABEL(empty_widget)) :
-                    g_type_name(G_TYPE_FROM_INSTANCE(empty_widget)));
+                  gtk_label_get_text(GTK_LABEL(empty_widget)) :
+                  g_type_name(G_TYPE_FROM_INSTANCE(empty_widget)));
 
   gtk_container_add(GTK_CONTAINER(priv->event_box), empty_widget);
   gtk_widget_hide(priv->pannable_area);
@@ -456,7 +459,7 @@ sync_view(OssoABookTreeView *view)
   if (!priv->sync_view_id)
   {
     priv->sync_view_id =
-        gdk_threads_add_idle_full(100, sync_view_idle, view, NULL);
+      gdk_threads_add_idle_full(100, sync_view_idle, view, NULL);
   }
 }
 
@@ -486,7 +489,7 @@ osso_abook_tree_view_set_model(OssoABookTreeView *view, GtkTreeModel *model)
   if (priv->tree_view)
   {
     GtkTreeModel *old_model =
-        gtk_tree_view_get_model(GTK_TREE_VIEW(priv->tree_view));
+      gtk_tree_view_get_model(GTK_TREE_VIEW(priv->tree_view));
 
     if (priv->row_inserted_id)
     {
@@ -495,11 +498,11 @@ osso_abook_tree_view_set_model(OssoABookTreeView *view, GtkTreeModel *model)
     }
 
     priv->row_inserted_id =
-        g_signal_connect_object(model, "row-inserted",
-                                G_CALLBACK(row_inserted_cb), view, 0);
+      g_signal_connect_object(model, "row-inserted",
+                              G_CALLBACK(row_inserted_cb), view, 0);
     priv->row_deleted_id =
-        g_signal_connect_object(model, "row-deleted",
-                                G_CALLBACK(row_deleted_cb), view, 0);
+      g_signal_connect_object(model, "row-deleted",
+                              G_CALLBACK(row_deleted_cb), view, 0);
     gtk_tree_view_set_model(GTK_TREE_VIEW(priv->tree_view), model);
     sync_view(view);
     sync_tree(view);
@@ -535,12 +538,12 @@ style_set(GtkWidget *widget, GtkStyle *previous_style, gpointer user_data)
   if (!priv->show_contact_avatar)
   {
     gtk_icon_size_lookup_for_settings(
-          settings, HILDON_ICON_SIZE_FINGER, NULL, &height);
+      settings, HILDON_ICON_SIZE_FINGER, NULL, &height);
   }
 
   get_icon_finger_size(priv, &hildon_size);
   gtk_icon_size_lookup_for_settings(
-        settings, HILDON_ICON_SIZE_XSMALL, &width, NULL);
+    settings, HILDON_ICON_SIZE_XSMALL, &width, NULL);
 
   hildon_size += 6;
   gtk_cell_renderer_set_fixed_size(priv->contact_name, -1, height);
@@ -572,9 +575,12 @@ style_set(GtkWidget *widget, GtkStyle *previous_style, gpointer user_data)
     if (memcmp(priv->border_color, border_color, sizeof(border_color)))
     {
       gint size = hildon_get_icon_pixel_size(HILDON_ICON_SIZE_FINGER);
-      gchar *avatar_name = _osso_abook_avatar_get_cache_name(size, size, TRUE,
-                                              priv->avatar_radius,
-                                              get_avatar_border_color(priv));
+      gchar *avatar_name = _osso_abook_avatar_get_cache_name(size,
+                                                             size,
+                                                             TRUE,
+                                                             priv->avatar_radius,
+                                                             get_avatar_border_color(
+                                                               priv));
 
       osso_abook_avatar_cache_drop_by_name(avatar_name);
       memcpy(priv->border_color, border_color, 4u);
@@ -643,14 +649,14 @@ sync_avatar_images_idle(gpointer user_data)
       if (gtk_tree_model_get_iter(tree_model, &iter, path))
       {
         OssoABookListStoreRow *row = osso_abook_row_model_iter_get_row(
-              OSSO_ABOOK_ROW_MODEL(tree_model), &iter);
+          OSSO_ABOOK_ROW_MODEL(tree_model), &iter);
 
         if (row && row->contact &&
             !get_cached_avatar_image(view, row->contact, NULL))
         {
           gint index = processing_q2 ? 0 : get_path_index(path);
 
-          if (processing_q2 || (index >= start_index && index <= end_index))
+          if (processing_q2 || ((index >= start_index) && (index <= end_index)))
           {
             if (create_avatar_image(view, row->contact))
               gtk_tree_model_row_changed(tree_model, path, &iter);
@@ -702,7 +708,7 @@ contact_avatar_cell_data(GtkTreeViewColumn *tree_column, GtkCellRenderer *cell,
     if (OSSO_ABOOK_TREE_VIEW_GET_CLASS(view)->is_row_sensitive)
     {
       sensitive = OSSO_ABOOK_TREE_VIEW_GET_CLASS(view)->is_row_sensitive(
-            view, tree_model, iter);
+        view, tree_model, iter);
     }
 
     g_object_set(cell, "sensitive", sensitive, NULL);
@@ -718,18 +724,18 @@ contact_avatar_cell_data(GtkTreeViewColumn *tree_column, GtkCellRenderer *cell,
         {
           OssoABookTreeViewPrivate *priv = OSSO_ABOOK_TREE_VIEW_PRIVATE(view);
           GtkTreeRowReference *row_ref =
-              gtk_tree_row_reference_new(tree_model, path);
+            gtk_tree_row_reference_new(tree_model, path);
 
           g_queue_push_tail(priv->row_queue1, row_ref);
 
           if (!priv->sync_avatar_images_id)
           {
             priv->sync_avatar_images_id = gdk_threads_add_idle_full(
-                  300, sync_avatar_images_idle, view, NULL);
+              300, sync_avatar_images_idle, view, NULL);
           }
 
           avatar_image = get_avatar_fallback_image(
-                view, OSSO_ABOOK_AVATAR(row->contact));
+            view, OSSO_ABOOK_AVATAR(row->contact));
         }
         else
           avatar_image = create_avatar_image(view, row->contact);
@@ -765,10 +771,11 @@ sync_presence(OssoABookTreeView *view)
                           priv->contact_presence, pos);
   gtk_tree_view_column_set_cell_data_func(priv->column, priv->contact_avatar,
                                           cell_data_func, view, NULL);
+
   if (priv->tree_view)
   {
     GtkTreeModel *model =
-        gtk_tree_view_get_model(GTK_TREE_VIEW(priv->tree_view));
+      gtk_tree_view_get_model(GTK_TREE_VIEW(priv->tree_view));
 
     g_object_ref(G_OBJECT(model));
     gtk_tree_view_set_model(GTK_TREE_VIEW(priv->tree_view), NULL);
@@ -823,7 +830,7 @@ osso_abook_tree_view_get_property(GObject *object, guint property_id,
       g_value_set_object(value, priv->aggregation_account);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -847,6 +854,7 @@ osso_abook_tree_view_set_property(GObject *object, guint property_id,
       osso_abook_tree_view_set_filter_model(view, g_value_get_object(value));
       break;
     case PARAM_SHOW_CONTACT_NAME:
+
       if (priv->show_contact_name != g_value_get_boolean(value))
       {
         priv->show_contact_name = !priv->show_contact_name;
@@ -854,8 +862,10 @@ osso_abook_tree_view_set_property(GObject *object, guint property_id,
                      "visible", priv->show_contact_name,
                      NULL);
       }
+
       break;
     case PARAM_SHOW_CONTACT_AVATAR:
+
       if (priv->show_contact_avatar != g_value_get_boolean(value))
       {
         priv->show_contact_avatar = !priv->show_contact_avatar;
@@ -864,8 +874,10 @@ osso_abook_tree_view_set_property(GObject *object, guint property_id,
                      NULL);
         sync_presence(view);
       }
+
       break;
     case PARAM_SHOW_CONTACT_PRESENCE:
+
       if (priv->show_contact_presence != g_value_get_boolean(value))
       {
         priv->show_contact_presence = !priv->show_contact_presence;
@@ -874,16 +886,18 @@ osso_abook_tree_view_set_property(GObject *object, guint property_id,
                      NULL);
         sync_presence(view);
       }
+
       break;
     case PARAM_SHOW_CONTACT_TELEPHONE:
+
       if (priv->show_contact_telephone != g_value_get_boolean(value))
       {
-
         priv->show_contact_telephone = !priv->show_contact_telephone;
         g_object_set(priv->contact_telephone,
                      "visible", priv->show_contact_telephone,
                      NULL);
       }
+
       break;
     case PARAM_USE_SIM_AVATAR:
       priv->use_sim_avatar = g_value_get_boolean(value);
@@ -896,7 +910,7 @@ osso_abook_tree_view_set_property(GObject *object, guint property_id,
       if (gtk_widget_get_mapped(GTK_WIDGET(view)) && priv->filter_model)
       {
         gtk_tree_model_filter_refilter(
-              GTK_TREE_MODEL_FILTER(priv->filter_model));
+          GTK_TREE_MODEL_FILTER(priv->filter_model));
       }
 
       break;
@@ -920,13 +934,14 @@ osso_abook_tree_view_set_property(GObject *object, guint property_id,
         hildon_gtk_tree_view_set_ui_mode(GTK_TREE_VIEW(priv->tree_view),
                                          priv->ui_mode);
       }
+
       break;
     case PARAM_AGGREGATION_ACCOUNT:
       osso_abook_tree_view_set_aggregation_account(view,
                                                    g_value_get_object(value));
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -960,7 +975,7 @@ get_pango_attributes(PangoAttrList *attr_list, GtkWidget *widget,
 
     settings = gtk_widget_get_settings(GTK_WIDGET(widget));
     style = gtk_rc_get_style_by_paths(
-          settings, "SmallSystemFont", NULL, G_TYPE_NONE);
+      settings, "SmallSystemFont", NULL, G_TYPE_NONE);
     desc = pango_attr_font_desc_new(style->font_desc);
     desc->start_index = start_index;
     desc->end_index = end_index;
@@ -980,6 +995,7 @@ contact_telefone_cell_data(GtkTreeViewColumn *tree_column,
   gchar *text = NULL;
   gboolean sensitive;
   PangoAttrList *attr_list;
+
   row = osso_abook_row_model_iter_get_row(OSSO_ABOOK_ROW_MODEL(tree_model),
                                           iter);
 
@@ -1009,7 +1025,7 @@ contact_telefone_cell_data(GtkTreeViewColumn *tree_column,
   if (OSSO_ABOOK_TREE_VIEW_GET_CLASS(view)->is_row_sensitive)
   {
     sensitive = OSSO_ABOOK_TREE_VIEW_GET_CLASS(view)->
-        is_row_sensitive(view, tree_model, iter);
+      is_row_sensitive(view, tree_model, iter);
   }
   else
     sensitive = TRUE;
@@ -1038,15 +1054,15 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
   GdkPixbuf *icon = NULL;
   const gchar *icon_name = NULL;
   OssoABookListStoreRow *row =
-      osso_abook_row_model_iter_get_row(OSSO_ABOOK_ROW_MODEL(tree_model), iter);
+    osso_abook_row_model_iter_get_row(OSSO_ABOOK_ROW_MODEL(tree_model), iter);
 
   if (row)
   {
     if (priv->aggregation_account)
     {
       GList *contacts = osso_abook_contact_find_roster_contacts_for_account(
-            row->contact, NULL,
-            tp_account_get_path_suffix(priv->aggregation_account));
+        row->contact, NULL,
+        tp_account_get_path_suffix(priv->aggregation_account));
       OssoABookPresence *max_presence = NULL;
       GList *l = contacts;
 
@@ -1067,9 +1083,9 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
 
 #if 0
       protocol = mc_profile_lookup(
-            mc_account_compat_get_profile(priv->aggregation_account));
+        mc_account_compat_get_profile(priv->aggregation_account));
       icon_name =
-          osso_abook_presence_get_branded_icon_name(max_presence, protocol);
+        osso_abook_presence_get_branded_icon_name(max_presence, protocol);
 #else
       g_assert(0);
 #endif
@@ -1077,7 +1093,7 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
     else
     {
       icon_name =
-          osso_abook_presence_get_icon_name(OSSO_ABOOK_PRESENCE(row->contact));
+        osso_abook_presence_get_icon_name(OSSO_ABOOK_PRESENCE(row->contact));
     }
   }
 
@@ -1091,7 +1107,7 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
   if (icon_name)
   {
     icon = _osso_abook_get_cached_icon(
-          view, icon_name, hildon_get_icon_pixel_size(HILDON_ICON_SIZE_XSMALL));
+      view, icon_name, hildon_get_icon_pixel_size(HILDON_ICON_SIZE_XSMALL));
   }
 
   g_object_set(cell,
@@ -1103,6 +1119,7 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
   if (icon)
     g_object_unref(icon);
 }
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 static void
@@ -1126,7 +1143,7 @@ contact_name_cell_data(GtkTreeViewColumn *tree_column, GtkCellRenderer *cell,
   guint start_index;
 
   row = osso_abook_row_model_iter_get_row(
-        OSSO_ABOOK_ROW_MODEL(tree_model), iter);
+    OSSO_ABOOK_ROW_MODEL(tree_model), iter);
 
   if (row)
   {
@@ -1145,7 +1162,7 @@ contact_name_cell_data(GtkTreeViewColumn *tree_column, GtkCellRenderer *cell,
   if (OSSO_ABOOK_TREE_VIEW_GET_CLASS(view)->is_row_sensitive)
   {
     sensitive = OSSO_ABOOK_TREE_VIEW_GET_CLASS(view)->
-        is_row_sensitive(view, tree_model, iter);
+      is_row_sensitive(view, tree_model, iter);
   }
   else
     sensitive = TRUE;
@@ -1155,9 +1172,9 @@ contact_name_cell_data(GtkTreeViewColumn *tree_column, GtkCellRenderer *cell,
     if (row)
     {
       status_message = osso_abook_presence_get_presence_status_message(
-            OSSO_ABOOK_PRESENCE(row->contact));
+        OSSO_ABOOK_PRESENCE(row->contact));
       location = osso_abook_presence_get_location_string(
-            OSSO_ABOOK_PRESENCE(row->contact));
+        OSSO_ABOOK_PRESENCE(row->contact));
     }
     else
     {
@@ -1178,7 +1195,7 @@ contact_name_cell_data(GtkTreeViewColumn *tree_column, GtkCellRenderer *cell,
         if (row)
         {
           caps = osso_abook_caps_get_capabilities(
-                OSSO_ABOOK_CAPS(row->contact));
+            OSSO_ABOOK_CAPS(row->contact));
           GList *contacts;
 
           uid = e_contact_get_const(E_CONTACT(row->contact), E_CONTACT_UID);
@@ -1266,24 +1283,38 @@ contact_name_cell_data(GtkTreeViewColumn *tree_column, GtkCellRenderer *cell,
     else
       text = g_strdup(contact_name);
 
-    g_object_set(cell, "text", text, "attributes", attr_list, "sensitive", sensitive, NULL);
+    g_object_set(cell,
+                 "text",
+                 text,
+                 "attributes",
+                 attr_list,
+                 "sensitive",
+                 sensitive,
+                 NULL);
     g_free(text);
   }
   else
   {
-    g_object_set(cell, "text", contact_name, "attributes", attr_list, "sensitive", sensitive, NULL);
+    g_object_set(cell,
+                 "text",
+                 contact_name,
+                 "attributes",
+                 attr_list,
+                 "sensitive",
+                 sensitive,
+                 NULL);
   }
 
   if (attr_list)
     pango_attr_list_unref(attr_list);
 }
+
 #pragma GCC diagnostic pop
 
 static void
 name_order_notify_cb(GConfClient *client, guint cnxn_id, GConfEntry *entry,
                      gpointer user_data)
 {
-
   OssoABookTreeView *view = OSSO_ABOOK_TREE_VIEW(user_data);
   GConfValue *val = gconf_entry_get_value(entry);
 
@@ -1372,13 +1403,13 @@ osso_abook_tree_view_constructed(GObject *object)
   gtk_box_pack_start(GTK_BOX(view), priv->event_box, TRUE, TRUE, 0);
 
   priv->name_order_notify_id =
-      gconf_client_notify_add(osso_abook_get_gconf_client(),
-                              OSSO_ABOOK_SETTINGS_KEY_NAME_ORDER,
-                              name_order_notify_cb, view, NULL, NULL);
+    gconf_client_notify_add(osso_abook_get_gconf_client(),
+                            OSSO_ABOOK_SETTINGS_KEY_NAME_ORDER,
+                            name_order_notify_cb, view, NULL, NULL);
   priv->contact_order_notify_id =
-      gconf_client_notify_add(osso_abook_get_gconf_client(),
-                              OSSO_ABOOK_SETTINGS_KEY_CONTACT_ORDER,
-                              contact_order_notify_cb, view, NULL, NULL);
+    gconf_client_notify_add(osso_abook_get_gconf_client(),
+                            OSSO_ABOOK_SETTINGS_KEY_CONTACT_ORDER,
+                            contact_order_notify_cb, view, NULL, NULL);
   sync_view(view);
 }
 
@@ -1394,6 +1425,7 @@ osso_abook_tree_view_dispose(GObject *object)
                                priv->name_order_notify_id);
     priv->name_order_notify_id = 0;
   }
+
   if (priv->contact_order_notify_id)
   {
     gconf_client_notify_remove(osso_abook_get_gconf_client(),
@@ -1409,7 +1441,8 @@ osso_abook_tree_view_dispose(GObject *object)
 
   if (priv->row_inserted_id)
   {
-    GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(priv->tree_view));
+    GtkTreeModel *model =
+      gtk_tree_view_get_model(GTK_TREE_VIEW(priv->tree_view));
 
     disconnect_signal_if_connected(model, priv->row_inserted_id);
     priv->row_inserted_id = 0;
@@ -1491,13 +1524,13 @@ osso_abook_tree_view_is_row_sensitive(OssoABookTreeView *view,
     return TRUE;
 
   row =
-      osso_abook_row_model_iter_get_row(OSSO_ABOOK_ROW_MODEL(tree_model), iter);
+    osso_abook_row_model_iter_get_row(OSSO_ABOOK_ROW_MODEL(tree_model), iter);
 
   if (!row)
     return TRUE;
 
   return osso_abook_caps_get_capabilities(OSSO_ABOOK_CAPS(row)) &
-      priv->sensitive_caps;
+         priv->sensitive_caps;
 }
 
 static void
@@ -1518,144 +1551,144 @@ osso_abook_tree_view_class_init(OssoABookTreeViewClass *klass)
   klass->is_row_sensitive = osso_abook_tree_view_is_row_sensitive;
 
   g_object_class_install_property(
-        object_class, PARAM_MODEL,
-        g_param_spec_object(
-                 "model",
-                 "Model",
-                 "The top contained GtkTreeModel.",
-                 GTK_TYPE_TREE_MODEL,
-                 GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PARAM_MODEL,
+    g_param_spec_object(
+      "model",
+      "Model",
+      "The top contained GtkTreeModel.",
+      GTK_TYPE_TREE_MODEL,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property(
-        object_class, PARAM_BASE_MODEL,
-        g_param_spec_object(
-                 "base-model",
-                 "Base model",
-                 "The contained OssoABookListStore.",
-                 OSSO_ABOOK_TYPE_LIST_STORE,
-                 GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PARAM_BASE_MODEL,
+    g_param_spec_object(
+      "base-model",
+      "Base model",
+      "The contained OssoABookListStore.",
+      OSSO_ABOOK_TYPE_LIST_STORE,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property(
-        object_class, PARAM_FILTER_MODEL,
-        g_param_spec_object(
-                  "filter-model",
-                  "Filter model",
-                  "The contained OssoABookFilterModel, if any.",
-                  OSSO_ABOOK_TYPE_FILTER_MODEL,
-                  GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PARAM_FILTER_MODEL,
+    g_param_spec_object(
+      "filter-model",
+      "Filter model",
+      "The contained OssoABookFilterModel, if any.",
+      OSSO_ABOOK_TYPE_FILTER_MODEL,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property(
-        object_class, PARAM_TREE_VIEW,
-        g_param_spec_object(
-                  "tree-view",
-                  "GtkTreeView",
-                  "The contained GtkTreeView widget.",
-                  GTK_TYPE_TREE_VIEW,
-                  GTK_PARAM_READABLE));
+    object_class, PARAM_TREE_VIEW,
+    g_param_spec_object(
+      "tree-view",
+      "GtkTreeView",
+      "The contained GtkTreeView widget.",
+      GTK_TYPE_TREE_VIEW,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PARAM_SHOW_CONTACT_NAME,
-        g_param_spec_boolean(
-                  "show-contact-name",
-                  "Show contact name",
-                  "TRUE if contact names should be shown",
-                  TRUE,
-                  GTK_PARAM_READWRITE));
+    object_class, PARAM_SHOW_CONTACT_NAME,
+    g_param_spec_boolean(
+      "show-contact-name",
+      "Show contact name",
+      "TRUE if contact names should be shown",
+      TRUE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PARAM_SHOW_CONTACT_AVATAR,
-        g_param_spec_boolean(
-                  "show-contact-avatar",
-                  "Show contact avatar",
-                  "TRUE if avatars should be shown",
-                  FALSE,
-                  GTK_PARAM_READWRITE));
+    object_class, PARAM_SHOW_CONTACT_AVATAR,
+    g_param_spec_boolean(
+      "show-contact-avatar",
+      "Show contact avatar",
+      "TRUE if avatars should be shown",
+      FALSE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PARAM_SENSITIVE_CAPS,
-        g_param_spec_uint(
-                  "sensitive-caps",
-                  "Sensitive Caps",
-                  "OssoABookCapsFlags mask that determines which entries are sensitive. A 0 value disables this feature.",
-                  OSSO_ABOOK_CAPS_NONE,
-                  G_MAXUINT,
-                  OSSO_ABOOK_CAPS_NONE,
-                  GTK_PARAM_WRITABLE));
+    object_class, PARAM_SENSITIVE_CAPS,
+    g_param_spec_uint(
+      "sensitive-caps",
+      "Sensitive Caps",
+      "OssoABookCapsFlags mask that determines which entries are sensitive. A 0 value disables this feature.",
+      OSSO_ABOOK_CAPS_NONE,
+      G_MAXUINT,
+      OSSO_ABOOK_CAPS_NONE,
+      GTK_PARAM_WRITABLE));
   g_object_class_install_property(
-        object_class, PARAM_SHOW_CONTACT_PRESENCE,
-        g_param_spec_boolean(
-                  "show-contact-presence",
-                  "Show contact presence",
-                  "TRUE if presence should be shown",
-                  TRUE,
-                  GTK_PARAM_READWRITE));
+    object_class, PARAM_SHOW_CONTACT_PRESENCE,
+    g_param_spec_boolean(
+      "show-contact-presence",
+      "Show contact presence",
+      "TRUE if presence should be shown",
+      TRUE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PARAM_SHOW_CONTACT_TELEPHONE,
-        g_param_spec_boolean(
-                  "show-contact-telephone",
-                  "Show contact telephone",
-                  "TRUE if telephone number should be shown",
-                  FALSE,
-                  GTK_PARAM_READWRITE));
+    object_class, PARAM_SHOW_CONTACT_TELEPHONE,
+    g_param_spec_boolean(
+      "show-contact-telephone",
+      "Show contact telephone",
+      "TRUE if telephone number should be shown",
+      FALSE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PARAM_USE_SIM_AVATAR,
-        g_param_spec_boolean(
-                  "use-sim-avatar",
-                  "Use sim avatar",
-                  "TRUE if not setted avatar use sim-card 'avatar' instead of default",
-                  FALSE,
-                  GTK_PARAM_READWRITE));
+    object_class, PARAM_USE_SIM_AVATAR,
+    g_param_spec_boolean(
+      "use-sim-avatar",
+      "Use sim avatar",
+      "TRUE if not setted avatar use sim-card 'avatar' instead of default",
+      FALSE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PARAM_EMPTY_TEXT,
-        g_param_spec_string(
-                  "empty-text",
-                  "Empty Text",
-                  "The text to show if there are not contacts",
-                  _("addr_ia_no_contacts"),
-                  GTK_PARAM_READWRITE));
+    object_class, PARAM_EMPTY_TEXT,
+    g_param_spec_string(
+      "empty-text",
+      "Empty Text",
+      "The text to show if there are not contacts",
+      _("addr_ia_no_contacts"),
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PARAM_HILDON_UI_MODE,
-        g_param_spec_enum(
-                  "hildon-ui-mode",
-                  "Hildon UI Mode",
-                  "The Hildon UI mode according to which the tree view should behave",
-                  HILDON_TYPE_UI_MODE,
-                  HILDON_UI_MODE_NORMAL,
-                  GTK_PARAM_READWRITE));
+    object_class, PARAM_HILDON_UI_MODE,
+    g_param_spec_enum(
+      "hildon-ui-mode",
+      "Hildon UI Mode",
+      "The Hildon UI mode according to which the tree view should behave",
+      HILDON_TYPE_UI_MODE,
+      HILDON_UI_MODE_NORMAL,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PARAM_AGGREGATION_ACCOUNT,
-        g_param_spec_object(
-                  "aggregation-account",
-                  "Aggregation Account",
-                  "A single MC Account to aggregate presence and avatar from (as opposed to all accounts).",
-                  TP_TYPE_ACCOUNT,
-                  GTK_PARAM_READWRITE));
+    object_class, PARAM_AGGREGATION_ACCOUNT,
+    g_param_spec_object(
+      "aggregation-account",
+      "Aggregation Account",
+      "A single MC Account to aggregate presence and avatar from (as opposed to all accounts).",
+      TP_TYPE_ACCOUNT,
+      GTK_PARAM_READWRITE));
   gtk_widget_class_install_style_property(
-        widget_class,
-        g_param_spec_int(
-                  "avatar-radius",
-                  "Avatar Radius",
-                  "Radius of rounded avatar borders",
-                  -1,
-                  G_MAXINT,
-                  -1,
-                  GTK_PARAM_READWRITE));
+    widget_class,
+    g_param_spec_int(
+      "avatar-radius",
+      "Avatar Radius",
+      "Radius of rounded avatar borders",
+      -1,
+      G_MAXINT,
+      -1,
+      GTK_PARAM_READWRITE));
   gtk_widget_class_install_style_property(
-        widget_class,
-        g_param_spec_boolean(
-                  "avatar-border",
-                  "Avatar Border",
-                  "Wheither to show an avatar borders",
-                  FALSE,
-                  GTK_PARAM_READWRITE));
+    widget_class,
+    g_param_spec_boolean(
+      "avatar-border",
+      "Avatar Border",
+      "Wheither to show an avatar borders",
+      FALSE,
+      GTK_PARAM_READWRITE));
   gtk_widget_class_install_style_property(
-        widget_class,
-        g_param_spec_boxed(
-                  "avatar-border-color",
-                  "Avatar Border Color",
-                  "Color of the avatar borders",
-                  GDK_TYPE_COLOR,
-                  GTK_PARAM_READWRITE));
+    widget_class,
+    g_param_spec_boxed(
+      "avatar-border-color",
+      "Avatar Border Color",
+      "Color of the avatar borders",
+      GDK_TYPE_COLOR,
+      GTK_PARAM_READWRITE));
 }
 
 GtkTreeSelection *
 osso_abook_tree_view_get_tree_selection(OssoABookTreeView *view)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW (view), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view), NULL);
 
   return gtk_tree_view_get_selection(osso_abook_tree_view_get_tree_view(view));
 }
@@ -1663,7 +1696,7 @@ osso_abook_tree_view_get_tree_selection(OssoABookTreeView *view)
 GtkTreeView *
 osso_abook_tree_view_get_tree_view(OssoABookTreeView *view)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW (view), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view), NULL);
 
   return GTK_TREE_VIEW(view->priv->tree_view);
 }
@@ -1671,7 +1704,7 @@ osso_abook_tree_view_get_tree_view(OssoABookTreeView *view)
 void
 osso_abook_tree_view_set_ui_mode(OssoABookTreeView *view, HildonUIMode mode)
 {
-  g_return_if_fail(OSSO_ABOOK_IS_TREE_VIEW (view));
+  g_return_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view));
 
   g_object_set(G_OBJECT(view), "hildon-ui-mode", mode, NULL);
 }
@@ -1679,7 +1712,7 @@ osso_abook_tree_view_set_ui_mode(OssoABookTreeView *view, HildonUIMode mode)
 GtkTreeModel *
 osso_abook_tree_view_get_model(OssoABookTreeView *view)
 {
-  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW (view), NULL);
+  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view), NULL);
 
   return gtk_tree_view_get_model(GTK_TREE_VIEW(view->priv->tree_view));
 }
@@ -1687,7 +1720,7 @@ osso_abook_tree_view_get_model(OssoABookTreeView *view)
 void
 osso_abook_tree_view_set_empty_text(OssoABookTreeView *view, const char *text)
 {
-  g_return_if_fail(OSSO_ABOOK_IS_TREE_VIEW (view));
+  g_return_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view));
   g_return_if_fail(text != NULL);
 
   g_object_set(G_OBJECT(view), "empty-text", text, NULL);
@@ -1751,8 +1784,8 @@ on_roster_ready(OssoABookWaitable *waitable, const GError *error, gpointer data)
   priv->closure = NULL;
 
   g_return_if_fail(
-        waitable == (OssoABookWaitable *)osso_abook_list_store_get_roster(
-          priv->base_model));
+    waitable == (OssoABookWaitable *)osso_abook_list_store_get_roster(
+      priv->base_model));
 
   sync_view(view);
 }
@@ -1798,7 +1831,7 @@ osso_abook_tree_view_set_base_model(OssoABookTreeView *view,
   {
     g_object_add_weak_pointer(priv->waitable, &priv->waitable);
     priv->closure = osso_abook_waitable_call_when_ready(
-          OSSO_ABOOK_WAITABLE(priv->waitable), on_roster_ready, view, NULL);
+      OSSO_ABOOK_WAITABLE(priv->waitable), on_roster_ready, view, NULL);
   }
 }
 

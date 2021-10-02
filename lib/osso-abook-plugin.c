@@ -41,9 +41,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define OSSO_ABOOK_PLUGIN_PRIVATE(group) \
-                osso_abook_plugin_get_instance_private(group)
+  osso_abook_plugin_get_instance_private(group)
 
-enum {
+enum
+{
   PROP_FILENAME = 1
 };
 
@@ -51,7 +52,7 @@ static void
 osso_abook_plugin_finalize(GObject *object)
 {
   OssoABookPluginPrivate *priv =
-      OSSO_ABOOK_PLUGIN_PRIVATE(OSSO_ABOOK_PLUGIN(object));
+    OSSO_ABOOK_PLUGIN_PRIVATE(OSSO_ABOOK_PLUGIN(object));
 
   g_free(priv->filename);
 
@@ -73,8 +74,10 @@ osso_abook_plugin_get_property(GObject *object, guint property_id,
       break;
     }
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    {
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
+    }
   }
 }
 
@@ -94,8 +97,10 @@ osso_abook_plugin_set_property(GObject *object, guint property_id,
       break;
     }
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    {
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
+    }
   }
 }
 
@@ -111,7 +116,6 @@ osso_abook_plugin_load(GTypeModule *module)
     return FALSE;
   }
 
-
   priv->module = g_module_open(priv->filename, 0);
 
   if (!priv->module)
@@ -123,7 +127,7 @@ osso_abook_plugin_load(GTypeModule *module)
   if (g_module_symbol(priv->module, "osso_abook_menu_plugin_load",
                       (gpointer *)&priv->load) &&
       g_module_symbol(priv->module, "osso_abook_menu_plugin_unload",
-                      (gpointer *)&priv->unload) )
+                      (gpointer *)&priv->unload))
   {
     priv->load(module);
     return TRUE;
@@ -161,10 +165,10 @@ osso_abook_plugin_class_init(OssoABookPluginClass *klass)
   type_module_class->unload = osso_abook_plugin_unload;
 
   g_object_class_install_property(
-        object_class, PROP_FILENAME,
-        g_param_spec_string(
-          "filename", "Filename", "The filaname of the module", NULL,
-          GTK_PARAM_READWRITE | GTK_ARG_CONSTRUCT_ONLY));
+    object_class, PROP_FILENAME,
+    g_param_spec_string(
+      "filename", "Filename", "The filaname of the module", NULL,
+      GTK_PARAM_READWRITE | GTK_ARG_CONSTRUCT_ONLY));
 }
 
 static void

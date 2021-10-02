@@ -29,16 +29,16 @@
 static void
 loop_quit (GtkWindow *window, gpointer data)
 {
-    GMainLoop *loop = data;
+  GMainLoop *loop = data;
 
-    g_return_if_fail(loop != NULL);
+  g_return_if_fail(loop != NULL);
 
-    gtk_widget_hide(GTK_WIDGET(window));
+  gtk_widget_hide(GTK_WIDGET(window));
 
-    while (gtk_events_pending())
-        gtk_main_iteration();
+  while (gtk_events_pending())
+    gtk_main_iteration();
 
-    g_main_loop_quit(loop);
+  g_main_loop_quit(loop);
 }
 
 static void
@@ -47,10 +47,10 @@ voicemail_response_cb(GtkWidget *dialog, gint response_id, gpointer user_data)
   if (response_id == GTK_RESPONSE_OK)
   {
     HildonTouchSelector *selector =
-        hildon_picker_dialog_get_selector(HILDON_PICKER_DIALOG(dialog));
+      hildon_picker_dialog_get_selector(HILDON_PICKER_DIALOG(dialog));
 
     osso_abook_voicemail_selector_apply(
-          OSSO_ABOOK_VOICEMAIL_SELECTOR(selector));
+      OSSO_ABOOK_VOICEMAIL_SELECTOR(selector));
     osso_abook_voicemail_selector_save(OSSO_ABOOK_VOICEMAIL_SELECTOR(selector));
   }
 
@@ -66,8 +66,8 @@ idle_run_dialog(gpointer user_data)
   hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog),
                                     HILDON_TOUCH_SELECTOR(selector));
   hildon_picker_dialog_set_done_label(
-        HILDON_PICKER_DIALOG(dialog),
-        dgettext("hildon-libs", "wdgt_bd_save"));
+    HILDON_PICKER_DIALOG(dialog),
+    dgettext("hildon-libs", "wdgt_bd_save"));
   g_signal_connect(dialog, "response",
                    G_CALLBACK(voicemail_response_cb), user_data);
 
@@ -79,7 +79,7 @@ idle_run_dialog(gpointer user_data)
 int
 main(int argc, char **argv)
 {
-  hildon_gtk_init (&argc, &argv);
+  hildon_gtk_init(&argc, &argv);
 
   setenv("OSSO_ABOOK_DEBUG", "all,disk-space", TRUE);
 

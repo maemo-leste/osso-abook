@@ -10,8 +10,8 @@ osso_abook_string_list_copy(GList *list)
   GList *l;
   GList *copy = NULL;
 
-  for(l = list; l; l = l->next)
-      copy = g_list_prepend(copy, g_strdup(l->data));
+  for (l = list; l; l = l->next)
+    copy = g_list_prepend(copy, g_strdup(l->data));
 
   return g_list_reverse(copy);
 }

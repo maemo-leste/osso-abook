@@ -1,31 +1,31 @@
-#include <gdk/gdk.h>
-#include <dbus/dbus.h>
 #include <dbus/dbus-glib-bindings.h>
+#include <dbus/dbus.h>
+#include <gdk/gdk.h>
 #include <gofono/gofono_manager.h>
 #include <gofono/gofono_modem.h>
 #include <gofono/gofono_names.h>
-#include <gofono/gofono_simmgr.h>
 #include <gofono/gofono_netreg.h>
+#include <gofono/gofono_simmgr.h>
 
 #include <math.h>
 
-#include "osso-abook-utils-private.h"
-#include "osso-abook-log.h"
-#include "osso-abook-contact.h"
 #include "osso-abook-account-manager.h"
+#include "osso-abook-contact.h"
+#include "osso-abook-log.h"
+#include "osso-abook-utils-private.h"
 
 #include "config.h"
 
 #define OSSO_ABOOK_OFONO_TIMEOUT (15 * 1000)
 
-__attribute__ ((visibility ("hidden"))) void
+__attribute__ ((visibility("hidden"))) void
 disconnect_signal_if_connected(gpointer instance, gulong handler)
 {
   if (g_signal_handler_is_connected(instance, handler))
     g_signal_handler_disconnect(instance, handler);
 }
 
-__attribute__ ((visibility ("hidden"))) gchar *
+__attribute__ ((visibility("hidden"))) gchar *
 _osso_abook_avatar_get_cache_name(int width, int height, gboolean crop,
                                   int radius, const guint8 border_color[4])
 {
@@ -51,7 +51,7 @@ _osso_abook_avatar_get_cache_name(int width, int height, gboolean crop,
   return g_string_free(name, FALSE);
 }
 
-__attribute__ ((visibility ("hidden"))) void
+__attribute__ ((visibility("hidden"))) void
 osso_abook_list_push(GList **list, gpointer data)
 {
   g_return_if_fail(NULL != list);
@@ -60,7 +60,7 @@ osso_abook_list_push(GList **list, gpointer data)
   *list = g_list_prepend(*list, data);
 }
 
-__attribute__ ((visibility ("hidden"))) gpointer
+__attribute__ ((visibility("hidden"))) gpointer
 osso_abook_list_pop(GList **list, gpointer data)
 {
   GList *l;
@@ -130,7 +130,6 @@ _osso_abook_scale_pixbuf_and_crop(const GdkPixbuf *image, int width, int height,
   else if (ratio_x >= ratio_y)
     ratio_x = (double)height / (double)in_h;
 
-
   if (ratio_x < 3.0)
     c = ratio_x;
   else
@@ -153,7 +152,7 @@ _osso_abook_scale_pixbuf_and_crop(const GdkPixbuf *image, int width, int height,
                        width > cx ? 0 : (width - cx) / -2,
                        height > cy ? 0 : (height - cy) / -2,
                        cx >= width ? width : cx,
-                       cy >= height ? height : cy , scaled,
+                       cy >= height ? height : cy, scaled,
                        pix_x < 0 ? border_size : border_size + pix_x,
                        pix_y < 0 ? border_size : border_size + pix_y);
 
@@ -260,7 +259,7 @@ _osso_abook_pixbuf_cut_corners(GdkPixbuf *pixbuf, const int radius,
         guchar b[4];
         double c1 = r1 + 1.0;
 
-        r1 = - r1;
+        r1 = -r1;
 
         b[0] = c1 * border_color[0];
         b[1] = c1 * border_color[1];
@@ -344,7 +343,6 @@ _osso_abook_flags_to_string(GType flags_type, guint value)
 
   g_return_val_if_fail(G_IS_FLAGS_CLASS(flags_class), NULL);
 
-
   s = g_string_new(0);
   g_string_append_c(s, '(');
 
@@ -352,7 +350,7 @@ _osso_abook_flags_to_string(GType flags_type, guint value)
   {
     GFlagsValue *v = &flags_class->values[i];
 
-    if (v->value && (value & v->value) == v->value)
+    if (v->value && ((value & v->value) == v->value))
     {
       if (not_first)
         g_string_append_c(s, '|');
@@ -386,7 +384,7 @@ _osso_abook_is_addressbook()
       dbus_uint32_t _pid = 0;
 
       org_freedesktop_DBus_get_connection_unix_process_id(
-            proxy, "com.nokia.osso_addressbook", &_pid, NULL);
+        proxy, "com.nokia.osso_addressbook", &_pid, NULL);
       g_object_unref(proxy);
       pid = _pid;
     }
@@ -404,14 +402,18 @@ default_presence_convert(TpConnectionPresenceType presence_type)
     case TP_CONNECTION_PRESENCE_TYPE_AVAILABLE:
     case TP_CONNECTION_PRESENCE_TYPE_ERROR:
       return presence_type;
+
     case TP_CONNECTION_PRESENCE_TYPE_OFFLINE:
     case TP_CONNECTION_PRESENCE_TYPE_HIDDEN:
       return TP_CONNECTION_PRESENCE_TYPE_OFFLINE;
+
     case TP_CONNECTION_PRESENCE_TYPE_AWAY:
     case TP_CONNECTION_PRESENCE_TYPE_EXTENDED_AWAY:
       return TP_CONNECTION_PRESENCE_TYPE_AWAY;
+
     case TP_CONNECTION_PRESENCE_TYPE_BUSY:
       return TP_CONNECTION_PRESENCE_TYPE_BUSY;
+
     default:
       return TP_CONNECTION_PRESENCE_TYPE_UNKNOWN;
   }
@@ -475,16 +477,16 @@ GdkPixbuf *
 _osso_abook_get_cached_icon(gpointer widget, const gchar *icon_name, gint size)
 {
   GHashTable *icon_cache =
-      g_object_get_data(G_OBJECT(widget), "osso-abook-icon-cache");
+    g_object_get_data(G_OBJECT(widget), "osso-abook-icon-cache");
   GdkPixbuf *icon;
 
   if (!icon_cache)
   {
     icon_cache = g_hash_table_new_full(
-                   g_str_hash,
-                   g_str_equal,
-                   (GDestroyNotify)g_free,
-                   (GDestroyNotify)g_object_unref);
+      g_str_hash,
+      g_str_equal,
+      (GDestroyNotify)g_free,
+      (GDestroyNotify)g_object_unref);
 
     g_object_set_data_full(G_OBJECT(widget), "osso-abook-icon-cache",
                            icon_cache, (GDestroyNotify)g_hash_table_unref);
@@ -574,7 +576,12 @@ _osso_abook_phone_sim_error_quark()
 }
 
 #define osso_abook_phone_error_message(error, quark, code, format, ...) \
-  _osso_abook_phone_error_message(G_STRLOC, (error), (quark), (code), (format), ## __VA_ARGS__);
+  _osso_abook_phone_error_message(G_STRLOC, \
+                                  (error), \
+                                  (quark), \
+                                  (code), \
+                                  (format), \
+                                  ## __VA_ARGS__);
 
 #define OSSO_ABOOK_PHONE_NET_ERROR (_osso_abook_phone_net_error_quark())
 #define OSSO_ABOOK_PHONE_SIM_ERROR (_osso_abook_phone_sim_error_quark())
@@ -594,7 +601,7 @@ _get_sim(const char *modem_path, GError **error)
 
     for (i = 0; i < modems->len; i++)
     {
-      OfonoModem *candidate = g_ptr_array_index (modems, i);
+      OfonoModem *candidate = g_ptr_array_index(modems, i);
 
       if (!ofono_modem_wait_valid(candidate, OSSO_ABOOK_OFONO_TIMEOUT, &err))
       {
@@ -630,8 +637,8 @@ _get_sim(const char *modem_path, GError **error)
         gint code = err ? err->code : 0;
 
         osso_abook_phone_error_message(
-              error, OSSO_ABOOK_PHONE_SIM_ERROR, code,
-              "OFONO sim manager wait ready timeout, error code %d", code);
+          error, OSSO_ABOOK_PHONE_SIM_ERROR, code,
+          "OFONO sim manager wait ready timeout, error code %d", code);
         g_clear_error(&err);
         ofono_simmgr_unref(sim);
         sim = NULL;
@@ -642,14 +649,14 @@ _get_sim(const char *modem_path, GError **error)
       if (modem_path)
       {
         osso_abook_phone_error_message(
-              error, OSSO_ABOOK_PHONE_SIM_ERROR, 0,
-              "OFONO modem %s not found", modem_path);
+          error, OSSO_ABOOK_PHONE_SIM_ERROR, 0,
+          "OFONO modem %s not found", modem_path);
       }
       else
       {
         osso_abook_phone_error_message(
-              error, OSSO_ABOOK_PHONE_SIM_ERROR, 0,
-              "No OFONO modem with SIM found");
+          error, OSSO_ABOOK_PHONE_SIM_ERROR, 0,
+          "No OFONO modem with SIM found");
       }
     }
   }
@@ -658,8 +665,8 @@ _get_sim(const char *modem_path, GError **error)
     gint code = err ? err->code : 0;
 
     osso_abook_phone_error_message(
-          error, OSSO_ABOOK_PHONE_SIM_ERROR, code,
-          "OFONO manager wait ready timeout, error code %d", code);
+      error, OSSO_ABOOK_PHONE_SIM_ERROR, code,
+      "OFONO manager wait ready timeout, error code %d", code);
     g_clear_error(&err);
   }
 
@@ -686,7 +693,7 @@ _osso_abook_get_imsi(const char *modem_path, GError **error)
   return imsi;
 }
 
-__attribute__ ((visibility ("hidden"))) gchar *
+__attribute__ ((visibility("hidden"))) gchar *
 _osso_abook_get_operator_id(const char *modem_path, GError **error)
 {
   gchar *imsi = _osso_abook_get_imsi(modem_path, error);
@@ -716,9 +723,9 @@ _mbpi_get_name(int mnc, int mcc)
 
     if (ctx)
     {
-      gchar* xpath = g_strdup_printf(
-            "//network-id[@mcc='%03d' and @mnc='%02d']/../../name/text()", mnc,
-            mcc);
+      gchar *xpath = g_strdup_printf(
+        "//network-id[@mcc='%03d' and @mnc='%02d']/../../name/text()", mnc,
+        mcc);
       xmlXPathObjectPtr obj = xmlXPathEvalExpression(BAD_CAST xpath, ctx);
 
       g_free(xpath);
@@ -754,7 +761,7 @@ _mbpi_get_name(int mnc, int mcc)
   return name;
 }
 
-__attribute__ ((visibility ("hidden"))) gchar *
+__attribute__ ((visibility("hidden"))) gchar *
 _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
                               GError **error)
 {
@@ -784,7 +791,7 @@ _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
 
         for (i = 0; i < modems->len; i++)
         {
-          OfonoModem *modem = g_ptr_array_index (modems, i);
+          OfonoModem *modem = g_ptr_array_index(modems, i);
 
           if (ofono_modem_wait_valid(modem, OSSO_ABOOK_OFONO_TIMEOUT, &err))
           {
@@ -794,7 +801,7 @@ _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
 
               if (ofono_netreg_valid(net) &&
                   net->mcc && net->mnc && !IS_EMPTY(net->name) &&
-                  mcc == atoi(net->mcc) && mnc == atoi(net->mnc))
+                  (mcc == atoi(net->mcc)) && (mnc == atoi(net->mnc)))
               {
                 name = g_strdup(net->name);
                 ofono_netreg_unref(net);
@@ -812,7 +819,7 @@ _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
               if (ofono_simmgr_wait_valid(sim, OSSO_ABOOK_OFONO_TIMEOUT, &err))
               {
                 if (sim->mcc && sim->mnc && !IS_EMPTY(sim->spn) &&
-                    mcc == atoi(sim->mcc) && mnc == atoi(sim->mnc))
+                    (mcc == atoi(sim->mcc)) && (mnc == atoi(sim->mnc)))
                 {
                   spn = g_strdup(sim->spn);
                 }
@@ -820,8 +827,8 @@ _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
               else
               {
                 OSSO_ABOOK_WARN(
-                      "OFONO modem [%s] SIM manager wait ready timeout: '%s'",
-                      ofono_modem_path(modem), err->message);
+                  "OFONO modem [%s] SIM manager wait ready timeout: '%s'",
+                  ofono_modem_path(modem), err->message);
                 g_clear_error(&err);
               }
 
@@ -855,16 +862,19 @@ _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
       if (!name)
       {
         osso_abook_phone_error_message(
-              error, OSSO_ABOOK_PHONE_NET_ERROR, 1001,
-              "Failed to lookup operator name for mobile operator with MCC=%03d and MNC=%02d.",
-              mcc, mnc);
+          error,
+          OSSO_ABOOK_PHONE_NET_ERROR,
+          1001,
+          "Failed to lookup operator name for mobile operator with MCC=%03d and MNC=%02d.",
+          mcc,
+          mnc);
       }
     }
     else
     {
       osso_abook_phone_error_message(
-            error, OSSO_ABOOK_PHONE_NET_ERROR, 1001,
-            "Invalid IMSI. First five numbers should be MCC and MNC.");
+        error, OSSO_ABOOK_PHONE_NET_ERROR, 1001,
+        "Invalid IMSI. First five numbers should be MCC and MNC.");
     }
   }
 
@@ -873,7 +883,7 @@ _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
   return name;
 }
 
-__attribute__ ((visibility ("hidden"))) gboolean
+__attribute__ ((visibility("hidden"))) gboolean
 _osso_abook_e_vcard_attribute_has_value(EVCardAttribute *attr)
 {
   GList *val;
@@ -909,7 +919,7 @@ get_im_service_name(OssoABookContact *rc)
   return name;
 }
 
-__attribute__ ((visibility ("hidden"))) gchar *
+__attribute__ ((visibility("hidden"))) gchar *
 _osso_abook_get_delete_confirmation_string(GList *contacts,
                                            gboolean show_contact_name,
                                            const gchar *no_im_format,
@@ -951,7 +961,7 @@ _osso_abook_get_delete_confirmation_string(GList *contacts,
 
     if (roster_contacts)
     {
-      while(roster_contacts)
+      while (roster_contacts)
       {
         gchar *name = get_im_service_name(roster_contacts->data);
 
@@ -1008,7 +1018,7 @@ _osso_abook_get_delete_confirmation_string(GList *contacts,
   return confirmation_string;
 }
 
-__attribute__ ((visibility ("hidden"))) gboolean
+__attribute__ ((visibility("hidden"))) gboolean
 _osso_abook_tp_protocol_has_rosters(TpProtocol *protocol)
 {
   GList *l;
@@ -1022,7 +1032,7 @@ _osso_abook_tp_protocol_has_rosters(TpProtocol *protocol)
   }
 
   accounts = osso_abook_account_manager_list_by_protocol(
-        NULL, tp_protocol_get_name(protocol));
+    NULL, tp_protocol_get_name(protocol));
 
   for (l = accounts; l; l = next)
   {
@@ -1037,10 +1047,10 @@ _osso_abook_tp_protocol_has_rosters(TpProtocol *protocol)
   return !!accounts;
 }
 
-__attribute__ ((visibility ("hidden"))) gchar *
+__attribute__ ((visibility("hidden"))) gchar *
 _osso_abook_tp_account_get_vcard_field(TpAccount *account)
 {
-  const gchar *  protocol_name = tp_account_get_protocol_name(account);
+  const gchar *protocol_name = tp_account_get_protocol_name(account);
   TpProtocol *protocol;
 
   if (!protocol_name)

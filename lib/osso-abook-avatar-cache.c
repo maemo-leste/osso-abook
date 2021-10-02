@@ -31,9 +31,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cache) \
-                osso_abook_avatar_cache_get_instance_private(cache)
+  osso_abook_avatar_cache_get_instance_private(cache)
 
-enum {
+enum
+{
   PROP_CACHE_LIMIT = 1
 };
 
@@ -47,7 +48,7 @@ prune_n_items(OssoABookAvatarCachePrivate *priv, guint n_items)
   guint queue_length = g_queue_get_length(&priv->queue);
   guint i;
 
-  g_warn_if_fail(queue_length != g_hash_table_size (priv->cached_images));
+  g_warn_if_fail(queue_length != g_hash_table_size(priv->cached_images));
 
   if (queue_length < n_items)
     n_items = queue_length;
@@ -66,7 +67,7 @@ osso_abook_avatar_cache_set_property(GObject *object, guint property_id,
     {
       OssoABookAvatarCache *cache = OSSO_ABOOK_AVATAR_CACHE(object);
       OssoABookAvatarCachePrivate *priv =
-          OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cache);
+        OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cache);
       guint new_limit = g_value_get_uint(value);
       guint limit = g_hash_table_size(priv->cached_images);
 
@@ -77,7 +78,7 @@ osso_abook_avatar_cache_set_property(GObject *object, guint property_id,
       break;
     }
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -92,13 +93,13 @@ osso_abook_avatar_cache_get_property(GObject *object, guint property_id,
     {
       OssoABookAvatarCache *cache = OSSO_ABOOK_AVATAR_CACHE(object);
       OssoABookAvatarCachePrivate *priv =
-          OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cache);
+        OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cache);
 
       g_value_set_uint(value, priv->limit);
       break;
     }
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -108,7 +109,7 @@ osso_abook_avatar_cache_dispose(GObject *object)
 {
   OssoABookAvatarCache *cache = OSSO_ABOOK_AVATAR_CACHE(object);
   OssoABookAvatarCachePrivate *priv =
-      OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cache);
+    OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cache);
 
   if (priv->cached_images)
   {
@@ -130,22 +131,22 @@ osso_abook_avatar_cache_class_init(OssoABookAvatarCacheClass *klass)
   object_class->get_property = osso_abook_avatar_cache_get_property;
 
   g_object_class_install_property(
-        object_class, PROP_CACHE_LIMIT,
-        g_param_spec_uint(
-                 "cache-limit",
-                 "Cache Limit",
-                 "Maximum number of pixbufs to cache",
-                 0,
-                 G_MAXUINT,
-                 DEFAULT_CACHE_LIMIT,
-                 GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    object_class, PROP_CACHE_LIMIT,
+    g_param_spec_uint(
+      "cache-limit",
+      "Cache Limit",
+      "Maximum number of pixbufs to cache",
+      0,
+      G_MAXUINT,
+      DEFAULT_CACHE_LIMIT,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
 cached_image_free(CachedImage *cached_image, gboolean keep_avatar)
 {
   OssoABookAvatarCachePrivate *priv =
-      OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cached_image->cache);
+    OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cached_image->cache);
   OssoABookAvatar *avatar = cached_image->avatar;
 
   g_queue_remove(&priv->queue, avatar);
@@ -183,7 +184,7 @@ static void
 osso_abook_avatar_cache_init(OssoABookAvatarCache *cache)
 {
   OssoABookAvatarCachePrivate *priv =
-      OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cache);
+    OSSO_ABOOK_AVATAR_CACHE_PRIVATE(cache);
 
   priv->cached_images = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                               NULL, cached_image_destroy);
@@ -196,7 +197,8 @@ osso_abook_avatar_cache_new(void)
   return g_object_new(OSSO_ABOOK_TYPE_AVATAR_CACHE, NULL);
 }
 
-OssoABookAvatarCache *osso_abook_avatar_cache_get_default()
+OssoABookAvatarCache *
+osso_abook_avatar_cache_get_default()
 {
   return osso_abook_avatar_cache_get_for_name("default");
 }
@@ -222,7 +224,7 @@ osso_abook_avatar_cache_get_for_name(const char *name)
   if (!cache_by_name)
   {
     cache_by_name =
-        g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
+      g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
   }
 
   cache = g_hash_table_lookup(cache_by_name, name);

@@ -1,7 +1,7 @@
 #include <libebook/libebook.h>
 
-#include "osso-abook-debug.h"
 #include "eds.h"
+#include "osso-abook-debug.h"
 
 #include "config.h"
 
@@ -22,7 +22,7 @@ _osso_abook_book_view_set_freezable(EBookView *view, gboolean freezable)
 #if 0
   EBook *book;
 
-  g_return_if_fail(E_IS_BOOK_VIEW (view));
+  g_return_if_fail(E_IS_BOOK_VIEW(view));
 
   book = e_book_view_get_book(view);
 
@@ -46,14 +46,16 @@ _osso_abook_book_view_set_freezable(EBookView *view, gboolean freezable)
       OSSO_ABOOK_NOTE(EDS, "deactivating freeze/thaw support on %s",
                       e_book_get_uri(book));
       g_signal_handlers_disconnect_matched(
-            view,
-            G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
-            0, 0, 0, contacts_modified_cb, NULL);
+        view,
+        G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+        0, 0, 0, contacts_modified_cb, NULL);
       e_book_view_set_freezable(view, FALSE);
     }
   }
+
 #else
-#pragma message("FIXME!!! - upstream eds does not support e_book_view_set_freezable()")
+#pragma \
+  message("FIXME!!! - upstream eds does not support e_book_view_set_freezable()")
 #endif
 }
 

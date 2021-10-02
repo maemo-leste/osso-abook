@@ -27,23 +27,23 @@
 static void
 loop_quit (GtkWindow *window, gpointer data)
 {
-    GMainLoop *loop = data;
+  GMainLoop *loop = data;
 
-    g_return_if_fail(loop != NULL);
+  g_return_if_fail(loop != NULL);
 
-    gtk_widget_hide(GTK_WIDGET(window));
+  gtk_widget_hide(GTK_WIDGET(window));
 
-    while (gtk_events_pending())
-        gtk_main_iteration();
+  while (gtk_events_pending())
+    gtk_main_iteration();
 
-    g_main_loop_quit(loop);
+  g_main_loop_quit(loop);
 }
 
-static  void
+static void
 avatar_chooser_response_cb(GtkWidget *dialog, int response_id,
                            gpointer user_data)
 {
-  printf("%s: response[%d] icon_name[%s]\n",__FUNCTION__, response_id,
+  printf("%s: response[%d] icon_name[%s]\n", __FUNCTION__, response_id,
          osso_abook_avatar_chooser_dialog_get_icon_name(
            OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(dialog)));
 
@@ -54,7 +54,7 @@ static gboolean
 idle_run_dialog(gpointer user_data)
 {
   GtkWidget *dialog =
-      osso_abook_avatar_chooser_dialog_new(GTK_WINDOW(user_data));
+    osso_abook_avatar_chooser_dialog_new(GTK_WINDOW(user_data));
 
   g_signal_connect(dialog, "response",
                    G_CALLBACK(avatar_chooser_response_cb), user_data);
@@ -66,7 +66,7 @@ idle_run_dialog(gpointer user_data)
 int
 main(int argc, char **argv)
 {
-  hildon_gtk_init (&argc, &argv);
+  hildon_gtk_init(&argc, &argv);
 
   setenv("OSSO_ABOOK_DEBUG", "all,disk-space", TRUE);
 

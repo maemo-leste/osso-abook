@@ -1,5 +1,5 @@
-#include "osso-abook-contact-model.h"
 #include "osso-abook-aggregator.h"
+#include "osso-abook-contact-model.h"
 #include "osso-abook-log.h"
 
 #include "config.h"
@@ -14,8 +14,7 @@ static OssoABookContactModel *osso_abook_contact_model_default = NULL;
 
 static void
 osso_abook_contact_model_init(OssoABookContactModel *model)
-{
-}
+{}
 
 static void
 osso_abook_contact_model_contacts_added(OssoABookListStore *store,
@@ -85,7 +84,7 @@ osso_abook_contact_model_get_default()
     if (aggr)
     {
       osso_abook_list_store_set_roster(
-            OSSO_ABOOK_LIST_STORE(osso_abook_contact_model_default), aggr);
+        OSSO_ABOOK_LIST_STORE(osso_abook_contact_model_default), aggr);
     }
   }
 
@@ -98,7 +97,7 @@ osso_abook_contact_model_find_contact(OssoABookContactModel *model,
 {
   OssoABookListStore *store = (OssoABookListStore *)model;
   OssoABookListStoreRow **rows =
-      osso_abook_list_store_find_contacts(store, uid);
+    osso_abook_list_store_find_contacts(store, uid);
   OssoABookListStoreRow *row = NULL;
 
   if (rows && (!iter || osso_abook_list_store_row_get_iter(store, *rows, iter)))

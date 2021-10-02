@@ -8,26 +8,26 @@ guint _osso_abook_debug_flags = 0;
 
 static GDebugKey debug_keys[] =
 {
-  {"eds", OSSO_ABOOK_DEBUG_EDS},
-  {"gtk", OSSO_ABOOK_DEBUG_GTK},
-  {"hildon", OSSO_ABOOK_DEBUG_HILDON},
-  {"contact-add", OSSO_ABOOK_DEBUG_CONTACT_ADD},
-  {"contact-remove", OSSO_ABOOK_DEBUG_CONTACT_REMOVE},
-  {"contact-update", OSSO_ABOOK_DEBUG_CONTACT_UPDATE},
-  {"vcard", OSSO_ABOOK_DEBUG_VCARD},
-  {"avatar", OSSO_ABOOK_DEBUG_AVATAR},
-  {"tp", OSSO_ABOOK_DEBUG_TP},
-  {"caps", OSSO_ABOOK_DEBUG_CAPS},
-  {"list-store", OSSO_ABOOK_DEBUG_LIST_STORE},
-  {"startup", OSSO_ABOOK_DEBUG_STARTUP},
-  {"dbus", OSSO_ABOOK_DEBUG_DBUS},
-  {"aggregator", OSSO_ABOOK_DEBUG_AGGREGATOR},
-  {"i18n", OSSO_ABOOK_DEBUG_I18N},
-  {"sim", OSSO_ABOOK_DEBUG_SIM},
-  {"editor", OSSO_ABOOK_DEBUG_EDITOR },
-  {"tree-view", OSSO_ABOOK_DEBUG_TREE_VIEW },
-  {"disk-space", OSSO_ABOOK_DEBUG_DISK_SPACE},
-  {"todo", OSSO_ABOOK_DEBUG_TODO}
+  { "eds", OSSO_ABOOK_DEBUG_EDS },
+  { "gtk", OSSO_ABOOK_DEBUG_GTK },
+  { "hildon", OSSO_ABOOK_DEBUG_HILDON },
+  { "contact-add", OSSO_ABOOK_DEBUG_CONTACT_ADD },
+  { "contact-remove", OSSO_ABOOK_DEBUG_CONTACT_REMOVE },
+  { "contact-update", OSSO_ABOOK_DEBUG_CONTACT_UPDATE },
+  { "vcard", OSSO_ABOOK_DEBUG_VCARD },
+  { "avatar", OSSO_ABOOK_DEBUG_AVATAR },
+  { "tp", OSSO_ABOOK_DEBUG_TP },
+  { "caps", OSSO_ABOOK_DEBUG_CAPS },
+  { "list-store", OSSO_ABOOK_DEBUG_LIST_STORE },
+  { "startup", OSSO_ABOOK_DEBUG_STARTUP },
+  { "dbus", OSSO_ABOOK_DEBUG_DBUS },
+  { "aggregator", OSSO_ABOOK_DEBUG_AGGREGATOR },
+  { "i18n", OSSO_ABOOK_DEBUG_I18N },
+  { "sim", OSSO_ABOOK_DEBUG_SIM },
+  { "editor", OSSO_ABOOK_DEBUG_EDITOR },
+  { "tree-view", OSSO_ABOOK_DEBUG_TREE_VIEW },
+  { "disk-space", OSSO_ABOOK_DEBUG_DISK_SPACE },
+  { "todo", OSSO_ABOOK_DEBUG_TODO }
 };
 
 static GTimer *_osso_debug_timer = NULL;
@@ -51,7 +51,7 @@ osso_abook_debug_init(void)
   env_debug = g_getenv("OSSO_ABOOK_DEBUG");
   _osso_debug_timer_name = g_quark_from_static_string("osso-debug-timer-name");
   _osso_debug_timer_domain =
-      g_quark_from_static_string("osso-debug-timer-domain");
+    g_quark_from_static_string("osso-debug-timer-domain");
   _osso_debug_timer = g_timer_new();
 
   if (env_debug)
@@ -72,7 +72,7 @@ osso_abook_debug_init(void)
 
 void
 _osso_abook_log(const char *domain, const char *strloc, const char *strfunc,
-               const char *strtype, int type, const char *format, ...)
+                const char *strtype, int type, const char *format, ...)
 {
   gchar *msg;
   const char *debug_type;
@@ -125,10 +125,12 @@ _osso_abook_dump_vcard_string(const char *domain, const char *strloc,
         while (*p && *p != ':')
           p++;
 
-        if (chunk > p && *p == ':')
+        if ((chunk > p) && (*p == ':'))
         {
           do
+          {
             p++;
+          }
           while (*p == '\t' || *p == ' ');
 
           if (chunk - p > 30)
@@ -195,7 +197,7 @@ _osso_abook_timer_start(const char *domain, const char *strfunc,
     destroy = NULL;
 
   g_dataset_id_set_data_full(
-        timer, _osso_debug_timer_name, timer_name, destroy);
+    timer, _osso_debug_timer_name, timer_name, destroy);
 }
 
 void

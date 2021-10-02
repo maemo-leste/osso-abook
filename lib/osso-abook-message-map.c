@@ -21,9 +21,8 @@
 
 #include "config.h"
 
-#include "osso-abook-message-map.h"
 #include "osso-abook-debug.h"
-
+#include "osso-abook-message-map.h"
 
 GHashTable *
 osso_abook_message_map_new(const OssoABookMessageMapping *mappings)

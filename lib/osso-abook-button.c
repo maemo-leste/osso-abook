@@ -36,10 +36,10 @@ struct _OssoABookButtonPrivate
   OssoABookPresence *presence;
   GdkPixbuf *presence_icon;
   gboolean icon_visible : 1; /* 0x1 */
-  gboolean visible: 1; /* = 0x2 */
-  gboolean presence_invalid: 1; /* = 0x4 */
-  gboolean highlighted: 1; /* = 0x8 */
-  gboolean resized: 1; /* = 0x10 */
+  gboolean visible : 1; /* = 0x2 */
+  gboolean presence_invalid : 1; /* = 0x4 */
+  gboolean highlighted : 1; /* = 0x8 */
+  gboolean resized : 1; /* = 0x10 */
 };
 
 typedef struct _OssoABookButtonPrivate OssoABookButtonPrivate;
@@ -51,7 +51,9 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define OSSO_ABOOK_BUTTON_PRIVATE(button) \
-  ((OssoABookButtonPrivate *)osso_abook_button_get_instance_private(((OssoABookButton *)button)))
+  ((OssoABookButtonPrivate *)osso_abook_button_get_instance_private((( \
+                                                                       OssoABookButton \
+                                                                       *)button)))
 
 struct _OssoABookButtonStyleHints
 {
@@ -94,7 +96,6 @@ enum
   STYLE_VALUE_DEFAULT,
   STYLE_VALUE_PICKER,
   STYLE_VALUE_INVALID_PRESENCE
-
 };
 static GQuark style_hints_quark;
 
@@ -168,8 +169,8 @@ _remove_presence(GObject *button)
   if (priv->presence)
   {
     g_signal_handlers_disconnect_matched(
-          priv->presence, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
-          0, 0, NULL, _presence_status_changed_cb, button);
+      priv->presence, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+      0, 0, NULL, _presence_status_changed_cb, button);
     g_object_unref(priv->presence);
     priv->presence = NULL;
   }
@@ -188,8 +189,8 @@ static gboolean
 _is_style_text(OssoABookButtonStyle style)
 {
   return
-      style == OSSO_ABOOK_BUTTON_STYLE_LABEL ||
-      style == OSSO_ABOOK_BUTTON_STYLE_NOTE;
+    style == OSSO_ABOOK_BUTTON_STYLE_LABEL ||
+    style == OSSO_ABOOK_BUTTON_STYLE_NOTE;
 }
 
 static void
@@ -207,18 +208,18 @@ _styles_attach(OssoABookButtonStyleHints *hints, GtkWidget *widget)
   GdkWindow *window = widget->window;
 
   hints->style[STYLE_TITLE_HIGHLIGHTED] =
-      gtk_style_attach(hints->style[STYLE_TITLE_HIGHLIGHTED], window);
+    gtk_style_attach(hints->style[STYLE_TITLE_HIGHLIGHTED], window);
   hints->style[STYLE_VALUE_DEFAULT] =
-      gtk_style_attach(hints->style[STYLE_VALUE_DEFAULT], window);
+    gtk_style_attach(hints->style[STYLE_VALUE_DEFAULT], window);
   hints->style[STYLE_VALUE_PICKER] =
-      gtk_style_attach(hints->style[STYLE_VALUE_PICKER], window);
+    gtk_style_attach(hints->style[STYLE_VALUE_PICKER], window);
   hints->style[STYLE_VALUE_INVALID_PRESENCE] =
-      gtk_style_attach(hints->style[STYLE_VALUE_INVALID_PRESENCE], window);
+    gtk_style_attach(hints->style[STYLE_VALUE_INVALID_PRESENCE], window);
 }
 
 static void
 _get_inner_border(GtkWidget *button, OssoABookButtonPrivate *priv,
-                OssoABookButtonStyleHints *hints, GtkBorder *border)
+                  OssoABookButtonStyleHints *hints, GtkBorder *border)
 {
   GtkStyle *style = button->style;
   gint border_width = GTK_CONTAINER(button)->border_width;
@@ -270,9 +271,9 @@ _get_full_border(GtkWidget *button, GtkAllocation *allocation,
   full_border->left = inner_border->left + allocation->x;
   full_border->right = inner_border->top + allocation->y;
   full_border->top =
-      allocation->width - inner_border->left - inner_border->right;
+    allocation->width - inner_border->left - inner_border->right;
   full_border->bottom =
-      allocation->height - inner_border->top - inner_border->bottom;
+    allocation->height - inner_border->top - inner_border->bottom;
 
   if (GTK_BUTTON(button)->focus_on_click)
   {
@@ -296,7 +297,7 @@ _get_line_count(GtkWidget *button)
 
   gtk_widget_get_size_request(button, NULL, &h);
 
-  if (h == -1 && (layout = OSSO_ABOOK_BUTTON_PRIVATE(button)->value_layout))
+  if ((h == -1) && (layout = OSSO_ABOOK_BUTTON_PRIVATE(button)->value_layout))
   {
     count = pango_layout_get_line_count(layout);
 
@@ -315,7 +316,7 @@ _get_line_count(GtkWidget *button)
 static gint
 _get_button_style_height(GtkWidget *button)
 {
-  if ( _get_line_count(button) > 1 )
+  if (_get_line_count(button) > 1)
     return 105;
   else
     return 70;
@@ -395,7 +396,7 @@ osso_abook_button_size_request(GtkWidget *widget, GtkRequisition *requisition)
   OssoABookButtonPrivate *priv = OSSO_ABOOK_BUTTON_PRIVATE(widget);
   gint screen_width = gdk_screen_get_width(gtk_widget_get_screen(widget));
   OssoABookButtonStyleHints *hints =
-      g_object_get_qdata(G_OBJECT(widget), style_hints_quark);
+    g_object_get_qdata(G_OBJECT(widget), style_hints_quark);
   gint width;
   GtkBorder inner_border;
 
@@ -455,7 +456,7 @@ osso_abook_button_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     _resize(widget, priv);
 
   GTK_WIDGET_CLASS(osso_abook_button_parent_class)->
-      size_allocate(widget, allocation);
+  size_allocate(widget, allocation);
 }
 
 static gboolean
@@ -463,7 +464,7 @@ osso_abook_button_expose_event(GtkWidget *widget, GdkEventExpose *event)
 {
   OssoABookButtonPrivate *priv = OSSO_ABOOK_BUTTON_PRIVATE(widget);
   OssoABookButtonStyleHints *hints =
-      g_object_get_qdata(G_OBJECT(widget), style_hints_quark);
+    g_object_get_qdata(G_OBJECT(widget), style_hints_quark);
   gint height = 0;
   gint width = 0;
   gint value_height = 0;
@@ -502,7 +503,7 @@ osso_abook_button_expose_event(GtkWidget *widget, GdkEventExpose *event)
   {
     gint line_count = pango_layout_get_line_count(priv->value_layout);
 
-    if (_is_not_note(priv->style) && line_count >= _get_line_count(widget))
+    if (_is_not_note(priv->style) && (line_count >= _get_line_count(widget)))
       line_count = _get_line_count(widget);
 
     if (line_count > 0)
@@ -514,8 +515,8 @@ osso_abook_button_expose_event(GtkWidget *widget, GdkEventExpose *event)
       for (line = 0; line < line_count; line++)
       {
         pango_layout_line_get_extents(
-              pango_layout_get_line_readonly(priv->value_layout, line),
-              NULL, &rect);
+          pango_layout_get_line_readonly(priv->value_layout, line),
+          NULL, &rect);
         _h += rect.height;
       }
 
@@ -526,7 +527,7 @@ osso_abook_button_expose_event(GtkWidget *widget, GdkEventExpose *event)
   if (priv->title_layout)
   {
     GtkStyle *style;
-    GdkRectangle  area;
+    GdkRectangle area;
 
     area.x = ((float)(full_border.top - width) * xalign +
               (float)full_border.left);
@@ -547,11 +548,11 @@ osso_abook_button_expose_event(GtkWidget *widget, GdkEventExpose *event)
   if (priv->value_layout)
   {
     gint style_idx;
-    GdkRectangle  area;
+    GdkRectangle area;
 
     area.x = full_border.left;
     area.y = (float)(full_border.bottom - height - value_height) * yalign +
-        (float)(full_border.right + height);
+      (float)(full_border.right + height);
     area.width = full_border.top;
     area.height = value_height;
 
@@ -563,8 +564,8 @@ osso_abook_button_expose_event(GtkWidget *widget, GdkEventExpose *event)
       style_idx = STYLE_VALUE_DEFAULT;
 
     gtk_paint_layout(
-          hints->style[style_idx], widget->window, widget->state, FALSE,
-          &area, widget, NULL, area.x, area.y, priv->value_layout);
+      hints->style[style_idx], widget->window, widget->state, FALSE,
+      &area, widget, NULL, area.x, area.y, priv->value_layout);
   }
 
   if (priv->icon_visible)
@@ -579,8 +580,8 @@ osso_abook_button_expose_event(GtkWidget *widget, GdkEventExpose *event)
           size = hints->finger_height;
 
         priv->icon = gtk_icon_theme_load_icon(
-              gtk_icon_theme_get_for_screen(gtk_widget_get_screen(widget)),
-              priv->icon_name, size, 0, NULL);
+          gtk_icon_theme_get_for_screen(gtk_widget_get_screen(widget)),
+          priv->icon_name, size, 0, NULL);
       }
     }
 
@@ -594,10 +595,10 @@ osso_abook_button_expose_event(GtkWidget *widget, GdkEventExpose *event)
         bottom = 70 - inner_border.top - inner_border.bottom;
 
       gdk_cairo_set_source_pixbuf(
-            cr, priv->icon,
-            full_border.left - hints->image_spacing -
-                                                  (hints->finger_width + w) / 2,
-            full_border.right + (bottom - h) / 2);
+        cr, priv->icon,
+        full_border.left - hints->image_spacing -
+        (hints->finger_width + w) / 2,
+        full_border.right + (bottom - h) / 2);
       cairo_paint(cr);
     }
   }
@@ -633,8 +634,8 @@ osso_abook_button_expose_event(GtkWidget *widget, GdkEventExpose *event)
         size = icon_width;
 
       priv->presence_icon = gtk_icon_theme_load_icon(
-            gtk_icon_theme_get_for_screen(gtk_widget_get_screen(widget)),
-            icon_name, size, 0, NULL);
+        gtk_icon_theme_get_for_screen(gtk_widget_get_screen(widget)),
+        icon_name, size, 0, NULL);
     }
 
     if (priv->presence_icon)
@@ -643,11 +644,11 @@ osso_abook_button_expose_event(GtkWidget *widget, GdkEventExpose *event)
       gint h = gdk_pixbuf_get_height(priv->presence_icon);
 
       gdk_cairo_set_source_pixbuf(
-            cr, priv->presence_icon,
-            (icon_width - w) / 2 + hints->image_spacing + full_border.top +
-                                                               full_border.left,
-            (int)((float)(full_border.bottom - height - value_height) * yalign +
-                         (float)full_border.right + (float)((height - h) / 2)));
+        cr, priv->presence_icon,
+        (icon_width - w) / 2 + hints->image_spacing + full_border.top +
+        full_border.left,
+        (int)((float)(full_border.bottom - height - value_height) * yalign +
+              (float)full_border.right + (float)((height - h) / 2)));
       cairo_paint(cr);
     }
   }
@@ -673,18 +674,18 @@ osso_abook_button_style_set(GtkWidget *widget, GtkStyle *previous_style)
   GTK_WIDGET_CLASS(osso_abook_button_parent_class)->style_set(widget,
                                                               previous_style);
 
-  if (!hints || hints->style[STYLE_WIDGET_DEFAULT] != widget->style)
+  if (!hints || (hints->style[STYLE_WIDGET_DEFAULT] != widget->style))
   {
     settings = gtk_widget_get_settings(widget);
-    hints = g_new0(OssoABookButtonStyleHints , 1);
+    hints = g_new0(OssoABookButtonStyleHints, 1);
     hints->style[STYLE_WIDGET_DEFAULT] = widget->style;
     gtk_widget_style_get(widget,
-          "child-displacement-x", &hints->child_displacement_x,
-          "child-displacement-y", &hints->child_displacement_y,
-          "focus-line-width", &hints->focus_line_width,
-          "focus-padding", &hints->focus_padding,
-          "image-spacing", &hints->image_spacing,
-          NULL);
+                         "child-displacement-x", &hints->child_displacement_x,
+                         "child-displacement-y", &hints->child_displacement_y,
+                         "focus-line-width", &hints->focus_line_width,
+                         "focus-padding", &hints->focus_padding,
+                         "image-spacing", &hints->image_spacing,
+                         NULL);
 
     gtk_widget_style_get(widget, "default-border", &border, NULL);
 
@@ -732,17 +733,21 @@ osso_abook_button_style_set(GtkWidget *widget, GtkStyle *previous_style)
     {
       pango_font_description_free(hints->style[STYLE_VALUE_DEFAULT]->font_desc);
       hints->style[STYLE_VALUE_DEFAULT]->font_desc =
-          pango_font_description_copy(style->font_desc);
+        pango_font_description_copy(style->font_desc);
     }
 
-    metrics = pango_context_get_metrics(gtk_widget_get_pango_context(widget),
-                                        hints->style[STYLE_VALUE_DEFAULT]->font_desc, NULL);
+    metrics = pango_context_get_metrics(gtk_widget_get_pango_context(
+                                          widget),
+                                        hints->style[STYLE_VALUE_DEFAULT]->font_desc,
+                                        NULL);
     hints->line_spacing = pango_font_metrics_get_descent(metrics) +
-        pango_font_metrics_get_ascent(metrics);
+      pango_font_metrics_get_ascent(metrics);
     pango_font_metrics_unref(metrics);
 
-    hints->style[STYLE_VALUE_PICKER] = gtk_style_copy(hints->style[STYLE_VALUE_DEFAULT]);
-    hints->style[STYLE_VALUE_INVALID_PRESENCE] = gtk_style_copy(hints->style[STYLE_VALUE_DEFAULT]);
+    hints->style[STYLE_VALUE_PICKER] =
+      gtk_style_copy(hints->style[STYLE_VALUE_DEFAULT]);
+    hints->style[STYLE_VALUE_INVALID_PRESENCE] =
+      gtk_style_copy(hints->style[STYLE_VALUE_DEFAULT]);
 
     if (gtk_style_lookup_color(widget->style, "SecondaryTextColor", &color))
     {
@@ -759,7 +764,8 @@ osso_abook_button_style_set(GtkWidget *widget, GtkStyle *previous_style)
     if (gtk_style_lookup_color(widget->style, "AttentionColor", &color))
     {
       hints->style[STYLE_VALUE_INVALID_PRESENCE]->fg[GTK_STATE_NORMAL] = color;
-      hints->style[STYLE_VALUE_INVALID_PRESENCE]->fg[GTK_STATE_PRELIGHT] = color;
+      hints->style[STYLE_VALUE_INVALID_PRESENCE]->fg[GTK_STATE_PRELIGHT] =
+        color;
     }
 
     if (gtk_widget_get_realized(widget))
@@ -773,9 +779,9 @@ osso_abook_button_style_set(GtkWidget *widget, GtkStyle *previous_style)
       hints->finger_width = 48;
     }
 
-    if ( !gtk_icon_size_lookup_for_settings(settings, HILDON_ICON_SIZE_STYLUS,
-                                            &hints->stylus_width,
-                                            &hints->stylus_height))
+    if (!gtk_icon_size_lookup_for_settings(settings, HILDON_ICON_SIZE_STYLUS,
+                                           &hints->stylus_width,
+                                           &hints->stylus_height))
     {
       hints->stylus_height = 32;
       hints->stylus_width = 32;
@@ -859,7 +865,9 @@ osso_abook_button_event(GtkWidget *widget, GdkEvent *event)
     case GDK_BUTTON_RELEASE:
     case GDK_ENTER_NOTIFY:
     case GDK_LEAVE_NOTIFY:
+    {
       return TRUE;
+    }
     default:
       return FALSE;
   }
@@ -958,8 +966,8 @@ osso_abook_button_set_property(GObject *object, guint property_id,
       if (priv->presence)
       {
         g_signal_connect_swapped(
-              priv->presence, "notify::presence-status",
-              G_CALLBACK(_presence_status_changed_cb), object);
+          priv->presence, "notify::presence-status",
+          G_CALLBACK(_presence_status_changed_cb), object);
         priv->presence_invalid = osso_abook_presence_is_invalid(priv->presence);
       }
       else
@@ -992,7 +1000,6 @@ osso_abook_button_set_property(GObject *object, guint property_id,
 redraw:
   osso_abook_button_style_set(button, NULL);
   _resize(button, priv);
-
 }
 
 static void
@@ -1112,84 +1119,85 @@ osso_abook_button_class_init(OssoABookButtonClass *klass)
   object_class->finalize = osso_abook_button_finalize;
 
   g_object_class_install_property(
-        object_class, PROP_SIZE,
-        g_param_spec_flags(
-          "size",
-          "Size",
-          "Size request for the button",
-          HILDON_TYPE_SIZE_TYPE,
-          HILDON_SIZE_AUTO,
-          GTK_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PROP_SIZE,
+    g_param_spec_flags(
+      "size",
+      "Size",
+      "Size request for the button",
+      HILDON_TYPE_SIZE_TYPE,
+      HILDON_SIZE_AUTO,
+      GTK_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property(
-        object_class, PROP_STYLE,
-        g_param_spec_enum(
-          "style",
-          "Style",
-          "Visual style of the button",
-          OSSO_ABOOK_TYPE_BUTTON_STYLE,
-          OSSO_ABOOK_BUTTON_STYLE_NORMAL,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_STYLE,
+    g_param_spec_enum(
+      "style",
+      "Style",
+      "Visual style of the button",
+      OSSO_ABOOK_TYPE_BUTTON_STYLE,
+      OSSO_ABOOK_BUTTON_STYLE_NORMAL,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_TITLE,
-        g_param_spec_string(
-          "title",
-          "Title",
-          "Text of the button's title label",
-          NULL,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_TITLE,
+    g_param_spec_string(
+      "title",
+      "Title",
+      "Text of the button's title label",
+      NULL,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_VALUE,
-        g_param_spec_string(
-          "value",
-          "Value",
-          "Text of the button's value label",
-          NULL,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_VALUE,
+    g_param_spec_string(
+      "value",
+      "Value",
+      "Text of the button's value label",
+      NULL,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_ICON_NAME,
-        g_param_spec_string(
-          "icon-name",
-          "Icon Name",
-          "Name of the button's icon",
-          NULL,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_ICON_NAME,
+    g_param_spec_string(
+      "icon-name",
+      "Icon Name",
+      "Name of the button's icon",
+      NULL,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_ICON_VISIBLE,
-        g_param_spec_boolean(
-          "icon-visible",
-          "Icon Visible",
-          "Weither the icon is visible",
-          FALSE,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_ICON_VISIBLE,
+    g_param_spec_boolean(
+      "icon-visible",
+      "Icon Visible",
+      "Weither the icon is visible",
+      FALSE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_PRESENCE,
-        g_param_spec_object(
-          "presence",
-          "Presence",
-          "Presence state for this button",
-          OSSO_ABOOK_TYPE_PRESENCE,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_PRESENCE,
+    g_param_spec_object(
+      "presence",
+      "Presence",
+      "Presence state for this button",
+      OSSO_ABOOK_TYPE_PRESENCE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_PRESENCE_VISIBLE,
-        g_param_spec_boolean(
-          "presence-visible",
-          "Presence Visible",
-          "Weither the presence icon is visible",
-          FALSE,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_PRESENCE_VISIBLE,
+    g_param_spec_boolean(
+      "presence-visible",
+      "Presence Visible",
+      "Weither the presence icon is visible",
+      FALSE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_HIGHLIGHTED,
-        g_param_spec_boolean(
-          "highlighted",
-          "Highlighted",
-          "Wether to highlight the title text",
-          FALSE,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_HIGHLIGHTED,
+    g_param_spec_boolean(
+      "highlighted",
+      "Highlighted",
+      "Wether to highlight the title text",
+      FALSE,
+      GTK_PARAM_READWRITE));
 
   style_hints_quark = g_quark_from_static_string("OssoABookButton-style-hints");
 
   gtk_rc_parse_string("class 'OssoABookButton' style 'hildon-button-label'");
-  gtk_rc_parse_string("widget '*.hildon-dialog-action-area.OssoABookButton-finger' style 'fremantle-dialog-button'");
+  gtk_rc_parse_string(
+    "widget '*.hildon-dialog-action-area.OssoABookButton-finger' style 'fremantle-dialog-button'");
 }
 
 GtkWidget *

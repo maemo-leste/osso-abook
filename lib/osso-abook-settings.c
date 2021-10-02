@@ -1,7 +1,7 @@
+#include "osso-abook-errors.h"
+#include "osso-abook-log.h"
 #include "osso-abook-settings.h"
 #include "osso-abook-utils-private.h"
-#include "osso-abook-log.h"
-#include "osso-abook-errors.h"
 
 #include "config.h"
 
@@ -74,16 +74,18 @@ osso_abook_settings_get_picture_folder()
   const char *folder = NULL;
 
 #if 0
+
   if (gconf_client_get_int(
         osso_abook_get_gconf_client(),
         "/apps/camera/settings/basic-settings/storage-device", NULL) ||
-      (folder = hildon_get_user_named_dir("NOKIA_MMC_CAMERA_DIR")) == 0 ||
+      ((folder = hildon_get_user_named_dir("NOKIA_MMC_CAMERA_DIR")) == 0) ||
       !g_file_test(folder, G_FILE_TEST_IS_DIR))
   {
     folder = hildon_get_user_named_dir("NOKIA_CAMERA_DIR");
 #else
   {
 #endif
+
     if (!folder || !g_file_test(folder, G_FILE_TEST_IS_DIR))
     {
       folder = g_get_user_special_dir(G_USER_DIRECTORY_PICTURES);
@@ -94,7 +96,6 @@ osso_abook_settings_get_picture_folder()
           images_folder = _osso_abook_get_safe_folder(".images");
 
         folder = images_folder;
-
       }
     }
   }
@@ -120,6 +121,7 @@ osso_abook_voicemail_number_new(const char *phone_number,
     {
       if (!g_ascii_isdigit(*p))
         goto bad_id;
+
       p++;
     }
 
@@ -140,7 +142,7 @@ bad_id:
     return number;
 
   number->operator_name =
-      _osso_abook_get_operator_name(NULL, number->operator_id, NULL);
+    _osso_abook_get_operator_name(NULL, number->operator_id, NULL);
 
   return number;
 }
@@ -166,9 +168,9 @@ osso_abook_voicemail_number_list_free(GSList *list)
 GSList *
 osso_abook_settings_get_voicemail_numbers()
 {
-  GSList *numbers= gconf_client_get_list(
-        osso_abook_get_gconf_client(),
-        OSSO_ABOOK_SETTINGS_KEY_VOICEMAIL_NUMBERS, GCONF_VALUE_STRING, NULL);
+  GSList *numbers = gconf_client_get_list(
+    osso_abook_get_gconf_client(),
+    OSSO_ABOOK_SETTINGS_KEY_VOICEMAIL_NUMBERS, GCONF_VALUE_STRING, NULL);
   GSList *l;
 
   for (l = numbers; l; l = l->next)

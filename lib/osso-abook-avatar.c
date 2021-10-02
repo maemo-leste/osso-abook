@@ -1,7 +1,7 @@
 #include <gtk/gtkprivate.h>
 
-#include "osso-abook-avatar.h"
 #include "osso-abook-avatar-cache.h"
+#include "osso-abook-avatar.h"
 #include "osso-abook-utils-private.h"
 
 #include "config.h"
@@ -9,46 +9,46 @@
 typedef OssoABookAvatarIface OssoABookAvatarInterface;
 
 G_DEFINE_INTERFACE(
-    OssoABookAvatar,
-    osso_abook_avatar,
-    G_TYPE_OBJECT
+  OssoABookAvatar,
+  osso_abook_avatar,
+  G_TYPE_OBJECT
 );
 
 static void
 osso_abook_avatar_default_init(OssoABookAvatarIface *iface)
 {
   g_object_interface_install_property(
-        iface,
-        g_param_spec_object(
-                 "avatar-image",
-                 "Avtar Image",
-                 "The avatar image",
-                 GDK_TYPE_PIXBUF,
-                 GTK_PARAM_READABLE));
+    iface,
+    g_param_spec_object(
+      "avatar-image",
+      "Avtar Image",
+      "The avatar image",
+      GDK_TYPE_PIXBUF,
+      GTK_PARAM_READABLE));
   g_object_interface_install_property(
-        iface,
-        g_param_spec_object(
-                 "server-image",
-                 "Server Image",
-                 "The server provided avatar image",
-                 GDK_TYPE_PIXBUF,
-                 GTK_PARAM_READABLE));
+    iface,
+    g_param_spec_object(
+      "server-image",
+      "Server Image",
+      "The server provided avatar image",
+      GDK_TYPE_PIXBUF,
+      GTK_PARAM_READABLE));
   g_object_interface_install_property(
-        iface,
-        g_param_spec_boolean(
-                 "avatar-user-selected",
-                 "Avatar is User-Selected",
-                 "Whether the avatar was selected by the user",
-                 FALSE,
-                 GTK_PARAM_READABLE));
+    iface,
+    g_param_spec_boolean(
+      "avatar-user-selected",
+      "Avatar is User-Selected",
+      "Whether the avatar was selected by the user",
+      FALSE,
+      GTK_PARAM_READABLE));
   g_object_interface_install_property(
-        iface,
-        g_param_spec_boolean(
-                 "done-loading",
-                 "Done Loading",
-                 "Whether the avatar has been loaded",
-                 FALSE,
-                 GTK_PARAM_READABLE));
+    iface,
+    g_param_spec_boolean(
+      "done-loading",
+      "Done Loading",
+      "Whether the avatar has been loaded",
+      FALSE,
+      GTK_PARAM_READABLE));
   g_signal_new("load-error",
                G_TYPE_FROM_CLASS(iface), G_SIGNAL_RUN_LAST,
                G_STRUCT_OFFSET(OssoABookAvatarIface, load_error),

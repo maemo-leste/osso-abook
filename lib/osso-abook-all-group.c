@@ -1,9 +1,9 @@
 #include <gtk/gtkprivate.h>
 
-#include "osso-abook-all-group.h"
 #include "osso-abook-aggregator.h"
-#include "osso-abook-waitable.h"
+#include "osso-abook-all-group.h"
 #include "osso-abook-errors.h"
+#include "osso-abook-waitable.h"
 
 #include "config.h"
 
@@ -22,9 +22,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define OSSO_ABOOK_ALL_GROUP_PRIVATE(group) \
-                osso_abook_all_group_get_instance_private(group)
+  osso_abook_all_group_get_instance_private(group)
 
-enum {
+enum
+{
   PROP_AGGREGATOR = 1
 };
 
@@ -51,9 +52,9 @@ osso_abook_all_group_get_display_title(OssoABookGroup *group)
       osso_abook_waitable_is_ready(OSSO_ABOOK_WAITABLE(priv->aggregator), NULL))
   {
     display_title =
-        g_strdup_printf(
-          _("addr_ti_main_view"),
-          osso_abook_aggregator_get_master_contact_count(priv->aggregator));
+      g_strdup_printf(
+        _("addr_ti_main_view"),
+        osso_abook_aggregator_get_master_contact_count(priv->aggregator));
   }
   else
   {
@@ -101,8 +102,8 @@ osso_abook_all_group_destroy_aggregator(OssoABookAllGroup *group)
   if (priv->aggregator)
   {
     g_signal_handlers_disconnect_matched(
-          priv->aggregator, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
-          0, 0, NULL, master_contact_count_cb, group);
+      priv->aggregator, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+      0, 0, NULL, master_contact_count_cb, group);
     g_object_unref(priv->aggregator);
     priv->aggregator = NULL;
   }
@@ -152,12 +153,12 @@ osso_abook_all_group_set_property(GObject *object, guint property_id,
       priv->aggregator = g_value_dup_object(value);
       master_contact_count_cb(group);
       priv->closure = osso_abook_waitable_call_when_ready(
-            OSSO_ABOOK_WAITABLE(priv->aggregator),
-            osso_abook_all_group_aggregator_ready_cb, group, NULL);
+        OSSO_ABOOK_WAITABLE(priv->aggregator),
+        osso_abook_all_group_aggregator_ready_cb, group, NULL);
       break;
     }
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -179,7 +180,7 @@ osso_abook_all_group_get_property(GObject *object, guint property_id,
       break;
     }
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -199,13 +200,13 @@ osso_abook_all_group_class_init(OssoABookAllGroupClass *klass)
   group_class->get_sort_weight = osso_abook_all_group_get_sort_weight;
 
   g_object_class_install_property(
-        object_class, PROP_AGGREGATOR,
-        g_param_spec_object(
-                 "aggregator",
-                 "Aggregator",
-                 "The aggregator of all contacts in the addressbook.",
-                 OSSO_ABOOK_TYPE_AGGREGATOR,
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_AGGREGATOR,
+    g_param_spec_object(
+      "aggregator",
+      "Aggregator",
+      "The aggregator of all contacts in the addressbook.",
+      OSSO_ABOOK_TYPE_AGGREGATOR,
+      GTK_PARAM_READWRITE));
 }
 
 __attribute__((destructor)) static void

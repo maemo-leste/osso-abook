@@ -73,13 +73,13 @@ format_address(OssoABookAddress *address, const char *fmt)
     {
       char c = *end;
 
-      if (c == '[' || c == ']' || c == '|' || c == '%')
+      if ((c == '[') || (c == ']') || (c == '|') || (c == '%'))
         break;
 
       end++;
     }
 
-    if (end - start && *end != '[')
+    if (end - start && (*end != '['))
     {
       token = g_strndup(start, end - start);
 
@@ -116,7 +116,7 @@ format_address(OssoABookAddress *address, const char *fmt)
         case ']':
         {
           token = g_strndup(start, end - start);
-          bracket_count --;
+          bracket_count--;
 
           break;
         }
@@ -192,7 +192,7 @@ format_address(OssoABookAddress *address, const char *fmt)
 
     start = end;
   }
-  while(*start);
+  while (*start);
 
   g_free(sep);
 
@@ -212,7 +212,6 @@ osso_abook_address_format(OssoABookAddress *address)
 {
   char *formated_address;
   gchar *tmp_format = NULL;
-
 
   if (!format)
   {

@@ -33,7 +33,7 @@ struct _OssoABookContactFieldSelectorPrivate
 };
 
 typedef struct _OssoABookContactFieldSelectorPrivate
-    OssoABookContactFieldSelectorPrivate;
+  OssoABookContactFieldSelectorPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(
   OssoABookContactFieldSelector,
@@ -43,8 +43,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 
 #define PRIVATE(selector) \
   ((OssoABookContactFieldSelectorPrivate *) \
-  osso_abook_contact_field_selector_get_instance_private( \
-                                   ((OssoABookContactFieldSelector *)selector)))
+   osso_abook_contact_field_selector_get_instance_private( \
+     ((OssoABookContactFieldSelector *)selector)))
 
 enum
 {
@@ -60,46 +60,46 @@ enum
 
 static OssoABookMessageMapping field_map[] =
 {
-  {"", "addr_va_add_field"},
-  {"first_name", "addr_va_add_field_first_name"},
-  {"last_name", "addr_va_add_field_last_name"},
-  {"nickname", "addr_va_add_field_nickname"},
-  {"mobile", "addr_va_add_field_mobile"},
-  {"mobile_home", "addr_va_add_field_mobile_home"},
-  {"mobile_work", "addr_va_add_field_mobile_work"},
-  {"phone", "addr_va_add_field_phone"},
-  {"phone_home", "addr_va_add_field_phone_home"},
-  {"phone_work", "addr_va_add_field_phone_work"},
-  {"phone_other", "addr_va_add_field_phone"},
-  {"phone_fax", "addr_va_add_field_phone_fax"},
-  {"email", "addr_va_add_field_email"},
-  {"email_home", "addr_va_add_field_email_home"},
-  {"email_work", "addr_va_add_field_email_work"},
-  {"chat_sip", "addr_va_add_field_chat_sip"},
-  {"webpage", "addr_va_add_field_webpage"},
-  {"birthday", "addr_va_add_field_birthday"},
-  {"address", "addr_va_add_field_address"},
-  {"address_home", "addr_va_add_field_address_home"},
-  {"address_work", "addr_va_add_field_address_work"},
-  {"title", "addr_va_add_field_title"},
-  {"company", "addr_va_add_field_company"},
-  {"note", "addr_va_add_field_note"},
-  {"gender", "addr_va_add_field_gender"},
-  {"address_detail", ""},
-  {"address_home_detail", ""},
-  {"address_work_detail", ""},
-  {"email_detail", ""},
-  {"email_home_detail", ""},
-  {"email_work_detail", ""},
-  {"mobile_detail", ""},
-  {"mobile_home_detail", ""},
-  {"mobile_work_detail", ""},
-  {"phone_detail", ""},
-  {"phone_home_detail", ""},
-  {"phone_work_detail", ""},
-  {"phone_other_detail", ""},
-  {"phone_fax_detail", ""},
-  {NULL, NULL}
+  { "", "addr_va_add_field" },
+  { "first_name", "addr_va_add_field_first_name" },
+  { "last_name", "addr_va_add_field_last_name" },
+  { "nickname", "addr_va_add_field_nickname" },
+  { "mobile", "addr_va_add_field_mobile" },
+  { "mobile_home", "addr_va_add_field_mobile_home" },
+  { "mobile_work", "addr_va_add_field_mobile_work" },
+  { "phone", "addr_va_add_field_phone" },
+  { "phone_home", "addr_va_add_field_phone_home" },
+  { "phone_work", "addr_va_add_field_phone_work" },
+  { "phone_other", "addr_va_add_field_phone" },
+  { "phone_fax", "addr_va_add_field_phone_fax" },
+  { "email", "addr_va_add_field_email" },
+  { "email_home", "addr_va_add_field_email_home" },
+  { "email_work", "addr_va_add_field_email_work" },
+  { "chat_sip", "addr_va_add_field_chat_sip" },
+  { "webpage", "addr_va_add_field_webpage" },
+  { "birthday", "addr_va_add_field_birthday" },
+  { "address", "addr_va_add_field_address" },
+  { "address_home", "addr_va_add_field_address_home" },
+  { "address_work", "addr_va_add_field_address_work" },
+  { "title", "addr_va_add_field_title" },
+  { "company", "addr_va_add_field_company" },
+  { "note", "addr_va_add_field_note" },
+  { "gender", "addr_va_add_field_gender" },
+  { "address_detail", "" },
+  { "address_home_detail", "" },
+  { "address_work_detail", "" },
+  { "email_detail", "" },
+  { "email_home_detail", "" },
+  { "email_work_detail", "" },
+  { "mobile_detail", "" },
+  { "mobile_home_detail", "" },
+  { "mobile_work_detail", "" },
+  { "phone_detail", "" },
+  { "phone_home_detail", "" },
+  { "phone_work_detail", "" },
+  { "phone_other_detail", "" },
+  { "phone_fax_detail", "" },
+  { NULL, NULL }
 };
 
 static gchar *
@@ -128,7 +128,7 @@ get_field_text(OssoABookContactFieldSelectorPrivate *priv,
     if (priv->show_values)
     {
       const char *display_value =
-          osso_abook_contact_field_get_display_value(field);
+        osso_abook_contact_field_get_display_value(field);
 
       if (display_value)
         g_string_append_printf(s, "\n%s", display_value);
@@ -220,7 +220,7 @@ osso_abook_contact_field_selector_get_property(GObject *object,
     }
     default:
     {
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
     }
   }
@@ -244,12 +244,12 @@ osso_abook_contact_field_selector_dispose(GObject *object)
   }
 
   G_OBJECT_CLASS(osso_abook_contact_field_selector_parent_class)->
-      dispose(object);
+  dispose(object);
 }
 
 static void
 osso_abook_contact_field_selector_class_init(
-    OssoABookContactFieldSelectorClass *klass)
+  OssoABookContactFieldSelectorClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
@@ -258,10 +258,10 @@ osso_abook_contact_field_selector_class_init(
   object_class->dispose = osso_abook_contact_field_selector_dispose;
 
   g_object_class_install_property(
-        object_class, PROP_SHOW_VALUES,
-        g_param_spec_boolean(
-          "show-values", "Show Values", "Show contact field values",
-          FALSE, GTK_PARAM_READWRITE));
+    object_class, PROP_SHOW_VALUES,
+    g_param_spec_boolean(
+      "show-values", "Show Values", "Show contact field values",
+      FALSE, GTK_PARAM_READWRITE));
 }
 
 static gint
@@ -289,7 +289,6 @@ osso_abook_contact_field_selector_init(OssoABookContactFieldSelector *selector)
   GList *cells;
   GtkCellRenderer *cell;
 
-
   priv->message_map = osso_abook_message_map_new(field_map);
 
   priv->list_store = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_STRING,
@@ -301,13 +300,13 @@ osso_abook_contact_field_selector_init(OssoABookContactFieldSelector *selector)
   gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(priv->list_store), COL_TEXT,
                                   compare_fields, NULL, NULL);
   col = hildon_touch_selector_append_text_column(
-        HILDON_TOUCH_SELECTOR(selector), GTK_TREE_MODEL(priv->list_store), 0);
+    HILDON_TOUCH_SELECTOR(selector), GTK_TREE_MODEL(priv->list_store), 0);
 
   for (cells = gtk_cell_layout_get_cells(GTK_CELL_LAYOUT(col)); cells;
        cells = g_list_delete_link(cells, cells))
   {
     if (GTK_IS_CELL_RENDERER_TEXT(cells->data))
-      g_object_set(cells->data,  "ellipsize", 3,  NULL);
+      g_object_set(cells->data, "ellipsize", 3, NULL);
   }
 
   cell = gtk_cell_renderer_pixbuf_new();
@@ -349,9 +348,10 @@ osso_abook_contact_field_selector_new(void)
 }
 
 void
-osso_abook_contact_field_selector_load(
-    OssoABookContactFieldSelector *selector, OssoABookContact *contact,
-    OssoABookContactFieldPredicate accept_field, gpointer user_data)
+osso_abook_contact_field_selector_load(OssoABookContactFieldSelector *selector,
+                                       OssoABookContact *contact,
+                                       OssoABookContactFieldPredicate accept_field,
+                                       gpointer user_data)
 {
   OssoABookContactFieldSelectorPrivate *priv;
   GList *fields;
@@ -367,7 +367,7 @@ osso_abook_contact_field_selector_load(
                                                           contact, accept_field,
                                                           user_data);
   icon_theme = gtk_icon_theme_get_for_screen(
-        gtk_widget_get_screen(GTK_WIDGET(selector)));
+    gtk_widget_get_screen(GTK_WIDGET(selector)));
 
   while (fields)
   {
@@ -381,7 +381,8 @@ osso_abook_contact_field_selector_load(
 
 void
 osso_abook_contact_field_selector_append(
-    OssoABookContactFieldSelector *selector, OssoABookContactField *field)
+  OssoABookContactFieldSelector *selector,
+  OssoABookContactField *field)
 {
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD_SELECTOR(selector));
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD(field));
@@ -393,7 +394,7 @@ osso_abook_contact_field_selector_append(
 
 OssoABookContactField *
 osso_abook_contact_field_selector_get_selected(
-    OssoABookContactFieldSelector *selector)
+  OssoABookContactFieldSelector *selector)
 {
   OssoABookContactFieldSelectorPrivate *priv;
   HildonTouchSelector *ts;
@@ -417,7 +418,7 @@ osso_abook_contact_field_selector_get_selected(
   else
   {
     GtkTreePath *path =
-        hildon_touch_selector_get_last_activated_row(ts, COL_TEXT);
+      hildon_touch_selector_get_last_activated_row(ts, COL_TEXT);
 
     if (path)
     {
@@ -434,8 +435,9 @@ osso_abook_contact_field_selector_get_selected(
 
 int
 osso_abook_contact_field_selector_find_custom(
-    OssoABookContactFieldSelector *selector,
-    OssoABookContactFieldPredicate accept_field, gpointer user_data)
+  OssoABookContactFieldSelector *selector,
+  OssoABookContactFieldPredicate accept_field,
+  gpointer user_data)
 {
   GtkTreeModel *model;
   GtkTreeIter iter;
@@ -461,7 +463,6 @@ osso_abook_contact_field_selector_find_custom(
 
       if (accept_field(field, user_data))
         return i;
-
     }
     while (gtk_tree_model_iter_next(model, &iter));
   }
@@ -471,11 +472,12 @@ osso_abook_contact_field_selector_find_custom(
 
 GList *
 osso_abook_contact_field_selector_get_selected_fields(
-    OssoABookContactFieldSelector *selector)
+  OssoABookContactFieldSelector *selector)
 {
   OssoABookContactFieldSelectorPrivate *priv;
   GList *rows;
   GList *fields = NULL;
+
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD_SELECTOR(selector), NULL);
 
   priv = PRIVATE(selector);
@@ -505,7 +507,8 @@ osso_abook_contact_field_selector_get_selected_fields(
 
 void
 osso_abook_contact_field_selector_set_show_values(
-    OssoABookContactFieldSelector *selector, gboolean value)
+  OssoABookContactFieldSelector *selector,
+  gboolean value)
 {
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD_SELECTOR(selector));
 
@@ -514,10 +517,9 @@ osso_abook_contact_field_selector_set_show_values(
                NULL);
 }
 
-
 gboolean
 osso_abook_contact_field_selector_get_show_values(
-    OssoABookContactFieldSelector *selector)
+  OssoABookContactFieldSelector *selector)
 {
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_FIELD_SELECTOR(selector), FALSE);
 

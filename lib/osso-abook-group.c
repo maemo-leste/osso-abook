@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-struct _OssoABookGroupPrivate {
+struct _OssoABookGroupPrivate
+{
   gchar *display_title;
 };
 
@@ -19,9 +20,10 @@ G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(
 );
 
 #define OSSO_ABOOK_GROUP_PRIVATE(group) \
-                osso_abook_group_get_instance_private(group)
+  osso_abook_group_get_instance_private(group)
 
-enum {
+enum
+{
   PROP_NAME = 1,
   PROP_ICON_NAME,
   PROP_DISPLAY_TITLE,
@@ -30,7 +32,8 @@ enum {
   PROP_SENSITIVE
 };
 
-enum {
+enum
+{
   SIGNAL_REFILTER_CONTACT,
   SIGNAL_REFILTER_GROUP,
   SIGNAL_LAST
@@ -122,20 +125,24 @@ osso_abook_group_set_property(GObject *object, guint property_id,
     case PROP_NAME:
       osso_abook_group_set_name(group, g_value_get_string(value));
       return;
+
     case PROP_ICON_NAME:
       osso_abook_group_set_icon_name(group, g_value_get_string(value));
       return;
+
     case PROP_VISIBLE:
       osso_abook_group_set_visible(group, g_value_get_boolean(value));
       return;
+
     case PROP_SORT_WEIGHT:
       osso_abook_group_set_weight(group, g_value_get_int(value));
       return;
+
     case PROP_SENSITIVE:
-     osso_abook_group_set_sensitive(group, g_value_get_boolean(value));
-     break;
+      osso_abook_group_set_sensitive(group, g_value_get_boolean(value));
+      break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       return;
   }
 }
@@ -264,7 +271,7 @@ osso_abook_group_get_property(GObject *object, guint property_id, GValue *value,
       g_value_set_boolean(value, osso_abook_group_get_sensitive(group));
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
   }
 }
@@ -289,66 +296,66 @@ osso_abook_group_class_init(OssoABookGroupClass *klass)
   object_class->finalize = osso_abook_group_finalize;
 
   g_object_class_install_property(
-        object_class, PROP_NAME,
-        g_param_spec_string(
-                 "name",
-                 "Name",
-                 "The name of the group",
-                 NULL,
-                 GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PROP_NAME,
+    g_param_spec_string(
+      "name",
+      "Name",
+      "The name of the group",
+      NULL,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property(
-        object_class, PROP_ICON_NAME,
-        g_param_spec_string(
-                 "icon-name",
-                 "Icon name",
-                 "The icon name of the group. The icon name can be used to look up the appropiate icon to represent the group.",
-                 NULL,
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_ICON_NAME,
+    g_param_spec_string(
+      "icon-name",
+      "Icon name",
+      "The icon name of the group. The icon name can be used to look up the appropiate icon to represent the group.",
+      NULL,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_DISPLAY_TITLE,
-        g_param_spec_string(
-                 "display-title",
-                 "Display Title",
-                 "The display title of the group",
-                 NULL,
-                 GTK_PARAM_READABLE));
+    object_class, PROP_DISPLAY_TITLE,
+    g_param_spec_string(
+      "display-title",
+      "Display Title",
+      "The display title of the group",
+      NULL,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_VISIBLE,
-        g_param_spec_boolean(
-                 "visible",
-                 "Visible",
-                 "Whether the group is visible.",
-                 TRUE,
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_VISIBLE,
+    g_param_spec_boolean(
+      "visible",
+      "Visible",
+      "Whether the group is visible.",
+      TRUE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_SORT_WEIGHT,
-        g_param_spec_int(
-                 "sort-weight",
-                 "Sort weight",
-                 "Sort weight of the group. A lower value results in a higher sorting priority.",
-                 G_MININT,
-                 G_MAXINT,
-                 0,
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_SORT_WEIGHT,
+    g_param_spec_int(
+      "sort-weight",
+      "Sort weight",
+      "Sort weight of the group. A lower value results in a higher sorting priority.",
+      G_MININT,
+      G_MAXINT,
+      0,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_SENSITIVE,
-        g_param_spec_boolean(
-                 "sensitive",
-                 "Sensitive",
-                 "Whether the group is sensitive.",
-                 FALSE,
-                 GTK_PARAM_READWRITE));
+    object_class, PROP_SENSITIVE,
+    g_param_spec_boolean(
+      "sensitive",
+      "Sensitive",
+      "Whether the group is sensitive.",
+      FALSE,
+      GTK_PARAM_READWRITE));
 
   signals[SIGNAL_REFILTER_CONTACT] =
-      g_signal_new("refilter-contact", OSSO_ABOOK_TYPE_GROUP, G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET(OssoABookGroupClass, refilter_contact),
-                   0, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE,
-                   1, OSSO_ABOOK_TYPE_CONTACT);
+    g_signal_new("refilter-contact", OSSO_ABOOK_TYPE_GROUP, G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(OssoABookGroupClass, refilter_contact),
+                 0, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE,
+                 1, OSSO_ABOOK_TYPE_CONTACT);
 
   signals[SIGNAL_REFILTER_GROUP] =
-      g_signal_new("refilter-group", OSSO_ABOOK_TYPE_GROUP, G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET(OssoABookGroupClass, refilter_group),
-                   0, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+    g_signal_new("refilter-group", OSSO_ABOOK_TYPE_GROUP, G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(OssoABookGroupClass, refilter_group),
+                 0, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 GtkWidget *
@@ -367,7 +374,8 @@ osso_abook_group_get_empty_widget(OssoABookGroup *group)
 }
 
 gboolean
-osso_abook_group_includes_contact(OssoABookGroup *group, OssoABookContact *contact)
+osso_abook_group_includes_contact(OssoABookGroup *group,
+                                  OssoABookContact *contact)
 {
   OssoABookGroupClass *group_class;
 
@@ -447,7 +455,6 @@ osso_abook_group_get_display_name(OssoABookGroup *group)
     return NULL;
 
   display_name = group_class->get_name(group);
-
 
   if (display_name && *display_name)
   {

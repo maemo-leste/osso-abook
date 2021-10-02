@@ -21,10 +21,10 @@
 
 #include "config.h"
 
-#include "osso-abook-eventlogger.h"
-#include "osso-abook-utils-private.h"
 #include "osso-abook-account-manager.h"
+#include "osso-abook-eventlogger.h"
 #include "osso-abook-string-list.h"
+#include "osso-abook-utils-private.h"
 
 static RTComEl *el = NULL;
 static GList *el_uids = NULL;
@@ -204,7 +204,7 @@ contact_get_attribute_values(OssoABookContact *contact, const char *attr_name)
     if (!g_strcmp0(e_vcard_attribute_get_name(attr->data), attr_name))
     {
       attr_values = g_list_concat(
-            g_list_copy(e_vcard_attribute_get_values(attr->data)), attr_values);
+        g_list_copy(e_vcard_attribute_get_values(attr->data)), attr_values);
     }
   }
 
@@ -220,8 +220,8 @@ vcard_field_table_add_uid(const gchar *attr_val, const gchar *uid)
   if (!vcf_attribute_uid)
   {
     vcf_attribute_uid = g_hash_table_new_full(
-          g_str_hash, g_str_equal, g_free,
-          (GDestroyNotify)osso_abook_string_list_free);
+      g_str_hash, g_str_equal, g_free,
+      (GDestroyNotify)osso_abook_string_list_free);
   }
 
   if (g_hash_table_lookup_extended(vcf_attribute_uid, attr_val, &orig_attr_val,
@@ -278,7 +278,7 @@ vcard_field_table_find_uid(const char *attr_val, const char *uid)
 
 void
 _osso_abook_eventlogger_update(OssoABookContact *new_contact,
-                              OssoABookContact *old_contact)
+                               OssoABookContact *old_contact)
 {
   static GList *vcard_fields = NULL;
   const char *uid;
@@ -293,6 +293,7 @@ _osso_abook_eventlogger_update(OssoABookContact *new_contact,
   uid = e_contact_get_const(E_CONTACT(new_contact), E_CONTACT_UID);
 
 #if 0
+
   if (!vcard_fields)
   {
     GList *l;
@@ -315,6 +316,7 @@ _osso_abook_eventlogger_update(OssoABookContact *new_contact,
       g_object_unref(l->data);
     }
   }
+
 #else
   g_assert(0);
 #endif
@@ -387,7 +389,6 @@ _osso_abook_eventlogger_remove(OssoABookContact *contact)
     for (vals = contact_get_attribute_values(contact, "TEL"); vals;
          vals = g_list_delete_link(vals, vals))
     {
-
       const char *vcf = vcard_field_table_find_uid(vals->data, uid);
 
       if (vcf)
@@ -410,7 +411,7 @@ _osso_abook_eventlogger_update_phone_table(OssoABookContact *contact)
   {
     const char *uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
 
-    for (v = contact_get_attribute_values(contact, "TEL") ; v;
+    for (v = contact_get_attribute_values(contact, "TEL"); v;
          v = g_list_delete_link(v, v))
     {
       vcard_field_table_add_uid(v->data, uid);

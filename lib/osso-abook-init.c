@@ -2,9 +2,9 @@
 
 #include <libintl.h>
 
-#include "osso-abook-init.h"
-#include "osso-abook-debug.h"
 #include "eds.h"
+#include "osso-abook-debug.h"
+#include "osso-abook-init.h"
 
 #include "config.h"
 
@@ -22,15 +22,18 @@ _osso_abook_init_with_args(int *argc, char ***argv,
   bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
   osso_abook_osso_context = osso_context;
 
-#if !GLIB_CHECK_VERSION(2,31,0)
+#if !GLIB_CHECK_VERSION(2, 31, 0)
+
   if (!g_thread_supported())
     g_thread_init(NULL);
+
 #endif
 
   osso_abook_debug_init();
   gtk_rc_add_default_file("/usr/share/libosso-abook/gtkrc.libosso-abook");
   rv = gtk_init_with_args(argc, argv, parameter_string, entries,
                           translation_domain, error);
+
   if (rv)
   {
     if (gtk_icon_size_from_name("hildon-finger") == GTK_ICON_SIZE_INVALID)
@@ -58,7 +61,7 @@ osso_abook_init_with_args(int *argc, char ***argv, osso_context_t *osso_context,
   g_return_val_if_fail(argv != NULL, FALSE);
 
   return _osso_abook_init_with_args(argc, argv, osso_context, parameter_string,
-                 entries, translation_domain, error);
+                                    entries, translation_domain, error);
 }
 
 gboolean
@@ -69,7 +72,7 @@ osso_abook_init_with_name(const char *name, osso_context_t *osso_context)
   g_return_val_if_fail(name != NULL, FALSE);
 
   return _osso_abook_init_with_args(
-        0, &argv, osso_context, NULL, NULL, NULL, NULL);
+    0, &argv, osso_context, NULL, NULL, NULL, NULL);
 }
 
 osso_context_t *

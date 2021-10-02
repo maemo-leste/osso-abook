@@ -20,26 +20,26 @@
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon.h>
 
-#include <libintl.h>
 #include <langinfo.h>
+#include <libintl.h>
 
 #include "config.h"
 
+#include "osso-abook-account-manager.h"
 #include "osso-abook-address-format.h"
-#include "osso-abook-button.h"
-#include "osso-abook-contact-field.h"
-#include "osso-abook-enums.h"
-#include "osso-abook-avatar-image.h"
-#include "osso-abook-message-map.h"
-#include "osso-abook-utils-private.h"
-#include "osso-abook-msgids.h"
-#include "osso-abook-util.h"
 #include "osso-abook-avatar-chooser-dialog.h"
 #include "osso-abook-avatar-editor-dialog.h"
-#include "osso-abook-entry.h"
-#include "osso-abook-account-manager.h"
-#include "osso-abook-string-list.h"
+#include "osso-abook-avatar-image.h"
+#include "osso-abook-button.h"
 #include "osso-abook-contact-field-selector.h"
+#include "osso-abook-contact-field.h"
+#include "osso-abook-entry.h"
+#include "osso-abook-enums.h"
+#include "osso-abook-message-map.h"
+#include "osso-abook-msgids.h"
+#include "osso-abook-string-list.h"
+#include "osso-abook-util.h"
+#include "osso-abook-utils-private.h"
 
 typedef struct _OssoABookContactFieldTemplate OssoABookContactFieldTemplate;
 
@@ -51,12 +51,12 @@ struct _OssoABookContactFieldTemplate
   gchar *icon_name;
   int sort_weight;
   OssoABookContactFieldFlags flags;
-  GList * (*actions)(OssoABookContactField *field);
-  GtkWidget * (*editor_widget)(OssoABookContactField *field);
-  GList * (*children)(OssoABookContactField *field);
+  GList *(*actions)(OssoABookContactField *field);
+  GtkWidget *(*editor_widget)(OssoABookContactField *field);
+  GList *(*children)(OssoABookContactField *field);
   void (*update)(OssoABookContactField *field);
   void (*synthesize_attributes)(OssoABookContactField *field);
-  gchar * (*get_attr_value)(EVCardAttribute *attr);
+  gchar *(*get_attr_value)(EVCardAttribute *attr);
 };
 
 struct _OssoABookContactFieldTemplateGroup
@@ -65,7 +65,8 @@ struct _OssoABookContactFieldTemplateGroup
   int count;
 };
 
-typedef struct _OssoABookContactFieldTemplateGroup OssoABookContactFieldTemplateGroup;
+typedef struct _OssoABookContactFieldTemplateGroup
+  OssoABookContactFieldTemplateGroup;
 
 struct _OssoABookContactFieldAction
 {
@@ -97,7 +98,7 @@ struct _OssoABookContactFieldPrivate
   OssoABookContactField *parent;
   GList *children;
   gchar *path;
-  gboolean modified : 1  /* 0x01 0xFE */;
+  gboolean modified : 1 /* 0x01 0xFE */;
   gboolean mandatory : 1 /* 0x02 0xFD */;
 };
 
@@ -127,7 +128,10 @@ enum
 };
 
 #define OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field) \
-  ((OssoABookContactFieldPrivate *)osso_abook_contact_field_get_instance_private(((OssoABookContactField *)field)))
+  ((OssoABookContactFieldPrivate *)osso_abook_contact_field_get_instance_private((( \
+                                                                                    OssoABookContactField \
+                                                                                    *) \
+                                                                                  field)))
 
 static GList *
 get_name_children(OssoABookContactField *field);
@@ -145,7 +149,7 @@ static OssoABookAvatar *
 get_avatar(OssoABookContactField *field)
 {
   GtkWidget *child = gtk_bin_get_child(
-        GTK_BIN(osso_abook_contact_field_get_editor_widget(field)));
+    GTK_BIN(osso_abook_contact_field_get_editor_widget(field)));
 
   return osso_abook_avatar_image_get_avatar(OSSO_ABOOK_AVATAR_IMAGE(child));
 }
@@ -195,14 +199,14 @@ osso_abook_contact_field_create_button_with_style(OssoABookContactField *field,
   if (roster_contact)
   {
     button = osso_abook_button_new_with_presence(
-          HILDON_SIZE_AUTO_WIDTH, icon_name, display_title, display_value,
-          OSSO_ABOOK_PRESENCE(roster_contact));
+      HILDON_SIZE_AUTO_WIDTH, icon_name, display_title, display_value,
+      OSSO_ABOOK_PRESENCE(roster_contact));
   }
   else
   {
     button = osso_abook_button_new_with_presence(
-          HILDON_SIZE_AUTO_WIDTH, icon_name, display_title, display_value,
-          NULL);
+      HILDON_SIZE_AUTO_WIDTH, icon_name, display_title, display_value,
+      NULL);
   }
 
   osso_abook_button_set_style(OSSO_ABOOK_BUTTON(button), style);
@@ -216,7 +220,7 @@ static GtkWidget *
 osso_abook_contact_field_create_button_with_label(OssoABookContactField *field)
 {
   return osso_abook_contact_field_create_button_with_style(
-        field, NULL, NULL, OSSO_ABOOK_BUTTON_STYLE_LABEL);
+    field, NULL, NULL, OSSO_ABOOK_BUTTON_STYLE_LABEL);
 }
 
 static void
@@ -232,13 +236,13 @@ static void
 synthesize_name_attributes(OssoABookContactField *field)
 {
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
-  EVCardAttribute *attr ;
+  EVCardAttribute *attr;
 
   g_return_if_fail(NULL != priv->attribute);
 
   attr = e_vcard_attribute_new(NULL, EVC_FN);
   e_vcard_attribute_add_value(
-        attr, osso_abook_contact_field_get_display_value(field));
+    attr, osso_abook_contact_field_get_display_value(field));
   free_attributes_list(priv->secondary_attributes);
   priv->secondary_attributes = g_list_prepend(NULL, attr);
 }
@@ -411,7 +415,7 @@ update_image_attribute(OssoABookContactField *field)
   e_vcard_attribute_remove_params(priv->attribute);
 
   photo_attr = e_vcard_get_attribute(
-        E_VCARD(OSSO_ABOOK_CONTACT(get_avatar(field))), EVC_PHOTO);
+    E_VCARD(OSSO_ABOOK_CONTACT(get_avatar(field))), EVC_PHOTO);
 
   if (photo_attr)
   {
@@ -479,7 +483,7 @@ update_attribute_list(OssoABookContactFieldPrivate *priv, guint attr_count)
     values = values->next;
   }
 
-  for (i = g_list_length(l); i < attr_count ; i++)
+  for (i = g_list_length(l); i < attr_count; i++)
     l = g_list_prepend(l, g_strdup(""));
 
   e_vcard_attribute_remove_values(priv->attribute);
@@ -545,7 +549,7 @@ get_text_editor_widget(OssoABookContactField *field)
     GList *v = e_vcard_attribute_get_values(attr);
 
     if (v)
-      s= v->data;
+      s = v->data;
   }
 
   if (!s)
@@ -559,7 +563,7 @@ get_text_editor_widget(OssoABookContactField *field)
     {
       gunichar uch = g_utf8_get_char(s);
 
-      switch(g_unichar_break_type(uch))
+      switch (g_unichar_break_type(uch))
       {
         case G_UNICODE_BREAK_CARRIAGE_RETURN:
         case G_UNICODE_BREAK_LINE_FEED:
@@ -590,8 +594,8 @@ get_text_editor_widget(OssoABookContactField *field)
       OSSO_ABOOK_CONTACT_FIELD_FLAGS_NO_LABEL)
   {
     hildon_gtk_entry_set_placeholder_text(
-          GTK_ENTRY(widget),
-          osso_abook_contact_field_get_display_title(field));
+      GTK_ENTRY(widget),
+      osso_abook_contact_field_get_display_title(field));
   }
 
   g_signal_connect_swapped(widget, "changed",
@@ -606,8 +610,8 @@ get_alpha_num_text_editor_widget(OssoABookContactField *field)
   GtkWidget *widget = get_text_editor_widget(field);
 
   hildon_gtk_entry_set_input_mode(
-        GTK_ENTRY(widget),
-        HILDON_GTK_INPUT_MODE_NUMERIC | HILDON_GTK_INPUT_MODE_ALPHA);
+    GTK_ENTRY(widget),
+    HILDON_GTK_INPUT_MODE_NUMERIC | HILDON_GTK_INPUT_MODE_ALPHA);
 
   return widget;
 }
@@ -649,7 +653,7 @@ note_editor_notify_cursor_position_cb(GtkTextBuffer *text_buffer,
     return;
 
   pa = gtk_widget_get_ancestor(
-        GTK_WIDGET(text_view), HILDON_TYPE_PANNABLE_AREA);
+    GTK_WIDGET(text_view), HILDON_TYPE_PANNABLE_AREA);
   table = gtk_widget_get_ancestor(GTK_WIDGET(text_view), GTK_TYPE_TABLE);
 
   g_return_if_fail(NULL != pa);
@@ -660,6 +664,7 @@ note_editor_notify_cursor_position_cb(GtkTextBuffer *text_buffer,
   gtk_text_view_get_iter_location(text_view, &iter, &location);
   gtk_text_view_buffer_to_window_coords(text_view, GTK_TEXT_WINDOW_WIDGET,
                                         0, location.y, NULL, &y);
+
   if (gtk_widget_translate_coordinates(
         GTK_WIDGET(text_view), table, 0, y, 0, &y))
   {
@@ -674,7 +679,7 @@ note_editor_size_allocate_cb(GtkTextView *text_view,
                              GdkRectangle *allocation, gpointer user_data)
 {
   note_editor_notify_cursor_position_cb(
-        gtk_text_view_get_buffer(text_view), 0, text_view);
+    gtk_text_view_get_buffer(text_view), 0, text_view);
 }
 
 static GtkWidget *
@@ -685,7 +690,7 @@ get_note_editor_widget(OssoABookContactField *field)
   HildonGtkInputMode im;
 
   gtk_text_buffer_set_text(
-        text_buffer, osso_abook_contact_field_get_display_value(field), -1);
+    text_buffer, osso_abook_contact_field_get_display_value(field), -1);
   widget = hildon_text_view_new();
   gtk_text_view_set_buffer(GTK_TEXT_VIEW(widget), text_buffer);
   gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(widget), GTK_WRAP_WORD_CHAR);
@@ -695,7 +700,7 @@ get_note_editor_widget(OssoABookContactField *field)
   g_signal_connect_swapped(text_buffer, "changed",
                            G_CALLBACK(field_modified), field);
   g_signal_connect(text_buffer, "notify::cursor-position",
-                   G_CALLBACK(note_editor_notify_cursor_position_cb),widget);
+                   G_CALLBACK(note_editor_notify_cursor_position_cb), widget);
   g_signal_connect(widget, "size-allocate",
                    G_CALLBACK(note_editor_size_allocate_cb), NULL);
   /* why twice? */
@@ -730,7 +735,7 @@ gender_editor_clicked_cb(GtkButton *button, OssoABookContactField *field)
 {
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
   GtkWidget *dialog = hildon_picker_dialog_new(
-        GTK_WINDOW(gtk_widget_get_toplevel(priv->editor_widget)));
+    GTK_WINDOW(gtk_widget_get_toplevel(priv->editor_widget)));
   GtkWidget *selector;
   const char *display_value;
   GtkTreeModel *tree_model;
@@ -747,7 +752,7 @@ gender_editor_clicked_cb(GtkButton *button, OssoABookContactField *field)
   hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog),
                                     HILDON_TOUCH_SELECTOR(selector));
   tree_model = hildon_touch_selector_get_model(
-        HILDON_TOUCH_SELECTOR(selector), 0);
+    HILDON_TOUCH_SELECTOR(selector), 0);
   display_value = osso_abook_contact_field_get_display_value(field);
 
   for (i = 0; i < G_N_ELEMENTS(genders); i++)
@@ -759,15 +764,15 @@ gender_editor_clicked_cb(GtkButton *button, OssoABookContactField *field)
     if (!strcmp(display_value, gender))
     {
       hildon_touch_selector_set_active(
-            HILDON_TOUCH_SELECTOR(selector), 0,
-            gtk_tree_model_iter_n_children(tree_model, 0) - 1);
+        HILDON_TOUCH_SELECTOR(selector), 0,
+        gtk_tree_model_iter_n_children(tree_model, 0) - 1);
     }
   }
 
   if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK)
   {
     gchar *text =
-        hildon_touch_selector_get_current_text(HILDON_TOUCH_SELECTOR(selector));
+      hildon_touch_selector_get_current_text(HILDON_TOUCH_SELECTOR(selector));
     hildon_button_set_value(HILDON_BUTTON(priv->editor_widget), text);
     field_modified(field);
     g_free(text);
@@ -848,11 +853,11 @@ date_editor_clicked_cb(GtkWidget *button, OssoABookContactField *field)
 
   selector = hildon_date_selector_new_with_year_range(1900, 2100);
   hildon_date_selector_select_current_date(
-        HILDON_DATE_SELECTOR(selector), gdate->year, gdate->month, gdate->day);
+    HILDON_DATE_SELECTOR(selector), gdate->year, gdate->month, gdate->day);
   g_date_free(gdate);
 
   dialog = hildon_picker_dialog_new(
-        GTK_WINDOW(gtk_widget_get_ancestor(button, GTK_TYPE_WINDOW)));
+    GTK_WINDOW(gtk_widget_get_ancestor(button, GTK_TYPE_WINDOW)));
   set_editor_window_title(GTK_WINDOW(dialog), field);
   hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog),
                                     HILDON_TOUCH_SELECTOR(selector));
@@ -865,7 +870,7 @@ date_editor_clicked_cb(GtkWidget *button, OssoABookContactField *field)
     guint year;
 
     hildon_date_selector_get_date(
-          HILDON_DATE_SELECTOR(selector), &year, &month, &day);
+      HILDON_DATE_SELECTOR(selector), &year, &month, &day);
     gdate = g_date_new_dmy(day, month + 1, year);
     g_date_strftime(sdate, sizeof(sdate),
                     dgettext("hildon-libs", "wdgt_va_date_medium"), gdate);
@@ -909,7 +914,7 @@ avatar_editor_response_cb(GtkWidget *dialog, int response_id,
   if (response_id == GTK_RESPONSE_OK)
   {
     GdkPixbuf *pixbuf = osso_abook_avatar_editor_dialog_get_scaled_pixbuf(
-          OSSO_ABOOK_AVATAR_EDITOR_DIALOG(dialog));
+      OSSO_ABOOK_AVATAR_EDITOR_DIALOG(dialog));
 
     if (pixbuf)
     {
@@ -932,11 +937,11 @@ avatar_chooser_response_cb(GtkWidget *dialog, int response_id,
   if (response_id == GTK_RESPONSE_OK)
   {
     GdkPixbuf *pixbuf = osso_abook_avatar_chooser_dialog_get_pixbuf(
-          OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(dialog));
+      OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(dialog));
     const char *icon_name = osso_abook_avatar_chooser_dialog_get_icon_name(
-          OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(dialog));
+      OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(dialog));
     OssoABookContact *master_contact =
-        osso_abook_contact_field_get_master_contact(field);
+      osso_abook_contact_field_get_master_contact(field);
     gboolean pixbuff_small = FALSE;
 
     if (master_contact)
@@ -956,7 +961,7 @@ avatar_chooser_response_cb(GtkWidget *dialog, int response_id,
       if (MAX(w, h) >= 72)
       {
         GtkWidget *editor_dialog = osso_abook_avatar_editor_dialog_new(
-              gtk_window_get_transient_for(GTK_WINDOW(dialog)), pixbuf);
+          gtk_window_get_transient_for(GTK_WINDOW(dialog)), pixbuf);
 
         g_signal_connect(editor_dialog, "response",
                          G_CALLBACK(avatar_editor_response_cb), field);
@@ -984,12 +989,12 @@ static void
 avatar_button_clicked_cb(GtkWidget *widget, OssoABookContactField *field)
 {
   GtkWidget *dialog = osso_abook_avatar_chooser_dialog_new(
-        GTK_WINDOW(gtk_widget_get_ancestor(widget, GTK_TYPE_WINDOW)));
+    GTK_WINDOW(gtk_widget_get_ancestor(widget, GTK_TYPE_WINDOW)));
 
   osso_abook_set_portrait_mode_supported(GTK_WINDOW(dialog), FALSE);
   osso_abook_avatar_chooser_dialog_set_contact(
-        OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(dialog),
-        osso_abook_contact_field_get_master_contact(field));
+    OSSO_ABOOK_AVATAR_CHOOSER_DIALOG(dialog),
+    osso_abook_contact_field_get_master_contact(field));
   g_signal_connect(dialog, "response",
                    G_CALLBACK(avatar_chooser_response_cb), field);
   gtk_widget_show(dialog);
@@ -1002,18 +1007,18 @@ avatar_button_destroy_cb(OssoABookAvatarImage *avatar_image,
   OssoABookAvatar *avatar = osso_abook_avatar_image_get_avatar(avatar_image);
 
   g_signal_handlers_disconnect_matched(
-        master_contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
-        0, 0, NULL, osso_abook_contact_attach, avatar);
+    master_contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+    0, 0, NULL, osso_abook_contact_attach, avatar);
   g_signal_handlers_disconnect_matched(
-        master_contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
-        0, 0, NULL, osso_abook_contact_detach, avatar);
+    master_contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+    0, 0, NULL, osso_abook_contact_detach, avatar);
 }
 
 GtkWidget *
 get_image_editor_widget(OssoABookContactField *field)
 {
   OssoABookContact *master_contact =
-      osso_abook_contact_field_get_master_contact(field);
+    osso_abook_contact_field_get_master_contact(field);
   OssoABookContact *contact = osso_abook_contact_new();
   gchar *uid = osso_abook_create_temporary_uid();
   GtkWidget *button;
@@ -1024,9 +1029,9 @@ get_image_editor_widget(OssoABookContactField *field)
   if (master_contact)
   {
     GdkPixbuf *avatar_image =
-        osso_abook_avatar_get_image(OSSO_ABOOK_AVATAR(master_contact));
+      osso_abook_avatar_get_image(OSSO_ABOOK_AVATAR(master_contact));
     EVCardAttribute *attr_photo =
-        e_vcard_get_attribute(E_VCARD(master_contact), EVC_PHOTO);
+      e_vcard_get_attribute(E_VCARD(master_contact), EVC_PHOTO);
     GList *l;
 
     for (l = osso_abook_contact_get_roster_contacts(master_contact); l;
@@ -1047,7 +1052,7 @@ get_image_editor_widget(OssoABookContactField *field)
       if (!attr_photo)
       {
         g_signal_connect(master_contact, "notify::avatar-image",
-          G_CALLBACK(avatar_image_changed_cb), field);
+                         G_CALLBACK(avatar_image_changed_cb), field);
       }
     }
 
@@ -1089,7 +1094,7 @@ get_country_editor_widget(OssoABookContactField *field)
     model = hildon_touch_selector_get_model(HILDON_TOUCH_SELECTOR(sel), 0);
     g_object_ref(model);
 
-    while(*country)
+    while (*country)
     {
       hildon_touch_selector_append_text(HILDON_TOUCH_SELECTOR(sel), *country);
       country++;
@@ -1101,7 +1106,7 @@ get_country_editor_widget(OssoABookContactField *field)
     hildon_touch_selector_set_model(HILDON_TOUCH_SELECTOR(sel), 0, model);
 
   entry = hildon_touch_selector_entry_get_entry(
-        HILDON_TOUCH_SELECTOR_ENTRY(sel));
+    HILDON_TOUCH_SELECTOR_ENTRY(sel));
   gtk_entry_set_text(GTK_ENTRY(entry), value);
   button = hildon_picker_button_new(HILDON_SIZE_FINGER_HEIGHT,
                                     HILDON_BUTTON_ARRANGEMENT_HORIZONTAL);
@@ -1142,7 +1147,8 @@ action_new(OssoABookContactField *field, OssoABookContactAction contact_action,
   action->layout_flags = layout_flags;
   action->contact_action = contact_action;
   action->ref_cnt = 1;
-  action->widget = g_object_ref_sink(widget);;
+  action->widget = g_object_ref_sink(widget);
+  ;
 
   if (protocol)
     action->protocol = g_object_ref(protocol);
@@ -1196,7 +1202,7 @@ static GList *
 get_note_actions(OssoABookContactField *field)
 {
   GtkWidget *button = osso_abook_contact_field_create_button_with_style(
-        field, 0, 0, OSSO_ABOOK_BUTTON_STYLE_NOTE);
+    field, 0, 0, OSSO_ABOOK_BUTTON_STYLE_NOTE);
   OssoABookContactFieldAction *action;
 
   action = action_new(field, OSSO_ABOOK_CONTACT_ACTION_NONE, NULL, button,
@@ -1858,7 +1864,8 @@ get_children(OssoABookContactField *field, OssoABookContactFieldTemplate *t,
       child_priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(child_field);
       child_priv->parent = field;
       child_priv->template = t;
-      g_object_add_weak_pointer((gpointer)field, (gpointer *)&child_priv->parent);
+      g_object_add_weak_pointer((gpointer)field,
+                                (gpointer *)&child_priv->parent);
       list = g_list_prepend(list, child_field);
     }
 
@@ -1883,9 +1890,9 @@ get_address_children(OssoABookContactField *field)
 
 static OssoABookContactFieldTemplateGroup template_groups[] =
 {
-  {general_templates, G_N_ELEMENTS(general_templates)},
-  {address_templates, G_N_ELEMENTS(address_templates)},
-  {name_templates, G_N_ELEMENTS(name_templates)}
+  { general_templates, G_N_ELEMENTS(general_templates) },
+  { address_templates, G_N_ELEMENTS(address_templates) },
+  { name_templates, G_N_ELEMENTS(name_templates) }
 };
 
 static void
@@ -1914,7 +1921,7 @@ osso_abook_contact_field_set_property(GObject *object, guint property_id,
     case PROP_MESSAGE_MAP:
     {
       osso_abook_contact_field_set_message_map(
-            OSSO_ABOOK_CONTACT_FIELD(object), g_value_get_boxed(value));
+        OSSO_ABOOK_CONTACT_FIELD(object), g_value_get_boxed(value));
       break;
     }
     case PROP_MASTER_CONTACT:
@@ -2033,7 +2040,8 @@ osso_abook_contact_field_update_dispose(GObject *object)
 
   if (priv->parent)
   {
-    g_object_remove_weak_pointer(G_OBJECT(priv->parent), (gpointer *)&priv->parent);
+    g_object_remove_weak_pointer(G_OBJECT(priv->parent),
+                                 (gpointer *)&priv->parent);
     priv->parent = NULL;
   }
 
@@ -2064,8 +2072,8 @@ osso_abook_contact_field_update_dispose(GObject *object)
   if (priv->master_contact)
   {
     g_signal_handlers_disconnect_matched(
-          priv->master_contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
-          0, 0, NULL, avatar_image_changed_cb, field);
+      priv->master_contact, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC,
+      0, 0, NULL, avatar_image_changed_cb, field);
     g_object_unref(priv->master_contact);
     priv->master_contact = NULL;
   }
@@ -2162,115 +2170,114 @@ osso_abook_contact_field_class_init(OssoABookContactFieldClass *klass)
   klass->update_label = osso_abook_contact_field_update_label;
 
   g_object_class_install_property(
-        object_class, PROP_NAME,
-        g_param_spec_string(
-          "name",
-          "Name",
-          "The name of this field",
-          0,
-          GTK_PARAM_READABLE));
+    object_class, PROP_NAME,
+    g_param_spec_string(
+      "name",
+      "Name",
+      "The name of this field",
+      0,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_FLAGS,
-        g_param_spec_flags(
-          "flags",
-          "Flags",
-          "Flags describing this field",
-          OSSO_ABOOK_TYPE_CONTACT_FIELD_FLAGS,
-          0,
-          GTK_PARAM_READWRITE));
-    g_object_class_install_property(
-        object_class, PROP_ATTRIBUTE,
-        g_param_spec_pointer(
-          "attribute",
-          "Attribute",
-          "The VCard attribute backing this field",
-          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PROP_FLAGS,
+    g_param_spec_flags(
+      "flags",
+      "Flags",
+      "Flags describing this field",
+      OSSO_ABOOK_TYPE_CONTACT_FIELD_FLAGS,
+      0,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_MESSAGE_MAP,
-        g_param_spec_boxed(
-          "message-map",
-          "Message Map",
-          "Mapping for generic message ids to context ids",
-          G_TYPE_HASH_TABLE,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_ATTRIBUTE,
+    g_param_spec_pointer(
+      "attribute",
+      "Attribute",
+      "The VCard attribute backing this field",
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property(
-        object_class, PROP_MASTER_CONTACT,
-        g_param_spec_object(
-          "master-contact",
-          "Master Contact",
-          "The master contact if one is associated with this field",
-          OSSO_ABOOK_TYPE_CONTACT,
-          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PROP_MESSAGE_MAP,
+    g_param_spec_boxed(
+      "message-map",
+      "Message Map",
+      "Mapping for generic message ids to context ids",
+      G_TYPE_HASH_TABLE,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_ROSTER_CONTACT,
-        g_param_spec_object(
-          "roster-contact",
-          "Roster Contact",
-          "The roster contact if one is associated with this field",
-          OSSO_ABOOK_TYPE_CONTACT,
-          GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    object_class, PROP_MASTER_CONTACT,
+    g_param_spec_object(
+      "master-contact",
+      "Master Contact",
+      "The master contact if one is associated with this field",
+      OSSO_ABOOK_TYPE_CONTACT,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property(
-        object_class, PROP_DISPLAY_TITLE,
-        g_param_spec_string(
-          "display-title",
-          "Display Title",
-          "The message ID field labels",
-          NULL,
-          GTK_PARAM_READABLE));
+    object_class, PROP_ROSTER_CONTACT,
+    g_param_spec_object(
+      "roster-contact",
+      "Roster Contact",
+      "The roster contact if one is associated with this field",
+      OSSO_ABOOK_TYPE_CONTACT,
+      GTK_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property(
-        object_class, PROP_DISPLAY_VALUE,
-        g_param_spec_string(
-          "display-value",
-          "Display Value",
-          "A human friendly string represeting the attribute value",
-          NULL,
-          GTK_PARAM_READABLE));
+    object_class, PROP_DISPLAY_TITLE,
+    g_param_spec_string(
+      "display-title",
+      "Display Title",
+      "The message ID field labels",
+      NULL,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_ICON_NAME,
-        g_param_spec_string(
-          "icon-name",
-          "Icon Name",
-          "The name of the icon to use with this field",
-          NULL,
-          GTK_PARAM_READABLE));
+    object_class, PROP_DISPLAY_VALUE,
+    g_param_spec_string(
+      "display-value",
+      "Display Value",
+      "A human friendly string represeting the attribute value",
+      NULL,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_SORT_WEIGHT,
-        g_param_spec_int(
-          "sort-weight",
-          "Sort Weight",
-          "The weight of this field when sorting them",
-          G_MININT32, G_MAXINT32, G_MININT32,
-          GTK_PARAM_READABLE));
+    object_class, PROP_ICON_NAME,
+    g_param_spec_string(
+      "icon-name",
+      "Icon Name",
+      "The name of the icon to use with this field",
+      NULL,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_LABEL_WIDGET,
-        g_param_spec_object(
-          "label-widget",
-          "Label Widget",
-          "The widget describing this field",
-          GTK_TYPE_WIDGET,
-          GTK_PARAM_READABLE));
+    object_class, PROP_SORT_WEIGHT,
+    g_param_spec_int(
+      "sort-weight",
+      "Sort Weight",
+      "The weight of this field when sorting them",
+      G_MININT32, G_MAXINT32, G_MININT32,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_EDITOR_WIDGET,
-        g_param_spec_object(
-          "editor-widget",
-          "Editor Widget",
-          "The widget for editing this field",
-          GTK_TYPE_WIDGET,
-          GTK_PARAM_READABLE));
+    object_class, PROP_LABEL_WIDGET,
+    g_param_spec_object(
+      "label-widget",
+      "Label Widget",
+      "The widget describing this field",
+      GTK_TYPE_WIDGET,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_MODIFIED,
-        g_param_spec_boolean(
-          "modified",
-          "Modified",
-          "Check if the field has been modified",
-          FALSE,
-          GTK_PARAM_READABLE));
+    object_class, PROP_EDITOR_WIDGET,
+    g_param_spec_object(
+      "editor-widget",
+      "Editor Widget",
+      "The widget for editing this field",
+      GTK_TYPE_WIDGET,
+      GTK_PARAM_READABLE));
+  g_object_class_install_property(
+    object_class, PROP_MODIFIED,
+    g_param_spec_boolean(
+      "modified",
+      "Modified",
+      "Check if the field has been modified",
+      FALSE,
+      GTK_PARAM_READABLE));
 }
 
 static void
-osso_abook_contact_field_init(OssoABookContactField* field)
-{
-}
+osso_abook_contact_field_init(OssoABookContactField *field)
+{}
 
 GtkWidget *
 osso_abook_contact_field_get_editor_widget(OssoABookContactField *field)
@@ -2378,7 +2385,7 @@ gboolean
 osso_abook_contact_field_is_mandatory(OssoABookContactField *field)
 {
   return osso_abook_contact_field_get_flags(field) &
-      OSSO_ABOOK_CONTACT_FIELD_FLAGS_MANDATORY;
+         OSSO_ABOOK_CONTACT_FIELD_FLAGS_MANDATORY;
 }
 
 void
@@ -2428,7 +2435,7 @@ osso_abook_contact_field_get_account(OssoABookContactField *field)
 }
 
 const char *
-osso_abook_contact_field_get_icon_name(OssoABookContactField* field)
+osso_abook_contact_field_get_icon_name(OssoABookContactField *field)
 {
   OssoABookContactFieldPrivate *priv;
 
@@ -2586,7 +2593,7 @@ osso_abook_contact_field_get_secondary_attributes(OssoABookContactField *field)
     OssoABookContactFieldTemplate *t = priv->template;
 
     if (t->update && osso_abook_contact_field_is_modified(field))
-        t->update(field);
+      t->update(field);
 
     if (t->synthesize_attributes && !priv->secondary_attributes)
       t->synthesize_attributes(field);
@@ -2815,6 +2822,7 @@ osso_abook_contact_field_new_full(GHashTable *message_map,
                                               "attribute",
                                               attribute,
                                               NULL);
+
   if (!OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field)->template)
   {
     g_object_unref(field);
@@ -2830,7 +2838,7 @@ osso_abook_contact_field_new(GHashTable *message_map,
                              EVCardAttribute *attribute)
 {
   g_return_val_if_fail(
-        NULL == master_contact || OSSO_ABOOK_IS_CONTACT (master_contact), NULL);
+    NULL == master_contact || OSSO_ABOOK_IS_CONTACT(master_contact), NULL);
   g_return_val_if_fail(NULL != attribute, NULL);
 
   return osso_abook_contact_field_new_full(message_map, master_contact,
@@ -2842,7 +2850,7 @@ osso_abook_contact_field_create_button(OssoABookContactField *field,
                                        const char *title, const char *icon_name)
 {
   return osso_abook_contact_field_create_button_with_style(
-        field, title, icon_name, OSSO_ABOOK_BUTTON_STYLE_NORMAL);
+    field, title, icon_name, OSSO_ABOOK_BUTTON_STYLE_NORMAL);
 }
 
 GList *
@@ -2861,7 +2869,7 @@ osso_abook_contact_field_get_actions(OssoABookContactField *field)
   else
   {
     GtkWidget *button =
-        osso_abook_contact_field_create_button_with_label(field);
+      osso_abook_contact_field_create_button_with_label(field);
     OssoABookContactFieldAction *action;
 
     action = action_new(field, OSSO_ABOOK_CONTACT_ACTION_NONE, 0, button,
@@ -2915,8 +2923,8 @@ create_dynamic_actions(OssoABookContactField *field, OssoABookCapsFlags caps,
   if ((caps & OSSO_ABOOK_CAPS_VIDEO))
   {
     title = g_strdup_printf(
-          g_dgettext("osso-addressbook", "addr_bd_cont_starter_video_call"),
-          display_title);
+      g_dgettext("osso-addressbook", "addr_bd_cont_starter_video_call"),
+      display_title);
     button = osso_abook_contact_field_create_button(field, title, NULL);
     action = action_new(field, OSSO_ABOOK_CONTACT_ACTION_VOIPTO_VIDEO, protocol,
                         button, OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY);
@@ -2927,8 +2935,8 @@ create_dynamic_actions(OssoABookContactField *field, OssoABookCapsFlags caps,
   if ((caps & OSSO_ABOOK_CAPS_VOICE))
   {
     title = g_strdup_printf(
-          g_dgettext("osso-addressbook", "addr_bd_cont_starter_call"),
-          display_title);
+      g_dgettext("osso-addressbook", "addr_bd_cont_starter_call"),
+      display_title);
     button = osso_abook_contact_field_create_button(field, title, NULL);
     action = action_new(field, OSSO_ABOOK_CONTACT_ACTION_VOIPTO, protocol,
                         button, OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY);
@@ -2939,8 +2947,8 @@ create_dynamic_actions(OssoABookContactField *field, OssoABookCapsFlags caps,
   if ((caps & OSSO_ABOOK_CAPS_CHAT))
   {
     title = g_strdup_printf(
-          g_dgettext("osso-addressbook", "addr_bd_cont_starter_chat"),
-          display_title);
+      g_dgettext("osso-addressbook", "addr_bd_cont_starter_chat"),
+      display_title);
     button = osso_abook_contact_field_create_button(field, title, NULL);
     action = action_new(field, OSSO_ABOOK_CONTACT_ACTION_CHATTO, protocol,
                         button, OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY);
@@ -2964,14 +2972,14 @@ get_dynamic_actions(OssoABookContactField *field)
   if (priv->roster_contact)
   {
     TpProtocol *protocol =
-        osso_abook_contact_get_protocol(priv->roster_contact);
+      osso_abook_contact_get_protocol(priv->roster_contact);
 
-    if (osso_abook_contact_has_invalid_username(priv->roster_contact) )
+    if (osso_abook_contact_has_invalid_username(priv->roster_contact))
     {
       title = g_strdup_printf(
-            g_dgettext("osso-addressbook",
-                       "addr_bd_cont_starter_chat"),
-            osso_abook_contact_field_get_display_title(field));
+        g_dgettext("osso-addressbook",
+                   "addr_bd_cont_starter_chat"),
+        osso_abook_contact_field_get_display_title(field));
 
       button = osso_abook_contact_field_create_button(field, title, NULL);
       action = action_new(field, OSSO_ABOOK_CONTACT_ACTION_CHATTO_ERROR,
@@ -2981,9 +2989,9 @@ get_dynamic_actions(OssoABookContactField *field)
       g_free(title);
 
       title = g_strdup_printf(
-            g_dgettext("osso-addressbook",
-                       "addr_bd_cont_starter_call"),
-            osso_abook_contact_field_get_display_title(field));
+        g_dgettext("osso-addressbook",
+                   "addr_bd_cont_starter_call"),
+        osso_abook_contact_field_get_display_title(field));
       button = osso_abook_contact_field_create_button(field, title, NULL);
       action = action_new(field, OSSO_ABOOK_CONTACT_ACTION_VOIPTO_ERROR,
                           protocol, button,
@@ -2994,18 +3002,21 @@ get_dynamic_actions(OssoABookContactField *field)
     else
     {
       OssoABookCapsFlags flags = osso_abook_caps_get_capabilities(
-            OSSO_ABOOK_CAPS(priv->roster_contact));
+        OSSO_ABOOK_CAPS(priv->roster_contact));
       actions = create_dynamic_actions(field, flags, protocol);
 
       if (!actions)
       {
         title = g_strdup_printf(
-              g_dgettext("osso-addressbook",
-                         "addr_bd_cont_starter_chat"),
-              osso_abook_contact_field_get_display_title(field));
+          g_dgettext("osso-addressbook",
+                     "addr_bd_cont_starter_chat"),
+          osso_abook_contact_field_get_display_title(field));
         button = osso_abook_contact_field_create_button(field, title, NULL);
-        action = action_new(field, OSSO_ABOOK_CONTACT_ACTION_CHATTO, protocol,
-                   button, OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY);
+        action = action_new(field,
+                            OSSO_ABOOK_CONTACT_ACTION_CHATTO,
+                            protocol,
+                            button,
+                            OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY);
         actions = g_list_prepend(actions, action);
         g_free(title);
       }
@@ -3014,7 +3025,7 @@ get_dynamic_actions(OssoABookContactField *field)
   else
   {
     GList *protocols =
-        osso_abook_account_manager_list_protocols(NULL, attr_name, TRUE);
+      osso_abook_account_manager_list_protocols(NULL, attr_name, TRUE);
 
     if (protocols)
     {
@@ -3031,11 +3042,11 @@ get_dynamic_actions(OssoABookContactField *field)
     else
     {
       GList *accounts =
-          osso_abook_account_manager_list_by_vcard_field(NULL, attr_name);
+        osso_abook_account_manager_list_by_vcard_field(NULL, attr_name);
 
       if (accounts)
       {
-        while (!tp_account_is_enabled(accounts->data) )
+        while (!tp_account_is_enabled(accounts->data))
           accounts = g_list_delete_link(accounts, accounts);
       }
 
@@ -3097,7 +3108,7 @@ flags_from_params(GList *param)
     {
       GList *vals;
 
-      for (vals = e_vcard_attribute_param_get_values(p) ; vals;
+      for (vals = e_vcard_attribute_param_get_values(p); vals;
            vals = vals->next)
       {
         if (vals->data)
@@ -3129,7 +3140,7 @@ find_template_by_name_and_flags(OssoABookContactFieldTemplate *t, size_t t_size,
     if (_t->name == name)
     {
       if (!(_t->flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER) &&
-          flags_type(_t->flags) == type)
+          (flags_type(_t->flags) == type))
       {
         return _t;
       }
@@ -3184,16 +3195,16 @@ osso_abook_contact_field_constructed(GObject *object)
     return;
 
   priv->template = find_template_by_name_and_flags(
-        general_templates, G_N_ELEMENTS(general_templates), name, flags);
+    general_templates, G_N_ELEMENTS(general_templates), name, flags);
 
-  if (priv->template )
+  if (priv->template)
     return;
 
   priv->template = find_template_by_name_and_flags(
-        general_templates, G_N_ELEMENTS(general_templates), name,
-        flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DEVICE_MASK);
+    general_templates, G_N_ELEMENTS(general_templates), name,
+    flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DEVICE_MASK);
 
-  if (priv->template )
+  if (priv->template)
     return;
 
   for (i = 0; i < G_N_ELEMENTS(flags_tel); i++)
@@ -3201,8 +3212,8 @@ osso_abook_contact_field_constructed(GObject *object)
     if (flags_tel[i] & flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_DEVICE_MASK)
     {
       priv->template = find_template_by_name_and_flags(
-            general_templates, G_N_ELEMENTS(general_templates), name,
-            flags_tel[i]);
+        general_templates, G_N_ELEMENTS(general_templates), name,
+        flags_tel[i]);
 
       if (priv->template)
         return;
@@ -3213,7 +3224,7 @@ osso_abook_contact_field_constructed(GObject *object)
   {
     OssoABookContactFieldTemplate *tmplt = &general_templates[i];
 
-    if (name == tmplt->name &&
+    if ((name == tmplt->name) &&
         tmplt->flags & OSSO_ABOOK_CONTACT_FIELD_FLAGS_OTHER)
     {
       priv->template = tmplt;
@@ -3224,7 +3235,7 @@ osso_abook_contact_field_constructed(GObject *object)
   if (!priv->roster_contact && priv->master_contact)
   {
     contacts = osso_abook_contact_find_roster_contacts_for_attribute(
-          priv->master_contact, priv->attribute);
+      priv->master_contact, priv->attribute);
 
     if (contacts)
       priv->roster_contact = contacts->data;
@@ -3250,7 +3261,7 @@ osso_abook_contact_field_constructed(GObject *object)
 
       priv->display_title = g_strdup(display_title);
       priv->secondary_title =
-          g_strdup(osso_abook_tp_account_get_bound_name(account));
+        g_strdup(osso_abook_tp_account_get_bound_name(account));
       titles_set = TRUE;
     }
   }
@@ -3297,15 +3308,15 @@ osso_abook_contact_field_get_actions_full(OssoABookContactField *field,
     return osso_abook_contact_field_get_actions(field);
 
   return g_list_prepend(
-        NULL,
-        action_new(field, OSSO_ABOOK_CONTACT_ACTION_NONE, NULL,
-                   osso_abook_contact_field_create_button_with_label(field),
-                   OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY));
+    NULL,
+    action_new(field, OSSO_ABOOK_CONTACT_ACTION_NONE, NULL,
+               osso_abook_contact_field_create_button_with_label(field),
+               OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY));
 }
 
 OssoABookContactFieldActionLayoutFlags
 osso_abook_contact_field_action_get_layout_flags(
-    OssoABookContactFieldAction *action)
+  OssoABookContactFieldAction *action)
 {
   g_return_val_if_fail(NULL != action,
                        OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_NORMAL);
@@ -3372,8 +3383,8 @@ osso_abook_contact_field_action_unref(OssoABookContactFieldAction *action)
     if (action->widget)
     {
       g_signal_handlers_disconnect_matched(
-            action->widget, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0,
-            NULL, action_widget_destroy_cb, action);
+        action->widget, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0,
+        NULL, action_widget_destroy_cb, action);
       g_object_unref(action->widget);
     }
 
@@ -3382,8 +3393,8 @@ osso_abook_contact_field_action_unref(OssoABookContactFieldAction *action)
 }
 
 int
-osso_abook_contact_field_cmp(OssoABookContactField       *a,
-                             OssoABookContactField       *b)
+osso_abook_contact_field_cmp(OssoABookContactField *a,
+                             OssoABookContactField *b)
 {
   OssoABookContactField *pa = osso_abook_contact_field_get_parent(a);
   OssoABookContactField *pb = osso_abook_contact_field_get_parent(b);
@@ -3410,13 +3421,14 @@ osso_abook_contact_field_cmp(OssoABookContactField       *a,
     return rv;
 
   rv = osso_abook_contact_field_get_sort_weight(b) -
-      osso_abook_contact_field_get_sort_weight(a);
+    osso_abook_contact_field_get_sort_weight(a);
 
   if (rv)
     return rv;
 
   rv = g_strcmp0(osso_abook_contact_field_get_display_title(a),
                  osso_abook_contact_field_get_display_title(b));
+
   if (rv)
     return rv;
 
@@ -3439,8 +3451,10 @@ osso_abook_contact_field_cmp(OssoABookContactField       *a,
 
 gboolean
 osso_abook_contact_field_action_start_with_callback(
-    OssoABookContactFieldAction *action, GtkWindow *parent,
-    OssoABookContactActionStartCb callback, gpointer callback_data)
+  OssoABookContactFieldAction *action,
+  GtkWindow *parent,
+  OssoABookContactActionStartCb callback,
+  gpointer callback_data)
 {
   TpAccount *account;
   gboolean aborted = TRUE;
@@ -3451,20 +3465,20 @@ osso_abook_contact_field_action_start_with_callback(
   g_return_val_if_fail(parent == NULL || GTK_IS_WINDOW(parent), FALSE);
 
   account = osso_abook_contact_field_action_request_account(
-        action, parent, &aborted);
+    action, parent, &aborted);
 
   if (!aborted)
   {
     OssoABookContactAction contact_action = action->contact_action;
 
-    if (!account && contact_action == OSSO_ABOOK_CONTACT_ACTION_BIND)
+    if (!account && (contact_action == OSSO_ABOOK_CONTACT_ACTION_BIND))
       contact_action = OSSO_ABOOK_CONTACT_ACTION_CREATE_ACCOUNT;
 
     rv = osso_abook_contact_action_start_with_callback(
-          contact_action,
-          osso_abook_contact_field_get_master_contact(action->field),
-          osso_abook_contact_field_get_attribute(action->field),
-          account, parent, callback, callback_data);
+      contact_action,
+      osso_abook_contact_field_get_master_contact(action->field),
+      osso_abook_contact_field_get_attribute(action->field),
+      account, parent, callback, callback_data);
   }
 
   if (account)
@@ -3517,9 +3531,10 @@ flags_to_vcard_attribute_values(EVCardAttribute *attr,
 }
 
 GList *
-osso_abook_contact_field_list_supported_fields(
-    GHashTable *message_map, OssoABookContact *master_contact,
-    OssoABookContactFieldPredicate accept_field, gpointer user_data)
+osso_abook_contact_field_list_supported_fields(GHashTable *message_map,
+                                               OssoABookContact *master_contact,
+                                               OssoABookContactFieldPredicate accept_field,
+                                               gpointer user_data)
 {
   OssoABookContactFieldTemplate *t;
   GList *fields = NULL;
@@ -3572,8 +3587,8 @@ osso_abook_contact_field_list_supported_fields(
       if (protocol)
       {
         e_vcard_attribute_add_param_with_value(
-              attr, e_vcard_attribute_param_new(EVC_TYPE),
-              tp_protocol_get_name(protocol));
+          attr, e_vcard_attribute_param_new(EVC_TYPE),
+          tp_protocol_get_name(protocol));
         g_object_unref(protocol);
       }
 
@@ -3608,10 +3623,10 @@ osso_abook_contact_field_list_supported_fields(
         OssoABookContactField *field;
 
         e_vcard_attribute_add_param_with_value(
-              attr, e_vcard_attribute_param_new(EVC_TYPE),
-              tp_protocol_get_name(protocol));
+          attr, e_vcard_attribute_param_new(EVC_TYPE),
+          tp_protocol_get_name(protocol));
         field = osso_abook_contact_field_new_full(
-              message_map, master_contact, NULL, attr);
+          message_map, master_contact, NULL, attr);
         e_vcard_attribute_free(attr);
 
         if (field)
@@ -3650,9 +3665,8 @@ osso_abook_contact_field_list_account_fields(GHashTable *message_map,
 
     if (vcard_field && protocol && strcmp(vcard_field, EVC_TEL))
     {
-
       OssoABookRoster *roster = osso_abook_roster_manager_get_roster(
-            NULL, tp_account_get_path_suffix(account));
+        NULL, tp_account_get_path_suffix(account));
 
       if (roster || !osso_abook_string_list_find(protocols, protocol))
       {
@@ -3670,7 +3684,7 @@ osso_abook_contact_field_list_account_fields(GHashTable *message_map,
 
         attr = e_vcard_attribute_new(NULL, vcard_field);
         e_vcard_attribute_add_param_with_value(
-              attr, e_vcard_attribute_param_new(EVC_TYPE), protocol);
+          attr, e_vcard_attribute_param_new(EVC_TYPE), protocol);
         field = osso_abook_contact_field_new_full(message_map, master_contact,
                                                   roster_contact, attr);
 
@@ -3710,7 +3724,7 @@ update_field_type(OssoABookContactField *field, OssoABookContactField *update)
   if (new_flags != flags_type(t->flags))
   {
     flags_to_vcard_attribute_values(
-          osso_abook_contact_field_get_attribute(field), new_flags);
+      osso_abook_contact_field_get_attribute(field), new_flags);
 
     if (t->msgid)
     {
@@ -3735,16 +3749,16 @@ static gboolean
 compare_field_names(OssoABookContactField *field, gpointer user_data)
 {
   return
-      osso_abook_contact_field_get_name(field) ==
-      osso_abook_contact_field_get_name(user_data);
+    osso_abook_contact_field_get_name(field) ==
+    osso_abook_contact_field_get_name(user_data);
 }
 
 static gboolean
 compare_field_flags(OssoABookContactField *field, gpointer user_data)
 {
   return
-      flags_type(osso_abook_contact_field_get_flags(field)) ==
-      flags_type(osso_abook_contact_field_get_flags(user_data));
+    flags_type(osso_abook_contact_field_get_flags(field)) ==
+    flags_type(osso_abook_contact_field_get_flags(user_data));
 }
 
 static void
@@ -3781,15 +3795,15 @@ label_button_clicked_cb(GtkWidget *button, OssoABookContactField *field)
   selector = osso_abook_contact_field_selector_new();
   contact = osso_abook_contact_field_get_master_contact(field);
   osso_abook_contact_field_selector_load(
-        OSSO_ABOOK_CONTACT_FIELD_SELECTOR(selector), contact,
-        compare_field_names, field);
+    OSSO_ABOOK_CONTACT_FIELD_SELECTOR(selector), contact,
+    compare_field_names, field);
   hildon_touch_selector_set_active(
-        HILDON_TOUCH_SELECTOR(selector), 0,
-        osso_abook_contact_field_selector_find_custom(
-          OSSO_ABOOK_CONTACT_FIELD_SELECTOR(selector), compare_field_flags,
-          field));
+    HILDON_TOUCH_SELECTOR(selector), 0,
+    osso_abook_contact_field_selector_find_custom(
+      OSSO_ABOOK_CONTACT_FIELD_SELECTOR(selector), compare_field_flags,
+      field));
   dialog = hildon_picker_dialog_new(
-        GTK_WINDOW(gtk_widget_get_ancestor(button, GTK_TYPE_WINDOW)));
+    GTK_WINDOW(gtk_widget_get_ancestor(button, GTK_TYPE_WINDOW)));
   update_field_type_dialog_set_title(GTK_WINDOW(dialog), field);
   hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog),
                                     HILDON_TOUCH_SELECTOR(selector));
@@ -3797,7 +3811,7 @@ label_button_clicked_cb(GtkWidget *button, OssoABookContactField *field)
   if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK)
   {
     selected = osso_abook_contact_field_selector_get_selected(
-          OSSO_ABOOK_CONTACT_FIELD_SELECTOR(selector));
+      OSSO_ABOOK_CONTACT_FIELD_SELECTOR(selector));
 
     if (selected)
     {
@@ -3836,7 +3850,8 @@ osso_abook_contact_field_get_label_widget(OssoABookContactField *field)
       OssoABookContactFieldTemplate *ft = priv->template;
       OssoABookContactFieldTemplate *t;
 
-      for (t = ft - 1; t >= general_templates && ft->name == t->name; t--);
+      for (t = ft - 1; t >= general_templates && ft->name == t->name; t--)
+        ;
 
       for (t = t + 1; t < &general_templates[G_N_ELEMENTS(general_templates)] &&
            ft->name == t->name; t++)
@@ -3865,8 +3880,8 @@ osso_abook_contact_field_get_label_widget(OssoABookContactField *field)
     else
     {
       button = hildon_button_new_with_text(
-            HILDON_SIZE_FINGER_HEIGHT, HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
-            title, value);
+        HILDON_SIZE_FINGER_HEIGHT, HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
+        title, value);
       gtk_button_set_alignment(GTK_BUTTON(button), 0.0, 0.5);
       hildon_button_set_style(HILDON_BUTTON(button),
                               HILDON_BUTTON_STYLE_PICKER);
@@ -3880,9 +3895,9 @@ osso_abook_contact_field_get_label_widget(OssoABookContactField *field)
   else
   {
     GtkWidget *button = osso_abook_button_new_with_text(
-          HILDON_SIZE_FINGER_HEIGHT,
-          osso_abook_contact_field_get_display_title(field),
-          osso_abook_contact_field_get_secondary_title(field));
+      HILDON_SIZE_FINGER_HEIGHT,
+      osso_abook_contact_field_get_display_title(field),
+      osso_abook_contact_field_get_secondary_title(field));
     osso_abook_button_set_style(OSSO_ABOOK_BUTTON(button),
                                 OSSO_ABOOK_BUTTON_STYLE_LABEL);
     gtk_widget_set_can_focus(button, FALSE);
@@ -3897,7 +3912,9 @@ osso_abook_contact_field_get_label_widget(OssoABookContactField *field)
 
 TpAccount *
 osso_abook_contact_field_action_request_account(
-    OssoABookContactFieldAction *action, GtkWindow *parent, gboolean *aborted)
+  OssoABookContactFieldAction *action,
+  GtkWindow *parent,
+  gboolean *aborted)
 {
   g_assert(0);
 
@@ -3905,10 +3922,13 @@ osso_abook_contact_field_action_request_account(
 }
 
 gboolean
-osso_abook_contact_action_start_with_callback(
-    OssoABookContactAction action, OssoABookContact *contact,
-    EVCardAttribute *attribute, TpAccount *account, GtkWindow *parent,
-    OssoABookContactActionStartCb callback, gpointer callback_data)
+osso_abook_contact_action_start_with_callback(OssoABookContactAction action,
+                                              OssoABookContact *contact,
+                                              EVCardAttribute *attribute,
+                                              TpAccount *account,
+                                              GtkWindow *parent,
+                                              OssoABookContactActionStartCb callback,
+                                              gpointer callback_data)
 {
   g_assert(0);
 

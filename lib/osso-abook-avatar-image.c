@@ -16,9 +16,9 @@
  * along with this library. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+#include <cairo-xlib.h>
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon.h>
-#include <cairo-xlib.h>
 
 #include <math.h>
 
@@ -65,7 +65,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define OSSO_ABOOK_AVATAR_IMAGE_PRIVATE(image) \
-  ((OssoABookAvatarImagePrivate *)osso_abook_avatar_image_get_instance_private(((OssoABookAvatarImage *)image)))
+  ((OssoABookAvatarImagePrivate *)osso_abook_avatar_image_get_instance_private((( \
+                                                                                  OssoABookAvatarImage \
+                                                                                  *) \
+                                                                                image)))
 
 enum
 {
@@ -95,8 +98,8 @@ osso_abook_avatar_image_init(OssoABookAvatarImage *image)
   gtk_widget_set_has_window(GTK_WIDGET(image), FALSE);
 
   osso_abook_avatar_image_set_zadjustment(
-        image,
-        GTK_ADJUSTMENT(gtk_adjustment_new(0.0, 0.0, 1.0, 0.0, 0.0, 0.0)));
+    image,
+    GTK_ADJUSTMENT(gtk_adjustment_new(0.0, 0.0, 1.0, 0.0, 0.0, 0.0)));
   hildon_helper_set_logical_color(GTK_WIDGET(image), GTK_RC_BG,
                                   GTK_STATE_NORMAL, "AvatarBgColor");
   hildon_helper_set_logical_color(GTK_WIDGET(image), GTK_RC_FG,
@@ -151,7 +154,7 @@ get_fallback_pixbuf(OssoABookAvatarImage *image)
   if (!pixbuf)
   {
     GtkIconTheme *icon_theme =
-        gtk_icon_theme_get_for_screen(gtk_widget_get_screen(GTK_WIDGET(image)));
+      gtk_icon_theme_get_for_screen(gtk_widget_get_screen(GTK_WIDGET(image)));
     const char *icon = priv->fallback_icon;
 
     if (!icon && priv->avatar)
@@ -173,6 +176,7 @@ get_fallback_pixbuf(OssoABookAvatarImage *image)
 
   return pixbuf;
 }
+
 static GdkPixbuf *
 get_pixbuf(OssoABookAvatarImage *image)
 {
@@ -234,8 +238,8 @@ destroy_avatar(OssoABookAvatarImage *image)
   if (priv->avatar)
   {
     g_signal_handlers_disconnect_matched(
-          priv->avatar, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-          notify_image_cb, image);
+      priv->avatar, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+      notify_image_cb, image);
     g_object_unref(priv->avatar);
     priv->avatar = NULL;
   }
@@ -293,8 +297,8 @@ replace_adjustment(OssoABookAvatarImage *image, GtkAdjustment **adjustment,
   if (*adjustment)
   {
     g_signal_handlers_disconnect_matched(
-          *adjustment, G_SIGNAL_MATCH_DATA|G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
-          value_change_func, image);
+      *adjustment, G_SIGNAL_MATCH_DATA|G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+      value_change_func, image);
     g_object_unref(*adjustment);
     *adjustment = NULL;
   }
@@ -375,8 +379,8 @@ scale_pixbuf(const GdkPixbuf *src, GdkPixbuf *dst, gint size, double zoom,
   if (yadjustment)
     yadj = yadjustment->value;
 
-  offset_x =  0.5f * (xadj * (src_w - size) + (dst_w - src_w) + 1.0f);
-  offset_y =  0.5f * (yadj * (src_h - size) + (dst_h - src_h) + 1.0f);
+  offset_x = 0.5f * (xadj * (src_w - size) + (dst_w - src_w) + 1.0f);
+  offset_y = 0.5f * (yadj * (src_h - size) + (dst_h - src_h) + 1.0f);
 
   if (offset_x < 0)
     src_w += offset_x;
@@ -435,17 +439,17 @@ osso_abook_avatar_image_set_property(GObject *object, guint property_id,
   {
     case PROP_AVATAR:
     {
-      OssoABookAvatar * avatar = g_value_get_object(value);
+      OssoABookAvatar *avatar = g_value_get_object(value);
 
-      if (!avatar || avatar != priv->avatar)
+      if (!avatar || (avatar != priv->avatar))
       {
         destroy_avatar(image);
         destroy_pixbuf(priv);
         destroy_default_avatar_pixbuf(priv);
 
-        if (avatar && avatar != priv->avatar)
+        if (avatar && (avatar != priv->avatar))
         {
-          priv->avatar  = g_object_ref(avatar);
+          priv->avatar = g_object_ref(avatar);
           g_signal_connect(priv->avatar, "notify::avatar-image",
                            G_CALLBACK(notify_image_cb), image);
         }
@@ -459,13 +463,13 @@ osso_abook_avatar_image_set_property(GObject *object, guint property_id,
     {
       GdkPixbuf *pixbuf = g_value_get_object(value);
 
-      if (!pixbuf || pixbuf != priv->pixbuf)
+      if (!pixbuf || (pixbuf != priv->pixbuf))
       {
         destroy_avatar(image);
         destroy_pixbuf(priv);
         destroy_default_avatar_pixbuf(priv);
 
-        if (pixbuf && pixbuf != priv->pixbuf)
+        if (pixbuf && (pixbuf != priv->pixbuf))
           priv->pixbuf = gdk_pixbuf_apply_embedded_orientation(pixbuf);
 
         calculate_zoom_and_redraw(image);
@@ -659,7 +663,7 @@ osso_abook_avatar_image_expose_event(GtkWidget *widget, GdkEventExpose *event)
     h = 0;
   }
 
-  if (widget->allocation.width != w || widget->allocation.height != h)
+  if ((widget->allocation.width != w) || (widget->allocation.height != h))
   {
     destroy_scaled_pixbuf(priv);
     priv->scaled_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 1, 8,
@@ -712,7 +716,7 @@ osso_abook_avatar_image_expose_event(GtkWidget *widget, GdkEventExpose *event)
     h = 0;
   }
 
-  if (widget->allocation.width != w || widget->allocation.height != h)
+  if ((widget->allocation.width != w) || (widget->allocation.height != h))
   {
     destroy_cairo_surface(priv);
     priv->surface = cairo_surface_create_similar(cairo_get_target(window_cr),
@@ -780,11 +784,11 @@ osso_abook_avatar_image_expose_event(GtkWidget *widget, GdkEventExpose *event)
                                  &style->bg[state]);
       cairo_fill_preserve(surface_cr);
       gdk_cairo_set_source_pixbuf(
-            surface_cr, priv->scaled_pixbuf,
-            floor(0.5f * (priv->size -
-                          gdk_pixbuf_get_width(priv->scaled_pixbuf))),
-            floor(0.5f * (priv->size -
-                          gdk_pixbuf_get_height(priv->scaled_pixbuf))));
+        surface_cr, priv->scaled_pixbuf,
+        floor(0.5f * (priv->size -
+                      gdk_pixbuf_get_width(priv->scaled_pixbuf))),
+        floor(0.5f * (priv->size -
+                      gdk_pixbuf_get_height(priv->scaled_pixbuf))));
       cairo_fill_preserve(surface_cr);
       cairo_fill_preserve(surface_cr);
 
@@ -826,7 +830,7 @@ osso_abook_avatar_image_size_request(GtkWidget *widget,
                                      GtkRequisition *requisition)
 {
   OssoABookAvatarImagePrivate *priv = OSSO_ABOOK_AVATAR_IMAGE_PRIVATE(widget);
-  gint size  = 2 * (priv->border_width + priv->shadow_size) + priv->size;
+  gint size = 2 * (priv->border_width + priv->shadow_size) + priv->size;
 
   requisition->width = size;
   requisition->height = size;
@@ -846,7 +850,7 @@ osso_abook_avatar_image_style_set(GtkWidget *widget, GtkStyle *previous_style)
   GdkColor *color = NULL;
 
   GTK_WIDGET_CLASS(osso_abook_avatar_image_parent_class)->
-      style_set(widget, previous_style);
+  style_set(widget, previous_style);
 
   gtk_widget_style_get(widget,
                        "background-opacity", &priv->background_opacity,
@@ -856,6 +860,7 @@ osso_abook_avatar_image_style_set(GtkWidget *widget, GtkStyle *previous_style)
                        "shadow-size", &priv->shadow_size,
                        "shadow-color", &color,
                        NULL);
+
   if (color)
   {
     priv->red = (double)color->red / 65535.0f;
@@ -890,109 +895,109 @@ osso_abook_avatar_image_class_init(OssoABookAvatarImageClass *klass)
   widget_class->style_set = osso_abook_avatar_image_style_set;
 
   g_object_class_install_property(
-        object_class, PROP_AVATAR,
-        g_param_spec_object(
-          "avatar", "Avatar", "Avatar object",
-          OSSO_ABOOK_TYPE_AVATAR,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_AVATAR,
+    g_param_spec_object(
+      "avatar", "Avatar", "Avatar object",
+      OSSO_ABOOK_TYPE_AVATAR,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_PIXBUF,
-        g_param_spec_object(
-          "pixbuf", "Pixbuf", "Pixbuf object of the avatar",
-          GDK_TYPE_PIXBUF,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_PIXBUF,
+    g_param_spec_object(
+      "pixbuf", "Pixbuf", "Pixbuf object of the avatar",
+      GDK_TYPE_PIXBUF,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_SIZE,
-        g_param_spec_int(
-          "size", "Size", "Size of the avatar in pixels",
-          16, 800, 144,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_SIZE,
+    g_param_spec_int(
+      "size", "Size", "Size of the avatar in pixels",
+      16, 800, 144,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_MINIMUM_ZOOM,
-        g_param_spec_double(
-          "minimum-zoom", "Minimum Zoom", "The minimal allowed zoom level",
-          0.0f, G_MAXDOUBLE, 1.0f,
-          GTK_PARAM_READABLE));
+    object_class, PROP_MINIMUM_ZOOM,
+    g_param_spec_double(
+      "minimum-zoom", "Minimum Zoom", "The minimal allowed zoom level",
+      0.0f, G_MAXDOUBLE, 1.0f,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_CURRENT_ZOOM,
-        g_param_spec_double(
-          "current-zoom", "Current Zoom", "The current zoom level",
-          0.0, G_MAXDOUBLE, 1.0,
-          GTK_PARAM_READABLE));
+    object_class, PROP_CURRENT_ZOOM,
+    g_param_spec_double(
+      "current-zoom", "Current Zoom", "The current zoom level",
+      0.0, G_MAXDOUBLE, 1.0,
+      GTK_PARAM_READABLE));
   g_object_class_install_property(
-        object_class, PROP_MAXIMUM_ZOOM,
-        g_param_spec_double(
-          "maximum-zoom", "Maximum Zoom", "The maximal allowed zoom level",
-          0.0, G_MAXDOUBLE, 2.0,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_MAXIMUM_ZOOM,
+    g_param_spec_double(
+      "maximum-zoom", "Maximum Zoom", "The maximal allowed zoom level",
+      0.0, G_MAXDOUBLE, 2.0,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_FALLBACK_ICON,
-        g_param_spec_string(
-          "fallback-icon", "Fallback Icon", "The name of the fallback icon",
-          "general_default_avatar",
-          GTK_PARAM_READWRITE));
+    object_class, PROP_FALLBACK_ICON,
+    g_param_spec_string(
+      "fallback-icon", "Fallback Icon", "The name of the fallback icon",
+      "general_default_avatar",
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_XADJUSTMENT,
-        g_param_spec_object(
-          "xadjustment", "X-Adjustment",
-          "The GtkAdjustment for the horizontal avatar position",
-          GTK_TYPE_ADJUSTMENT,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_XADJUSTMENT,
+    g_param_spec_object(
+      "xadjustment", "X-Adjustment",
+      "The GtkAdjustment for the horizontal avatar position",
+      GTK_TYPE_ADJUSTMENT,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_YADJUSTMENT,
-        g_param_spec_object(
-          "yadjustment", "Y-Adjustment",
-          "The GtkAdjustment for the vertical avatar position",
-          GTK_TYPE_ADJUSTMENT,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_YADJUSTMENT,
+    g_param_spec_object(
+      "yadjustment", "Y-Adjustment",
+      "The GtkAdjustment for the vertical avatar position",
+      GTK_TYPE_ADJUSTMENT,
+      GTK_PARAM_READWRITE));
   g_object_class_install_property(
-        object_class, PROP_ZADJUSTMENT,
-        g_param_spec_object(
-          "zadjustment", "Z-Adjustment",
-          "The GtkAdjustment for the avatar zoom",
-          GTK_TYPE_ADJUSTMENT,
-          GTK_PARAM_READWRITE));
+    object_class, PROP_ZADJUSTMENT,
+    g_param_spec_object(
+      "zadjustment", "Z-Adjustment",
+      "The GtkAdjustment for the avatar zoom",
+      GTK_TYPE_ADJUSTMENT,
+      GTK_PARAM_READWRITE));
   gtk_widget_class_install_style_property(
-        widget_class,
-        g_param_spec_double(
-          "background-opacity", "Background Opacity",
-          "Opacity of the background shading",
-          0.0f, 1.0f, 0.7f,
-          GTK_PARAM_READWRITE));
+    widget_class,
+    g_param_spec_double(
+      "background-opacity", "Background Opacity",
+      "Opacity of the background shading",
+      0.0f, 1.0f, 0.7f,
+      GTK_PARAM_READWRITE));
   gtk_widget_class_install_style_property(
-        widget_class,
-        g_param_spec_int(
-          "border-width", "Border Width",
-          "Width of the avatar border in pixels",
-          0, G_MAXINT, 0,
-          GTK_PARAM_READWRITE));
+    widget_class,
+    g_param_spec_int(
+      "border-width", "Border Width",
+      "Width of the avatar border in pixels",
+      0, G_MAXINT, 0,
+      GTK_PARAM_READWRITE));
   gtk_widget_class_install_style_property(
-        widget_class,
-        g_param_spec_int(
-          "border-radius", "Border Radius",
-          "Corner radius of the avatar border in pixels",
-          0,
-          G_MAXINT,
-          10,
-          GTK_PARAM_READWRITE));
+    widget_class,
+    g_param_spec_int(
+      "border-radius", "Border Radius",
+      "Corner radius of the avatar border in pixels",
+      0,
+      G_MAXINT,
+      10,
+      GTK_PARAM_READWRITE));
   gtk_widget_class_install_style_property(
-        widget_class,
-        g_param_spec_double(
-          "shadow-opacity", "Shadow Opacity", "Opacity of the avatar shadow",
-          0.0f, 1.0f, 0.7f,
-          GTK_PARAM_READWRITE));
+    widget_class,
+    g_param_spec_double(
+      "shadow-opacity", "Shadow Opacity", "Opacity of the avatar shadow",
+      0.0f, 1.0f, 0.7f,
+      GTK_PARAM_READWRITE));
   gtk_widget_class_install_style_property(
-        widget_class,
-        g_param_spec_int(
-          "shadow-size", "Shadow Size", "Size of the avatar shadow in pixels",
-          0, G_MAXINT, 0,
-          GTK_PARAM_READWRITE));
+    widget_class,
+    g_param_spec_int(
+      "shadow-size", "Shadow Size", "Size of the avatar shadow in pixels",
+      0, G_MAXINT, 0,
+      GTK_PARAM_READWRITE));
   gtk_widget_class_install_style_property(
-        widget_class,
-        g_param_spec_boxed(
-          "shadow-color", "Shadow Color", "Color of the avatar shadow",
-          GDK_TYPE_COLOR,
-          GTK_PARAM_READWRITE));
+    widget_class,
+    g_param_spec_boxed(
+      "shadow-color", "Shadow Color", "Color of the avatar shadow",
+      GDK_TYPE_COLOR,
+      GTK_PARAM_READWRITE));
 }
 
 GtkWidget *
@@ -1210,4 +1215,3 @@ osso_abook_avatar_image_get_zadjustment(OssoABookAvatarImage *image)
 
   return OSSO_ABOOK_AVATAR_IMAGE_PRIVATE(image)->zadjustment;
 }
-
