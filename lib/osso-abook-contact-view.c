@@ -4,6 +4,7 @@
 
 #include "osso-abook-all-group.h"
 #include "osso-abook-contact-view.h"
+#include "osso-abook-log.h"
 
 struct _OssoABookContactViewPrivate
 {
@@ -13,6 +14,10 @@ struct _OssoABookContactViewPrivate
 };
 
 typedef struct _OssoABookContactViewPrivate OssoABookContactViewPrivate;
+
+#define PRIVATE(view) \
+  ((OssoABookContactViewPrivate *) \
+   osso_abook_contact_view_get_instance_private((OssoABookContactView *)view))
 
 enum
 {
@@ -39,8 +44,7 @@ static void
 osso_abook_contact_view_dispose(GObject *object)
 {
   OssoABookContactView *view = OSSO_ABOOK_CONTACT_VIEW(object);
-  OssoABookContactViewPrivate *priv =
-    osso_abook_contact_view_get_instance_private(view);
+  OssoABookContactViewPrivate *priv = PRIVATE(view);
 
   if (priv->master_contact)
   {
@@ -65,7 +69,7 @@ hildon_row_tapped_cb(GtkTreeView *tree_view, GtkTreePath *path,
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_VIEW(user_data));
 
   view = OSSO_ABOOK_CONTACT_VIEW(user_data);
-  priv = osso_abook_contact_view_get_instance_private(view);
+  priv = PRIVATE(view);
 
   tree_model = osso_abook_tree_view_get_model(OSSO_ABOOK_TREE_VIEW(view));
 
@@ -118,8 +122,7 @@ osso_abook_contact_view_set_property(GObject *object, guint property_id,
                                      const GValue *value, GParamSpec *pspec)
 {
   OssoABookContactView *view = OSSO_ABOOK_CONTACT_VIEW(object);
-  OssoABookContactViewPrivate *priv =
-    osso_abook_contact_view_get_instance_private(view);
+  OssoABookContactViewPrivate *priv = PRIVATE(view);
 
   switch (property_id)
   {
@@ -235,8 +238,7 @@ osso_abook_contact_view_class_init(OssoABookContactViewClass *klass)
 static void
 osso_abook_contact_view_init(OssoABookContactView *view)
 {
-  OssoABookContactViewPrivate *priv =
-    osso_abook_contact_view_get_instance_private(view);
+  OssoABookContactViewPrivate *priv = PRIVATE(view);
 
   priv->maximum_selection = 1;
   priv->minimum_selection = 1;
@@ -245,13 +247,9 @@ osso_abook_contact_view_init(OssoABookContactView *view)
 unsigned int
 osso_abook_contact_view_get_minimum_selection(OssoABookContactView *view)
 {
-  OssoABookContactViewPrivate *priv;
-
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_VIEW(view), 1);
 
-  priv = osso_abook_contact_view_get_instance_private(view);
-
-  return priv->minimum_selection;
+  return PRIVATE(view)->minimum_selection;
 }
 
 void
@@ -266,13 +264,9 @@ osso_abook_contact_view_set_minimum_selection(OssoABookContactView *view,
 unsigned int
 osso_abook_contact_view_get_maximum_selection(OssoABookContactView *view)
 {
-  OssoABookContactViewPrivate *priv;
-
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_VIEW(view), 1);
 
-  priv = osso_abook_contact_view_get_instance_private(view);
-
-  return priv->maximum_selection;
+  return PRIVATE(view)->maximum_selection;
 }
 
 void
@@ -317,4 +311,54 @@ osso_abook_contact_view_new_basic(HildonUIMode mode,
   g_object_unref(filter_model);
 
   return view;
+}
+
+GList *
+osso_abook_contact_view_get_selection(OssoABookContactView *view)
+{
+  OssoABookContactViewPrivate *priv;
+  GList *rows;
+  GList *row;
+  GtkTreeIter iter;
+  GtkTreeModel *model;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_VIEW(view), NULL);
+
+  priv = PRIVATE(view);
+
+  if (priv->maximum_selection <= 1)
+  {
+    if (priv->master_contact)
+      return g_list_prepend(NULL, priv->master_contact);
+
+    return NULL;
+  }
+
+  rows = gtk_tree_selection_get_selected_rows(
+    osso_abook_tree_view_get_tree_selection(OSSO_ABOOK_TREE_VIEW(view)),
+    &model);
+
+  for (row = rows; row; row = row->next)
+  {
+    GtkTreePath *path = row->data;
+
+    if (gtk_tree_model_get_iter(model, &iter, path))
+    {
+      gpointer master_contact;
+
+      gtk_tree_model_get(model, &iter, 0, &master_contact, -1);
+      row->data = master_contact;
+      g_object_unref(master_contact);
+    }
+    else
+    {
+      gchar *tmp = gtk_tree_path_to_string(path);
+      OSSO_ABOOK_WARN("Couldn't find valid iter for path %s", tmp);
+      g_free(tmp);
+    }
+
+    gtk_tree_path_free(path);
+  }
+
+  return rows;
 }

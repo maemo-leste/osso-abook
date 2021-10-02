@@ -1162,3 +1162,33 @@ osso_abook_contact_chooser_refilter(OssoABookContactChooser *chooser)
   if (priv->filter_model)
     gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(priv->filter_model));
 }
+
+void
+osso_abook_contact_chooser_set_maximum_selection(
+  OssoABookContactChooser *chooser,
+  unsigned int limit)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
+
+  osso_abook_contact_view_set_maximum_selection(
+    OSSO_ABOOK_CONTACT_VIEW(PRIVATE(chooser)->contact_view), limit);
+}
+
+GList *
+osso_abook_contact_chooser_get_selection(OssoABookContactChooser *chooser)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser), NULL);
+
+  return osso_abook_contact_view_get_selection(
+    OSSO_ABOOK_CONTACT_VIEW(PRIVATE(chooser)->contact_view));
+}
+
+void
+osso_abook_contact_chooser_set_model(OssoABookContactChooser *chooser,
+                                     OssoABookContactModel *model)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_MODEL(model));
+
+  g_object_set(chooser, "model", model, NULL);
+}
