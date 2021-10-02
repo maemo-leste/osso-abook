@@ -3548,3 +3548,42 @@ osso_abook_contact_delete(OssoABookContact *contact, EBook *book,
 
   return TRUE;
 }
+
+char *
+osso_abook_contact_get_basename(OssoABookContact *contact, gboolean strict)
+{
+  gchar *basename;
+  gchar *s;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  basename = g_strdup(osso_abook_contact_get_display_name(contact));
+
+  g_assert(basename);
+
+  if (strict)
+    basename = g_strdelimit(basename, " ", '_');
+
+  s = g_convert(basename, -1, "ASCII//translit", "UTF-8", NULL, NULL, NULL);
+
+  if (s)
+  {
+    g_free(basename);
+    basename = s;
+  }
+
+  s = g_uri_escape_string(basename, "!$&'()*+,;=:@ ", FALSE);
+
+  if (s)
+  {
+    g_free(basename);
+    basename = s;
+  }
+
+  basename = g_strdelimit(basename, "\\/:*?\"<>|", '_');
+
+  if (strlen(basename) > 199)
+    basename[200] = 0;
+
+  return basename;
+}
