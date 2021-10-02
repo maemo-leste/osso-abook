@@ -27,3 +27,24 @@
 /stamp-h1
 Makefile
 Makefile.in
+INSTALL
+
+#debian
+debian/tmp
+debian/libosso-abook-dev/
+debian/libosso-abook/
+debian/.debhelper/
+debian/*debhelper*
+debian/autoreconf*
+debian/files
+debian/*.substvars
+
+#generated stuff
+lib/osso-abook-enums.c
+lib/osso-abook-enums.h
+lib/osso-abook-marshal.c
+lib/osso-abook-marshal.h
+lib/tp-glib-enums.c
+lib/tp-glib-enums.h
+lib/tp-glib-enums.tmp.h
+pkgconfig/libosso-abook-1.0.pc
