@@ -1076,7 +1076,7 @@ _is_regular_file(const gchar *fname)
   return g_file_test(fname, G_FILE_TEST_IS_REGULAR);
 }
 
- __attribute__ ((visibility("hidden"))) gboolean
+__attribute__ ((visibility("hidden"))) gboolean
 _is_local_file(const gchar *uri)
 {
   const gchar *fname;

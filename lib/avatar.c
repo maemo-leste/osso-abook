@@ -20,8 +20,8 @@
 #include "config.h"
 
 #include "osso-abook-contact.h"
-#include "osso-abook-utils-private.h"
 #include "osso-abook-log.h"
+#include "osso-abook-utils-private.h"
 
 #include "avatar.h"
 

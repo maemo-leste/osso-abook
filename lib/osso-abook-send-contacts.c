@@ -37,7 +37,7 @@ struct _OssoABookSendContactsDialogPrivate
 };
 
 typedef struct _OssoABookSendContactsDialogPrivate
-OssoABookSendContactsDialogPrivate;
+  OssoABookSendContactsDialogPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(
   OssoABookSendContactsDialog,
