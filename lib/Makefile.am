@@ -66,21 +66,24 @@ COMMON_SOURCES = \
 		osso-abook-contact-detail-store.c \
 		osso-abook-dialogs.c \
 		osso-abook-tp-account-model.c \
-		osso-abook-tp-account-selector.c
+		osso-abook-tp-account-selector.c \
+		avatar.c \
+		osso-abook-send-contacts.c
 
 COMMON_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
 		$(GMODULE_CFLAGS) $(GCONF_CFLAGS) $(TPGLIB_CFLAGS) \
 		$(CAIRO_CFLAGS) $(RTCOM_CFLAGS) $(XML_CFLAGS) $(GOFONO_CFLAGS) \
-		-I$(srcdir)/../include -Wall -Werror -DOSSO_ABOOK_DEBUG \
-		-DOSSOLOG_COMPILE=1 -DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" \
+		$(MODEST_DBUS_CFLAGS) -I$(srcdir)/../include -Wall -Werror \
+		-DOSSO_ABOOK_DEBUG -DOSSOLOG_COMPILE=1 \
+		-DISO_CODES_PREFIX=\"$(ISO_CODES_PREFIX)\" \
 		-DMBPI_DATABASE=\"$(MBPI_DATABASE)\" -Wno-format-extra-args \
 		$(DGETTEXT)
 
 COMMON_LIBS = \
 		$(OSSO_LIBS) $(HILDON_LIBS) $(EBOOK_LIBS) $(RTCOM_LIBS) \
 		$(GMODULE_LIBS) $(GCONF_LIBS) $(TPGLIB_LIBS) $(XML_LIBS) \
-		$(CAIRO_LIBS) $(GOFONO_LIBS) -lm
+		$(CAIRO_LIBS) $(GOFONO_LIBS) $(MODEST_DBUS_LIBS) -lm
 
 noinst_LIBRARIES = libosso-abook-test.a
 
@@ -208,7 +211,9 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-contact-detail-store.c \
 		osso-abook-dialogs.c \
 		osso-abook-tp-account-model.c \
-		osso-abook-tp-account-selector.c
+		osso-abook-tp-account-selector.c \
+		avatar.c \
+		osso-abook-send-contacts.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook.h \

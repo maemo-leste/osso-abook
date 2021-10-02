@@ -18,6 +18,8 @@
 
 #define OSSO_ABOOK_OFONO_TIMEOUT (15 * 1000)
 
+#define FILE_SCHEME "file://"
+
 __attribute__ ((visibility("hidden"))) void
 disconnect_signal_if_connected(gpointer instance, gulong handler)
 {
@@ -1063,4 +1065,31 @@ _osso_abook_tp_account_get_vcard_field(TpAccount *account)
     return NULL;
 
   return g_strdup(tp_protocol_get_vcard_field(protocol));
+}
+
+static gboolean
+_is_regular_file(const gchar *fname)
+{
+  if (!fname)
+    return FALSE;
+
+  return g_file_test(fname, G_FILE_TEST_IS_REGULAR);
+}
+
+ __attribute__ ((visibility("hidden"))) gboolean
+_is_local_file(const gchar *uri)
+{
+  const gchar *fname;
+
+  if (!uri || !*uri)
+    return FALSE;
+
+  if (g_str_has_prefix(uri, FILE_SCHEME))
+    fname = uri + strlen(FILE_SCHEME);
+  else if (*uri == '/')
+    fname = uri;
+  else
+    return FALSE;
+
+  return _is_regular_file(fname);
 }
