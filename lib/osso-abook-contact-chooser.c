@@ -60,6 +60,11 @@ struct _OssoABookContactChooserPrivate
 
 typedef struct _OssoABookContactChooserPrivate OssoABookContactChooserPrivate;
 
+#define PRIVATE(chooser) \
+  ((OssoABookContactChooserPrivate *) \
+   osso_abook_contact_chooser_get_instance_private( \
+     (OssoABookContactChooser *)chooser))
+
 G_DEFINE_TYPE_WITH_CODE(
   OssoABookContactChooser,
   osso_abook_contact_chooser,
@@ -96,8 +101,7 @@ _response_cb(GtkDialog *dialog, gint response_id, gpointer user_data)
   if (response_id == DONE_BUTTON_ID)
   {
     OssoABookContactChooser *chooser = user_data;
-    OssoABookContactChooserPrivate *priv =
-      osso_abook_contact_chooser_get_instance_private(chooser);
+    OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
     unsigned int selected_count;
     unsigned int minimum_selection;
     unsigned int maximum_selection;
@@ -126,8 +130,7 @@ _response_cb(GtkDialog *dialog, gint response_id, gpointer user_data)
 static void
 osso_abook_contact_chooser_init(OssoABookContactChooser *chooser)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   priv->excluded_contacts = NULL;
   priv->alpha_shortcuts = NULL;
@@ -153,8 +156,7 @@ _row_inserted(GtkTreeModel *tree_model, GtkTreePath *path, GtkTreeIter *iter,
               gpointer user_data)
 {
   OssoABookContactChooser *chooser = OSSO_ABOOK_CONTACT_CHOOSER(user_data);
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   if (osso_abook_list_store_is_loading(OSSO_ABOOK_LIST_STORE(
                                          priv->contact_model)))
@@ -185,7 +187,7 @@ add_live_search(OssoABookContactChooser *chooser)
 
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   if (priv->live_search)
     return;
@@ -209,7 +211,7 @@ remove_live_search(OssoABookContactChooser *chooser)
 
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   if (!priv->live_search)
     return;
@@ -235,7 +237,7 @@ add_alpha_shortcuts(OssoABookContactChooser *chooser)
 
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   if (priv->alpha_shortcuts)
     return;
@@ -259,7 +261,7 @@ remove_alpha_shortcuts(OssoABookContactChooser *chooser)
 
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   if (!priv->alpha_shortcuts)
     return;
@@ -277,7 +279,7 @@ update_navigation_widgets(OssoABookContactChooser *chooser)
 
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   if (!osso_abook_screen_is_landscape_mode(
         gtk_widget_get_screen(GTK_WIDGET(chooser))))
@@ -299,8 +301,7 @@ update_navigation_widgets(OssoABookContactChooser *chooser)
 static void
 update_widgets(OssoABookContactChooser *chooser)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   g_signal_handlers_disconnect_matched(
     priv->contact_view, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0,
@@ -336,8 +337,7 @@ static void
 _maximum_selection_cb(GObject *gobject, GParamSpec *arg1,
                       OssoABookContactChooser *chooser)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
   unsigned int max_selection =
     osso_abook_contact_view_get_maximum_selection(
       OSSO_ABOOK_CONTACT_VIEW(priv->contact_view));
@@ -355,8 +355,7 @@ roster_weak_notify(gpointer data, GObject *where_the_object_was)
 static void
 destroy_contact_model(OssoABookContactChooser *chooser)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   if (priv->closure)
   {
@@ -371,8 +370,7 @@ destroy_contact_model(OssoABookContactChooser *chooser)
 static void
 destroy_models(OssoABookContactChooser *chooser)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   if (priv->filter_model)
   {
@@ -402,9 +400,7 @@ _screen_size_changed_cb(GdkScreen *screen, gpointer user_data)
 static void
 osso_abook_contact_chooser_dispose(GObject *object)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(
-      OSSO_ABOOK_CONTACT_CHOOSER(object));
+  OssoABookContactChooserPrivate *priv = PRIVATE(object);
 
   if (priv->contact_view)
   {
@@ -427,9 +423,7 @@ osso_abook_contact_chooser_dispose(GObject *object)
 static void
 osso_abook_contact_chooser_finalize(GObject *object)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(
-      OSSO_ABOOK_CONTACT_CHOOSER(object));
+  OssoABookContactChooserPrivate *priv = PRIVATE(object);
 
   osso_abook_string_list_free(priv->excluded_contacts);
 
@@ -444,8 +438,7 @@ osso_abook_contact_chooser_get_property(GObject *object, guint property_id,
                                         GValue *value, GParamSpec *pspec)
 {
   OssoABookContactChooser *chooser = OSSO_ABOOK_CONTACT_CHOOSER(object);
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   switch (property_id)
   {
@@ -508,8 +501,7 @@ static void
 set_model_order(OssoABookContactChooser *chooser, OssoABookContactModel *model,
                 OssoABookContactOrder order)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   if (!osso_abook_screen_is_landscape_mode(gtk_widget_get_screen(
                                              GTK_WIDGET(chooser))) &&
@@ -547,8 +539,7 @@ create_custom_model(OssoABookContactChooser *chooser,
 static gboolean
 contact_is_visibile(OssoABookContact *contact, OssoABookContactChooser *chooser)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
   OssoABookCapsFlags abook_caps =
     osso_abook_caps_get_capabilities(OSSO_ABOOK_CAPS(contact));
   OssoABookCapsFlags caps_flags = priv->caps_flags;
@@ -641,7 +632,7 @@ _roster_is_ready_cb(OssoABookWaitable *waitable, const GError *error,
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(data));
 
   chooser = OSSO_ABOOK_CONTACT_CHOOSER(data);
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
   roster = osso_abook_list_store_get_roster(
     OSSO_ABOOK_LIST_STORE(priv->contact_model));
 
@@ -688,8 +679,7 @@ _roster_is_ready_cb(OssoABookWaitable *waitable, const GError *error,
 static void
 setup_roster_waitable(OssoABookContactChooser *chooser)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   destroy_contact_model(chooser);
 
@@ -712,7 +702,7 @@ osso_abook_contact_chooser_real_set_model(OssoABookContactChooser *chooser,
 
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_MODEL(model));
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   g_object_freeze_notify(G_OBJECT(chooser));
   destroy_models(chooser);
@@ -763,8 +753,7 @@ osso_abook_contact_chooser_real_set_contact_order(
   OssoABookContactChooser *chooser,
   OssoABookContactOrder order)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   if (order != priv->contact_order)
   {
@@ -787,8 +776,7 @@ static void
 osso_abook_contact_chooser_real_set_done_label(OssoABookContactChooser *chooser,
                                                const char *label)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   if (!label)
     label = dgettext("hildon-libs", "wdgt_bd_done");
@@ -801,8 +789,7 @@ osso_abook_contact_chooser_real_set_hide_offline_contacts(
   OssoABookContactChooser *chooser,
   gboolean state)
 {
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   priv->hide_offline_contacts = state;
   osso_abook_contact_chooser_refilter(chooser);
@@ -821,8 +808,7 @@ osso_abook_contact_chooser_set_property(GObject *object, guint property_id,
                                         const GValue *value, GParamSpec *pspec)
 {
   OssoABookContactChooser *chooser = OSSO_ABOOK_CONTACT_CHOOSER(object);
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
 
   switch (property_id)
   {
@@ -927,8 +913,7 @@ static void
 osso_abook_contact_chooser_constructed(GObject *object)
 {
   OssoABookContactChooser *chooser = OSSO_ABOOK_CONTACT_CHOOSER(object);
-  OssoABookContactChooserPrivate *priv =
-    osso_abook_contact_chooser_get_instance_private(chooser);
+  OssoABookContactChooserPrivate *priv = PRIVATE(chooser);
   GtkWidget *align;
   OssoABookContactModel *model;
 
@@ -1078,7 +1063,7 @@ osso_abook_contact_chooser_deselect_all(OssoABookContactChooser *chooser)
 
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
   selection = osso_abook_tree_view_get_tree_selection(
     OSSO_ABOOK_TREE_VIEW(priv->contact_view));
   gtk_tree_selection_unselect_all(selection);
@@ -1093,7 +1078,7 @@ osso_abook_contact_chooser_get_capabilities(OssoABookContactChooser *chooser)
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser),
                        OSSO_ABOOK_CAPS_ALL);
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   g_object_get(priv->filter_model, "capabilities", &rv, NULL);
 
@@ -1109,7 +1094,7 @@ osso_abook_contact_chooser_get_contact_order(OssoABookContactChooser *chooser)
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser),
                        OSSO_ABOOK_CONTACT_ORDER_NONE);
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   g_object_get(priv->contact_model, "contact-order", &rv, NULL);
 
@@ -1124,7 +1109,7 @@ osso_abook_contact_chooser_get_excluded_contacts(
 
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser), NULL);
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   return priv->excluded_contacts;
 }
@@ -1136,7 +1121,7 @@ osso_abook_contact_chooser_get_done_label(OssoABookContactChooser *chooser)
 
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser), NULL);
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   return gtk_button_get_label(GTK_BUTTON(priv->done_button));
 }
@@ -1148,7 +1133,7 @@ osso_abook_contact_chooser_get_contact_view(OssoABookContactChooser *chooser)
 
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser), NULL);
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   return priv->contact_view;
 }
@@ -1160,7 +1145,7 @@ osso_abook_contact_chooser_get_model(OssoABookContactChooser *chooser)
 
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser), NULL);
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   return priv->contact_model;
 }
@@ -1172,7 +1157,7 @@ osso_abook_contact_chooser_refilter(OssoABookContactChooser *chooser)
 
   g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
 
-  priv = osso_abook_contact_chooser_get_instance_private(chooser);
+  priv = PRIVATE(chooser);
 
   if (priv->filter_model)
     gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(priv->filter_model));
