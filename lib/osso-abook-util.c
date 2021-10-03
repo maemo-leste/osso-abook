@@ -33,6 +33,9 @@
 #include "osso-abook-util.h"
 #include "osso-abook-utils-private.h"
 
+#define OSSO_ABOOK_TEL_DIGITS ("0123456789")
+#define OSSO_ABOOK_TEL_CHARS ("0123456789" OSSO_ABOOK_DTMF_CHARS)
+
 struct OssoABookAsyncPixbufData
 {
   int width;
@@ -1081,4 +1084,87 @@ char *
 osso_abook_tp_account_get_display_markup(TpAccount *account)
 {
   return account_get_display_string(account, NULL, NULL, TRUE);
+}
+
+EVCardAttribute *
+osso_abook_convert_to_tel_attribute(EVCardAttribute *attribute)
+{
+  const char *name;
+  GList *values;
+  EVCardAttribute *tel_attribute;
+  const gchar *value;
+  gchar *tel = NULL;
+  size_t spn;
+
+  g_return_val_if_fail(attribute != NULL, NULL);
+
+  name = e_vcard_attribute_get_name(attribute);
+  values = e_vcard_attribute_get_values(attribute);
+
+  if (!name || !values)
+    return NULL;
+
+  value = values->data;
+
+  if (!value || values->next)
+    return NULL;
+
+  if (!g_strcmp0(name, "X-SKYPE"))
+    tel = g_strdup(value);
+  else if (!g_strcmp0(name, "X-SIP"))
+  {
+    const char *p = osso_abook_strip_sip_prefix(value);
+    const char *q = strchr(p, '@');
+
+    if (q)
+      tel = g_strndup(p, q - p);
+    else
+      tel = g_strdup(p);
+  }
+
+  if (!tel || (*tel != '+'))
+  {
+    g_free(tel);
+    return NULL;
+  }
+
+  spn = strspn(tel + 1, OSSO_ABOOK_TEL_DIGITS) + 1;
+
+  if ((spn <= 1) || tel[spn + strspn(&tel[spn], OSSO_ABOOK_TEL_CHARS)])
+    tel_attribute = NULL;
+  else
+  {
+    tel_attribute = e_vcard_attribute_new(NULL, EVC_TEL);
+    e_vcard_attribute_add_value(tel_attribute, tel);
+  }
+
+  g_free(tel);
+
+  return tel_attribute;
+}
+
+const gchar *
+osso_abook_strip_sip_prefix(const gchar *address)
+{
+  static const char *prefixes[] =
+  {
+    "sip:",
+    "sips:",
+    NULL
+  };
+  const char **prefix;
+
+  for (prefix = prefixes; prefix; prefix++)
+  {
+    const char *p = *prefix;
+    size_t prefix_len = strlen(p);
+
+    if (!g_ascii_strncasecmp(address, p, prefix_len))
+    {
+      address += strlen(p);
+      break;
+    }
+  }
+
+  return address;
 }
