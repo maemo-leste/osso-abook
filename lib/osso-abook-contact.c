@@ -3799,3 +3799,13 @@ osso_abook_contact_to_string(OssoABookContact *contact, EVCardFormat format,
 
   return s;
 }
+
+gboolean
+osso_abook_contact_action_start(OssoABookContactAction action,
+                                OssoABookContact *contact,
+                                EVCardAttribute *attribute,
+                                TpAccount *account, GtkWindow *parent)
+{
+  return osso_abook_contact_action_start_with_callback(
+    action, contact, attribute, account, parent, NULL, NULL);
+}
