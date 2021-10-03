@@ -1192,3 +1192,21 @@ osso_abook_contact_chooser_set_model(OssoABookContactChooser *chooser,
 
   g_object_set(chooser, "model", model, NULL);
 }
+
+GtkWidget *
+osso_abook_contact_chooser_new_with_capabilities(GtkWindow *parent,
+                                                 const gchar *title,
+                                                 OssoABookCapsFlags caps,
+                                                 OssoABookContactOrder order)
+{
+  g_return_val_if_fail(!parent || GTK_IS_WINDOW(parent), NULL);
+
+  return g_object_new(OSSO_ABOOK_TYPE_CONTACT_CHOOSER,
+                      "transient-for", parent,
+                      "title", title,
+                      "capabilities", caps,
+                      "contact-order", order,
+                      "modal", TRUE,
+                      "destroy-with-parent", TRUE,
+                      NULL);
+}
