@@ -113,7 +113,7 @@ osso_abook_voicemail_contact_get_preferred_number(
   if (!contact)
     return NULL;
 
-  tel = osso_abook_contact_get_value(E_CONTACT(contact), "TEL");
+  tel = osso_abook_contact_get_value(E_CONTACT(contact), EVC_TEL);
   g_object_unref(contact);
 
   return tel;

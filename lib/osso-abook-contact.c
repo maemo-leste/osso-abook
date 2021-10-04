@@ -393,7 +393,7 @@ parse_capabilities(OssoABookContact *contact, OssoABookContactPrivate *priv)
      * however, telepathy-ring in its current shape does not devine vcard-field
      * at all.
      */
-    if (vcf && g_strcmp0(vcf, "TEL"))
+    if (vcf && g_strcmp0(vcf, EVC_TEL))
     {
       if (e_vcard_get_attribute(E_VCARD(contact), vcf))
         priv->caps |= osso_abook_caps_from_tp_protocol(l->data);
@@ -418,7 +418,7 @@ parse_capabilities(OssoABookContact *contact, OssoABookContactPrivate *priv)
       if (v && !IS_EMPTY(v->data))
         priv->caps |= OSSO_ABOOK_CAPS_EMAIL;
     }
-    else if (!g_strcmp0(attr_name, "TEL"))
+    else if (!g_strcmp0(attr_name, EVC_TEL))
     {
       GList *v = e_vcard_attribute_get_values(attr->data);
 

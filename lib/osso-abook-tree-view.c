@@ -1001,7 +1001,7 @@ contact_telefone_cell_data(GtkTreeViewColumn *tree_column,
 
   if (row)
   {
-    text = osso_abook_contact_get_value(E_CONTACT(row->contact), "TEL");
+    text = osso_abook_contact_get_value(E_CONTACT(row->contact), EVC_TEL);
 
     if (!text || !*text)
     {

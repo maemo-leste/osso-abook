@@ -806,7 +806,7 @@ create_layout(OssoABookTouchContactStarter *starter, guint max_columns_per_row,
               osso_abook_contact_field_get_attribute(fld1);
             const char *attr_name = e_vcard_attribute_get_name(attr);
 
-            if (!g_strcmp0(attr_name, "TEL") &&
+            if (!g_strcmp0(attr_name, EVC_TEL) &&
                 !(osso_abook_contact_field_get_flags(fld1) &
                   OSSO_ABOOK_CONTACT_FIELD_FLAGS_CELL))
             {

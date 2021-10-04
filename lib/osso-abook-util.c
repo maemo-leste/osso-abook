@@ -209,7 +209,7 @@ osso_abook_is_fax_attribute(EVCardAttribute *attribute)
 
   g_return_val_if_fail(attribute != NULL, FALSE);
 
-  if (g_strcmp0(e_vcard_attribute_get_name(attribute), "TEL"))
+  if (g_strcmp0(e_vcard_attribute_get_name(attribute), EVC_TEL))
     return FALSE;
 
   for (p = e_vcard_attribute_get_params(attribute); p; p = p->next)
@@ -246,7 +246,7 @@ osso_abook_is_mobile_attribute(EVCardAttribute *attribute)
 
   g_return_val_if_fail(attribute != NULL, FALSE);
 
-  if (g_strcmp0(e_vcard_attribute_get_name(attribute), "TEL"))
+  if (g_strcmp0(e_vcard_attribute_get_name(attribute), EVC_TEL))
     return FALSE;
 
   for (p = e_vcard_attribute_get_params(attribute); p; p = p->next)
@@ -388,7 +388,7 @@ osso_abook_query_phone_number(const char *phone_number, gboolean fuzzy_match)
 
   g_return_val_if_fail(!IS_EMPTY(phone_number), NULL);
 
-  qs[0] = e_book_query_vcard_field_test("TEL", E_BOOK_QUERY_IS, phone_number);
+  qs[0] = e_book_query_vcard_field_test(EVC_TEL, E_BOOK_QUERY_IS, phone_number);
   len = strcspn(phone_number, OSSO_ABOOK_DTMF_CHARS);
 
   if (len < strlen(phone_number))
@@ -397,7 +397,7 @@ osso_abook_query_phone_number(const char *phone_number, gboolean fuzzy_match)
 
     if (phone_num)
     {
-      qs[1] = e_book_query_vcard_field_test("TEL", E_BOOK_QUERY_IS, phone_num);
+      qs[1] = e_book_query_vcard_field_test(EVC_TEL, E_BOOK_QUERY_IS, phone_num);
       nqs = 2;
     }
   }
@@ -426,7 +426,7 @@ osso_abook_query_phone_number(const char *phone_number, gboolean fuzzy_match)
       test = E_BOOK_QUERY_ENDS_WITH;
     }
 
-    qs[nqs++] = e_book_query_vcard_field_test("TEL", test, phone_num_norm);
+    qs[nqs++] = e_book_query_vcard_field_test(EVC_TEL, test, phone_num_norm);
     g_free(normalized);
   }
 
@@ -492,7 +492,7 @@ osso_abook_sort_phone_number_matches(GList *matches, const char *phone_number)
     for (attr = e_vcard_get_attributes(E_VCARD(data->contact)); attr;
          attr = attr->next)
     {
-      if (!strcmp(e_vcard_attribute_get_name(attr->data), "TEL"))
+      if (!strcmp(e_vcard_attribute_get_name(attr->data), EVC_TEL))
       {
         GList *vals = e_vcard_attribute_get_values(attr->data);
 

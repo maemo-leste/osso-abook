@@ -330,7 +330,7 @@ _osso_abook_eventlogger_update(OssoABookContact *new_contact,
 
     if (accounts)
     {
-      gboolean is_tel = !g_strcmp0(vcf->data, "TEL");
+      gboolean is_tel = !g_strcmp0(vcf->data, EVC_TEL);
       GList *old_list = contact_get_attribute_values(old_contact, vcf->data);
       GList *new_list = contact_get_attribute_values(new_contact, vcf->data);
       GList *to_remove;
@@ -386,7 +386,7 @@ _osso_abook_eventlogger_remove(OssoABookContact *contact)
     const char *uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
     GList *vals;
 
-    for (vals = contact_get_attribute_values(contact, "TEL"); vals;
+    for (vals = contact_get_attribute_values(contact, EVC_TEL); vals;
          vals = g_list_delete_link(vals, vals))
     {
       const char *vcf = vcard_field_table_find_uid(vals->data, uid);
@@ -411,7 +411,7 @@ _osso_abook_eventlogger_update_phone_table(OssoABookContact *contact)
   {
     const char *uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
 
-    for (v = contact_get_attribute_values(contact, "TEL"); v;
+    for (v = contact_get_attribute_values(contact, EVC_TEL); v;
          v = g_list_delete_link(v, v))
     {
       vcard_field_table_add_uid(v->data, uid);
