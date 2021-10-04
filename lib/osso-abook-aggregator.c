@@ -2344,3 +2344,37 @@ osso_abook_aggregator_find_contacts_for_phone_number(
 
   return contacts;
 }
+
+static gboolean
+filter_emails_predicate(OssoABookContact *contact, gpointer user_data)
+{
+  GList *emails = e_contact_get(E_CONTACT(contact), E_CONTACT_EMAIL);
+  GList *email;
+  gboolean match = FALSE;
+
+  for (email = emails; email; email = email->next)
+  {
+    if (!strcasecmp(email->data, user_data))
+    {
+      match = TRUE;
+      break;
+    }
+  }
+
+  osso_abook_string_list_free(emails);
+
+  return match;
+}
+
+GList *
+osso_abook_aggregator_find_contacts_for_email_address(
+  OssoABookAggregator *aggregator,
+  const char *address)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_AGGREGATOR(aggregator), NULL);
+  g_return_val_if_fail(NULL != address, NULL);
+
+  return osso_abook_aggregator_find_contacts_full(aggregator,
+                                                  filter_emails_predicate,
+                                                  (gpointer)address);
+}
