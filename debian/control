@@ -19,7 +19,8 @@ Build-Depends:
  libgofono-dev,
  mobile-broadband-provider-info,
  libhildonfm2-dev,
- libmodest-dbus-client-dev
+ libmodest-dbus-client-dev,
+ iso-codes,
 Section: libs
 Standards-Version: 4.3.0
 # Packages that could/should go in Build-Depends, but are currently missing:
