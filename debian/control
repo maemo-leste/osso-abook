@@ -21,6 +21,7 @@ Build-Depends:
  libhildonfm2-dev,
  libmodest-dbus-client-dev,
  iso-codes,
+ libglibutil-dev,
 Section: libs
 Standards-Version: 4.3.0
 # Packages that could/should go in Build-Depends, but are currently missing:
