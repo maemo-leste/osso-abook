@@ -18,8 +18,6 @@
 
 #define OSSO_ABOOK_OFONO_TIMEOUT (15 * 1000)
 
-#define FILE_SCHEME "file://"
-
 __attribute__ ((visibility("hidden"))) void
 disconnect_signal_if_connected(gpointer instance, gulong handler)
 {
