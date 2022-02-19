@@ -1,8 +1,8 @@
+#include "config.h"
+
 #include <glib-object.h>
 #include <glib.h>
 #include <gtk/gtkprivate.h>
-
-#include "config.h"
 
 #include "eds.h"
 #include "osso-abook-account-manager.h"

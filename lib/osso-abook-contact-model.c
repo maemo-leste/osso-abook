@@ -1,8 +1,8 @@
+#include "config.h"
+
 #include "osso-abook-aggregator.h"
 #include "osso-abook-contact-model.h"
 #include "osso-abook-log.h"
-
-#include "config.h"
 
 G_DEFINE_TYPE(
   OssoABookContactModel,

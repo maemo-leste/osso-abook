@@ -17,14 +17,14 @@
  *
  */
 
+#include "config.h"
+
 #include <hildon/hildon.h>
 
 #include <libintl.h>
 
 #include "osso-abook-debug.h"
 #include "osso-abook-voicemail-selector.h"
-
-#include "config.h"
 
 static void
 loop_quit (GtkWindow *window, gpointer data)

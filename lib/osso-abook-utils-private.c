@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <dbus/dbus-glib-bindings.h>
 #include <dbus/dbus.h>
 #include <gdk/gdk.h>
@@ -13,8 +15,6 @@
 #include "osso-abook-contact.h"
 #include "osso-abook-log.h"
 #include "osso-abook-utils-private.h"
-
-#include "config.h"
 
 #define OSSO_ABOOK_OFONO_TIMEOUT (15 * 1000)
 

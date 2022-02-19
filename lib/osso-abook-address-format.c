@@ -17,9 +17,9 @@
  *
  */
 
-#include <glib.h>
-
 #include "config.h"
+
+#include <glib.h>
 
 #include "osso-abook-address-format.h"
 #include "osso-abook-log.h"

@@ -1,9 +1,9 @@
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon.h>
 
 #include <string.h>
-
-#include "config.h"
 
 #include "osso-abook-avatar-cache.h"
 #include "osso-abook-contact-model.h"

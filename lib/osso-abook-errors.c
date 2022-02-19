@@ -1,9 +1,9 @@
+#include "config.h"
+
 #include <hildon/hildon.h>
 
 #include <errno.h>
 #include <sys/statfs.h>
-
-#include "config.h"
 
 #include "osso-abook-debug.h"
 #include "osso-abook-errors.h"

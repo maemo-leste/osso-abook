@@ -1,9 +1,9 @@
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 
 #include <libintl.h>
 #include <string.h>
-
-#include "config.h"
 
 #include "osso-abook-aggregator.h"
 #include "osso-abook-alpha-shortcuts.h"

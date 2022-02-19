@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 
 #include "eds.h"
@@ -7,8 +9,6 @@
 #include "osso-abook-roster.h"
 #include "osso-abook-utils-private.h"
 #include "osso-abook-waitable.h"
-
-#include "config.h"
 
 enum
 {

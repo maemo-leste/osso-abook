@@ -17,9 +17,9 @@
  *
  */
 
-#include <rtcom-eventlogger/eventlogger.h>
-
 #include "config.h"
+
+#include <rtcom-eventlogger/eventlogger.h>
 
 #include "osso-abook-account-manager.h"
 #include "osso-abook-eventlogger.h"

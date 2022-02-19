@@ -17,9 +17,9 @@
  *
  */
 
-#include <gtk/gtkprivate.h>
-
 #include "config.h"
+
+#include <gtk/gtkprivate.h>
 
 #include "osso-abook-account-manager.h"
 #include "osso-abook-enums.h"

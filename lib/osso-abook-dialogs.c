@@ -17,9 +17,9 @@
  *
  */
 
-#include <glib.h>
-
 #include "config.h"
+
+#include <glib.h>
 
 #include "osso-abook-gconf-contact.h"
 #include "osso-abook-roster.h"

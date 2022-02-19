@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <glib-object.h>
 #include <glib.h>
 #include <gtk/gtkprivate.h>
@@ -5,8 +7,6 @@
 
 #include <sys/types.h>
 #include <unistd.h>
-
-#include "config.h"
 
 #include "eds.h"
 #include "osso-abook-aggregator.h"

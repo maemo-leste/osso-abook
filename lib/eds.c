@@ -1,9 +1,9 @@
+#include "config.h"
+
 #include <libebook/libebook.h>
 
 #include "eds.h"
 #include "osso-abook-debug.h"
-
-#include "config.h"
 
 static OssoABookBackendDiedFunc _backend_died_func = NULL;
 static gpointer _backend_died_user_data = NULL;

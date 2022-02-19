@@ -17,9 +17,9 @@
  *
  */
 
-#include <gdk/gdk.h>
-
 #include "config.h"
+
+#include <gdk/gdk.h>
 
 #include "osso-abook-contact-filter.h"
 #include "osso-abook-contact-subscriptions.h"

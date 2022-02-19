@@ -1,6 +1,6 @@
 /*** BEGIN file-header ***/
-#include "tp-glib-enums.h"
 #include "config.h"
+#include "tp-glib-enums.h"
 /*** END file-header ***/
 
 /*** BEGIN file-production ***/

@@ -17,9 +17,9 @@
  *
  */
 
-#include "osso-abook-contact-filter.h"
-
 #include "config.h"
+
+#include "osso-abook-contact-filter.h"
 
 typedef OssoABookContactFilterIface OssoABookContactFilterInterface;
 

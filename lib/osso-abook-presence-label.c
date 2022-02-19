@@ -16,12 +16,13 @@
  * along with this library. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon.h>
 
 #include <libintl.h>
-
-#include "config.h"
 
 #include "osso-abook-presence-label.h"
 #include "osso-abook-presence.h"

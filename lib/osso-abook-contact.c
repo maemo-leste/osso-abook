@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <glib.h>
 #include <libedata-book/libedata-book.h>
 #include <telepathy-glib/enums.h>
@@ -17,8 +19,6 @@
 #include "osso-abook-string-list.h"
 #include "osso-abook-utils-private.h"
 #include "tp-glib-enums.h"
-
-#include "config.h"
 
 #include "osso-abook-util.h"
 

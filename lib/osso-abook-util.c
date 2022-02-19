@@ -17,6 +17,8 @@
  *
  */
 
+#include "config.h"
+
 #include <errno.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -24,8 +26,6 @@
 #include <math.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
-
-#include "config.h"
 
 #include "osso-abook-account-manager.h"
 #include "osso-abook-avatar-image.h"

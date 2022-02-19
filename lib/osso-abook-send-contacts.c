@@ -16,13 +16,14 @@
  * along with this library. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+#include "config.h"
+
 #include <dbus/dbus.h>
 #include <gtk/gtkprivate.h>
 #include <libmodest-dbus-client/libmodest-dbus-client.h>
 
 #include <errno.h>
-
-#include "config.h"
 
 #include "osso-abook-errors.h"
 #include "osso-abook-init.h"

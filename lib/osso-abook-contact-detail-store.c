@@ -16,10 +16,11 @@
  * along with this library. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#include <gtk/gtkprivate.h>
-#include <hildon/hildon.h>
 
 #include "config.h"
+
+#include <gtk/gtkprivate.h>
+#include <hildon/hildon.h>
 
 #include "osso-abook-account-manager.h"
 #include "osso-abook-contact-detail-store.h"

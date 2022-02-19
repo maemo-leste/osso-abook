@@ -17,9 +17,9 @@
  *
  */
 
-#include <gtk/gtkprivate.h>
-
 #include "config.h"
+
+#include <gtk/gtkprivate.h>
 
 #include "osso-abook-contact-field-selector.h"
 #include "osso-abook-debug.h"

@@ -1,6 +1,6 @@
 /*** BEGIN file-header ***/
-#include "osso-abook-enums.h"
 #include "config.h"
+#include "osso-abook-enums.h"
 /*** END file-header ***/
 
 /*** BEGIN file-production ***/

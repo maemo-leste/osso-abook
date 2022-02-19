@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <hildon/hildon.h>
 
 #include <libintl.h>
@@ -5,8 +7,6 @@
 #include "eds.h"
 #include "osso-abook-debug.h"
 #include "osso-abook-init.h"
-
-#include "config.h"
 
 static osso_context_t *osso_abook_osso_context = NULL;
 

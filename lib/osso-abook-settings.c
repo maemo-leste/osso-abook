@@ -1,9 +1,9 @@
+#include "config.h"
+
 #include "osso-abook-errors.h"
 #include "osso-abook-log.h"
 #include "osso-abook-settings.h"
 #include "osso-abook-utils-private.h"
-
-#include "config.h"
 
 static GConfClient *gconf = NULL;
 

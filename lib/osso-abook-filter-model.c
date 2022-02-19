@@ -1,9 +1,9 @@
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon.h>
 
 #include <string.h>
-
-#include "config.h"
 
 #include "osso-abook-filter-model.h"
 #include "osso-abook-row-model.h"

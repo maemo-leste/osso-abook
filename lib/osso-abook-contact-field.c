@@ -17,13 +17,13 @@
  *
  */
 
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon.h>
 
 #include <langinfo.h>
 #include <libintl.h>
-
-#include "config.h"
 
 #include "osso-abook-account-manager.h"
 #include "osso-abook-address-format.h"

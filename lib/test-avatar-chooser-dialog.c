@@ -17,9 +17,9 @@
  *
  */
 
-#include <hildon/hildon.h>
-
 #include "config.h"
+
+#include <hildon/hildon.h>
 
 #include "osso-abook-avatar-chooser-dialog.h"
 #include "osso-abook-debug.h"

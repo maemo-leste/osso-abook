@@ -16,11 +16,12 @@
  * along with this library. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 
 #include <libintl.h>
-
-#include "config.h"
 
 #include "osso-abook-aggregator.h"
 #include "osso-abook-avatar-image.h"

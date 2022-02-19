@@ -1,9 +1,9 @@
+#include "config.h"
+
 #include "osso-abook-avatar.h"
 #include "osso-abook-gconf-contact.h"
 #include "osso-abook-settings.h"
 #include "osso-abook-voicemail-contact.h"
-
-#include "config.h"
 
 static void
 osso_abook_voicemail_contact_osso_abook_avatar_iface_init(

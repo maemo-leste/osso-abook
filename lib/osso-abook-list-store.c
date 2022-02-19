@@ -1,8 +1,8 @@
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon.h>
 #include <libosso.h>
-
-#include "config.h"
 
 #include "osso-abook-aggregator.h"
 #include "osso-abook-contact.h"

@@ -1,10 +1,10 @@
+#include "config.h"
+
 #include <glib-object.h>
 #include <glib.h>
 #include <hildon/hildon.h>
 #include <libedata-book/libedata-book.h>
 #include <stdlib.h>
-
-#include "config.h"
 
 #include "osso-abook-contact-chooser.h"
 #include "osso-abook-debug.h"

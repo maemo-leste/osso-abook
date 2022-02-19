@@ -17,13 +17,13 @@
  *
  */
 
+#include "config.h"
+
 #include "osso-abook-log.h"
 #include "osso-abook-settings.h"
 #include "osso-abook-utils-private.h"
 #include "osso-abook-voicemail-contact.h"
 #include "osso-abook-voicemail-selector.h"
-
-#include "config.h"
 
 struct _OssoABookVoicemailSelectorPrivate
 {

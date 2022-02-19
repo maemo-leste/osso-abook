@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <gtk/gtk.h>
 #include <gtk/gtkprivate.h>
 #include <telepathy-glib/connection.h>
@@ -7,8 +9,6 @@
 
 #include "osso-abook-presence.h"
 #include "osso-abook-utils-private.h"
-
-#include "config.h"
 
 typedef OssoABookPresenceIface OssoABookPresenceInterface;
 

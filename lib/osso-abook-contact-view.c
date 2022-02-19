@@ -1,6 +1,6 @@
-#include <gtk/gtkprivate.h>
-
 #include "config.h"
+
+#include <gtk/gtkprivate.h>
 
 #include "osso-abook-all-group.h"
 #include "osso-abook-contact-view.h"

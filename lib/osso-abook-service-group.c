@@ -17,11 +17,11 @@
  *
  */
 
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 
 #include "osso-abook-service-group.h"
-
-#include "config.h"
 
 struct _OssoABookServiceGroupPrivate
 {

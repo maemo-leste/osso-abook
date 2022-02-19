@@ -17,10 +17,10 @@
  *
  */
 
+#include "config.h"
+
 #include <glib-2.0/gmodule.h>
 #include <gobject/gvaluecollector.h>
-
-#include "config.h"
 
 #include "osso-abook-plugin-manager.h"
 #include "osso-abook-plugin.h"

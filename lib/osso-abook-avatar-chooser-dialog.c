@@ -17,11 +17,11 @@
  *
  */
 
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon-file-chooser-dialog.h>
 #include <hildon/hildon-file-selection.h>
-
-#include "config.h"
 
 #include "osso-abook-avatar-chooser-dialog.h"
 #include "osso-abook-contact.h"

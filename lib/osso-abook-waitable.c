@@ -1,8 +1,8 @@
+#include "config.h"
+
 #include <gdk/gdk.h>
 
 #include "osso-abook-waitable.h"
-
-#include "config.h"
 
 struct waitable_notify_data
 {

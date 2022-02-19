@@ -1,6 +1,6 @@
-#include <hildon/hildon.h>
-
 #include "config.h"
+
+#include <hildon/hildon.h>
 
 #include "osso-abook-avatar-editor-dialog.h"
 #include "osso-abook-debug.h"

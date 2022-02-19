@@ -17,9 +17,9 @@
  *
  */
 
-#include <gtk/gtkprivate.h>
-
 #include "config.h"
+
+#include <gtk/gtkprivate.h>
 
 #include "osso-abook-tp-account-model.h"
 #include "osso-abook-util.h"

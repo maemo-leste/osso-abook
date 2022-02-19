@@ -1,9 +1,9 @@
+#include "config.h"
+
 #include <glib-object.h>
 #include <gtk/gtkprivate.h>
 
 #include "osso-abook-caps.h"
-
-#include "config.h"
 
 typedef OssoABookCapsIface OssoABookCapsInterface;
 

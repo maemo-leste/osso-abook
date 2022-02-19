@@ -17,13 +17,13 @@
  *
  */
 
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon.h>
 
 #include <libintl.h>
 #include <math.h>
-
-#include "config.h"
 
 #include "osso-abook-avatar-editor-dialog.h"
 #include "osso-abook-avatar-editor.h"

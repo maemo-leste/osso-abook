@@ -1,9 +1,9 @@
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 
 #include "osso-abook-avatar-cache.h"
 #include "osso-abook-utils-private.h"
-
-#include "config.h"
 
 struct _OssoABookAvatarCachePrivate
 {

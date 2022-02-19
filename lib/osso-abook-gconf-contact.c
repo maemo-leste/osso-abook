@@ -1,7 +1,7 @@
+#include "config.h"
+
 #include <gconf/gconf-client.h>
 #include <gtk/gtkprivate.h>
-
-#include "config.h"
 
 #include "osso-abook-gconf-contact.h"
 #include "osso-abook-settings.h"

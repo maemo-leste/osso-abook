@@ -17,9 +17,9 @@
  *
  */
 
-#include <hildon/hildon.h>
-
 #include "config.h"
+
+#include <hildon/hildon.h>
 
 #include "osso-abook-entry.h"
 

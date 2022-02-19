@@ -16,13 +16,14 @@
  * along with this library. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+#include "config.h"
+
 #include <cairo-xlib.h>
 #include <gtk/gtkprivate.h>
 #include <hildon/hildon.h>
 
 #include <math.h>
-
-#include "config.h"
 
 #include "osso-abook-avatar-image.h"
 #include "osso-abook-avatar.h"

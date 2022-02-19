@@ -17,9 +17,9 @@
  *
  */
 
-#include <libintl.h>
-
 #include "config.h"
+
+#include <libintl.h>
 
 #include "osso-abook-debug.h"
 #include "osso-abook-message-map.h"

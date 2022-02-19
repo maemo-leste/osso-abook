@@ -1,10 +1,10 @@
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 
 #include <string.h>
 
 #include "osso-abook-group.h"
-
-#include "config.h"
 
 struct _OssoABookGroupPrivate
 {

@@ -1,10 +1,10 @@
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 
 #include "osso-abook-avatar-cache.h"
 #include "osso-abook-avatar.h"
 #include "osso-abook-utils-private.h"
-
-#include "config.h"
 
 typedef OssoABookAvatarIface OssoABookAvatarInterface;
 

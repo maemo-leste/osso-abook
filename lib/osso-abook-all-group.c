@@ -1,11 +1,11 @@
+#include "config.h"
+
 #include <gtk/gtkprivate.h>
 
 #include "osso-abook-aggregator.h"
 #include "osso-abook-all-group.h"
 #include "osso-abook-errors.h"
 #include "osso-abook-waitable.h"
-
-#include "config.h"
 
 struct _OssoABookAllGroupPrivate
 {
