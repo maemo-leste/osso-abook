@@ -24,6 +24,8 @@
 
 #include "osso-abook-contact-field.h"
 #include "osso-abook-contact.h"
+#include "osso-abook-debug.h"
+#include "osso-abook-errors.h"
 #include "osso-abook-log.h"
 #include "osso-abook-message-map.h"
 #include "osso-abook-utils-private.h"
@@ -1241,4 +1243,238 @@ out:
   }
 
   return merged;
+}
+
+struct MergeContactsData
+{
+  GtkWindow *parent;
+  GList *contacts;
+  OssoABookContact *merged_contact;
+  gpointer object;
+  GSList *home_applets;
+  OssoABookMergeWithCb cb;
+  gpointer user_data;
+};
+
+static void
+merge_data_free(struct MergeContactsData *data)
+{
+  g_list_free_full(data->contacts, g_object_unref);
+
+  if (data->merged_contact)
+    g_object_unref(data->merged_contact);
+
+  if (data->object)
+    g_object_unref(data->object);
+
+  g_slist_free_full(data->home_applets, g_free);
+  g_slice_free(struct MergeContactsData, data);
+}
+
+static void
+commit_contact_cb(EBook *book, EBookStatus status, gpointer closure)
+{
+  struct MergeContactsData *data = closure;
+
+  const char *merged_uid = NULL;
+  GList *contact;
+
+  if (!status)
+  {
+    merged_uid = e_contact_get_const(E_CONTACT(data->merged_contact),
+                                     E_CONTACT_UID);
+
+    for (contact = data->contacts; contact; contact = contact->next)
+    {
+      const char *uid = e_contact_get_const(E_CONTACT(contact->data),
+                                            E_CONTACT_UID);
+
+      if (g_strcmp0(merged_uid, uid))
+      {
+        GList *rc;
+
+        for (rc = osso_abook_contact_get_roster_contacts(contact->data); rc;
+             rc = g_list_delete_link(rc, rc))
+        {
+          osso_abook_contact_accept_for_uid(rc->data, merged_uid, NULL);
+
+          if (!osso_abook_is_temporary_uid(uid))
+            osso_abook_contact_reject_for_uid(rc->data, uid, NULL);
+        }
+
+        if (!osso_abook_contact_is_roster_contact(contact->data) &&
+            !osso_abook_contact_is_sim_contact(contact->data))
+        {
+          if (!IS_EMPTY(uid))
+          {
+            if (!osso_abook_is_temporary_uid(uid))
+              osso_abook_contact_delete(contact->data, NULL, NULL);
+          }
+        }
+      }
+    }
+
+    osso_abook_settings_set_home_applets(data->home_applets);
+  }
+  else
+    osso_abook_handle_estatus(NULL, status, book);
+
+  if (data->cb)
+    data->cb(merged_uid, data->user_data);
+
+  merge_data_free(data);
+}
+
+static void
+add_contact_cb(EBook *book, EBookStatus status, const gchar *uid,
+               gpointer closure)
+{
+  struct MergeContactsData *data = closure;
+
+  e_contact_set(E_CONTACT(data->merged_contact), E_CONTACT_UID, uid);
+  commit_contact_cb(book, status, data);
+}
+
+static signed int
+remove_contact_home_applet(OssoABookContact *contact,
+                           GSList **home_applets)
+{
+  const char *uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+  GSList *applet;
+
+  for (applet = *home_applets; applet; applet = applet->next)
+  {
+    const char *applet_uid = applet->data;
+
+    if (applet_uid)
+    {
+      if (g_str_has_prefix(applet_uid, OSSO_ABOOK_HOME_APPLET_PREFIX))
+        applet_uid += strlen(OSSO_ABOOK_HOME_APPLET_PREFIX);
+    }
+
+    if (!g_strcmp0(applet_uid, uid))
+    {
+      g_free(applet->data);
+      *home_applets = g_slist_delete_link(*home_applets, applet);
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static void
+osso_abook_merge_contacts_and_save_real(struct MergeContactsData *merge_data)
+{
+  OssoABookContact *merged;
+  GSList *applets;
+  GList *contact;
+  const char *applet_uid = NULL;
+  const char *merged_uid = NULL;
+
+  merged = osso_abook_merge_contacts(merge_data->contacts, merge_data->parent);
+  merge_data->merged_contact = merged;
+
+  if (!merged)
+  {
+    if (merge_data->cb)
+      merge_data->cb(NULL, merge_data->user_data);
+
+    merge_data_free(merge_data);
+    return;
+  }
+
+  OSSO_ABOOK_DUMP_VCARD(VCARD, merged,
+                        "successfully merged contacts into new contact");
+
+  applets = osso_abook_settings_get_home_applets();
+  contact = merge_data->contacts;
+
+  if (!contact)
+  {
+    merge_data->home_applets = applets;
+
+    osso_abook_contact_async_add(merge_data->merged_contact, NULL,
+                                 add_contact_cb, merge_data);
+    return;
+  }
+
+  for (; contact; contact = contact->next)
+  {
+    GList *rc;
+    const char *contact_uid;
+
+    for (rc = osso_abook_contact_get_roster_contacts(contact->data); rc;
+         rc = g_list_delete_link(rc, rc))
+    {
+      if (remove_contact_home_applet(rc->data, &applets))
+      {
+        if (!applet_uid)
+          applet_uid = e_contact_get_const(E_CONTACT(rc->data), E_CONTACT_UID);
+      }
+    }
+
+    contact_uid = e_contact_get_const(E_CONTACT(contact->data), E_CONTACT_UID);
+
+    if (!osso_abook_is_temporary_uid(contact_uid))
+    {
+      gboolean removed = remove_contact_home_applet(contact->data, &applets);
+
+      if (removed)
+      {
+        if (!applet_uid)
+          applet_uid = contact_uid;
+      }
+
+      if (!osso_abook_contact_is_roster_contact(contact->data) &&
+          !osso_abook_contact_is_sim_contact(contact->data))
+      {
+        if (!IS_EMPTY(contact_uid))
+        {
+          if (removed)
+          {
+            merged_uid = contact_uid;
+            applet_uid = contact_uid;
+          }
+          else if (!merged_uid)
+            merged_uid = contact_uid;
+        }
+      }
+    }
+  }
+
+  if (applet_uid)
+  {
+    applets = g_slist_prepend(
+        applets, g_strconcat("osso-abook-applet-", applet_uid, NULL));
+  }
+
+  merge_data->home_applets = applets;
+
+  if (merged_uid)
+  {
+    e_contact_set(E_CONTACT(merge_data->merged_contact), E_CONTACT_UID,
+                  merged_uid);
+    osso_abook_contact_async_commit(merge_data->merged_contact, NULL,
+                                    commit_contact_cb, merge_data);
+  }
+}
+
+void
+osso_abook_merge_contacts_and_save(GList *contacts, GtkWindow *parent,
+                                   OssoABookMergeWithCb cb, gpointer user_data)
+{
+  struct MergeContactsData *data;
+
+  g_return_if_fail(contacts);
+  g_return_if_fail(!parent || GTK_IS_WINDOW(parent));
+
+  data = g_slice_new0(struct MergeContactsData);
+  data->parent = parent;
+  data->cb = cb;
+  data->user_data = user_data;
+  data->contacts = g_list_copy(contacts);
+  g_list_foreach(data->contacts, (GFunc)g_object_ref, NULL);
+
+  osso_abook_merge_contacts_and_save_real(data);
 }

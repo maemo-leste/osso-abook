@@ -3809,3 +3809,79 @@ osso_abook_contact_action_start(OssoABookContactAction action,
   return osso_abook_contact_action_start_with_callback(
     action, contact, attribute, account, parent, NULL, NULL);
 }
+
+void
+osso_abook_contact_set_photo(OssoABookContact *contact,
+                             const char *filename, EBook *book,
+                             GtkWindow *window)
+{
+  GError *error = NULL;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+  g_return_if_fail(!window || GTK_IS_WINDOW(window));
+
+  if (filename)
+  {
+    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file_at_size(
+          filename, OSSO_ABOOK_PIXEL_SIZE_AVATAR_DEFAULT,
+          OSSO_ABOOK_PIXEL_SIZE_AVATAR_DEFAULT, &error);
+
+    if (pixbuf)
+    {
+      osso_abook_contact_set_pixbuf(contact, pixbuf, book, window);
+      g_object_unref(pixbuf);
+    }
+    else if (window)
+    {
+      if (error)
+        osso_abook_handle_gerror(window, error);
+      else
+      {
+        hildon_banner_show_information(GTK_WIDGET(window), NULL,
+                                       _("addr_ib_disc_full"));
+      }
+    }
+  }
+  else
+    osso_abook_contact_set_pixbuf(contact, NULL, book, window);
+}
+
+void
+osso_abook_contact_set_photo_data(OssoABookContact *contact, gconstpointer data,
+                                  gsize len, EBook *book, GtkWindow *window)
+{
+  GError *error = NULL;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+  g_return_if_fail(!window || GTK_IS_WINDOW(window));
+
+  if (data)
+  {
+    GdkPixbufLoader *loader = gdk_pixbuf_loader_new();
+    GdkPixbuf *pixbuf;
+
+    g_signal_connect(loader, "size-prepared",
+                     G_CALLBACK(size_prepared_cb),NULL);
+
+    if (gdk_pixbuf_loader_write(loader, data, len, &error) &&
+        gdk_pixbuf_loader_close(loader, &error) &&
+        (pixbuf = gdk_pixbuf_loader_get_pixbuf(loader)) != 0)
+    {
+      osso_abook_contact_set_pixbuf(contact, pixbuf, book, window);
+    }
+    else if (window)
+    {
+      if (error)
+        osso_abook_handle_gerror(window, error);
+      else
+      {
+        hildon_banner_show_information(GTK_WIDGET(window), NULL,
+                                       _("addr_ib_disc_full"));
+      }
+    }
+
+    g_object_unref(loader);
+  }
+  else
+    osso_abook_contact_set_pixbuf(contact, NULL, book, window);
+}

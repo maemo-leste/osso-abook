@@ -219,3 +219,25 @@ osso_abook_settings_set_voicemail_numbers(GSList *numbers)
 
   return rv;
 }
+
+gboolean
+osso_abook_settings_set_home_applets(GSList *list)
+{
+  gboolean res;
+  GError *error = NULL;
+
+  res = gconf_client_set_list(osso_abook_get_gconf_client(),
+                              OSSO_ABOOK_SETTINGS_KEY_HOME_APPLETS,
+                              GCONF_VALUE_STRING, list, &error);
+  osso_abook_handle_gerror(NULL, error);
+
+  return res;
+}
+
+GSList *
+osso_abook_settings_get_home_applets()
+{
+  return gconf_client_get_list(osso_abook_get_gconf_client(),
+                               OSSO_ABOOK_SETTINGS_KEY_HOME_APPLETS,
+                               GCONF_VALUE_STRING, NULL);
+}
