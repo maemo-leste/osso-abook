@@ -108,8 +108,7 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "${GETTEXT_PACKAGE}", [gettext package])
 DGETTEXT="-D'_(msgid)'='g_dgettext(GETTEXT_PACKAGE, msgid)'"
 AC_SUBST(DGETTEXT)
 
-CFLAGS="-Wall -Werror -DG_LOG_DOMAIN=PACKAGE_NAME"
-AC_SUBST(CFLAGS)
+AC_DEFINE_UNQUOTED([G_LOG_DOMAIN], "$PACKAGE_NAME", [Default logging facility])
 
 ISO_CODES_PREFIX=`pkg-config iso-codes --variable=prefix`
 AC_SUBST(ISO_CODES_PREFIX)
