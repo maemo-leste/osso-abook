@@ -1174,6 +1174,16 @@ osso_abook_contact_chooser_set_maximum_selection(
     OSSO_ABOOK_CONTACT_VIEW(PRIVATE(chooser)->contact_view), limit);
 }
 
+void
+osso_abook_contact_chooser_set_minimum_selection(
+    OssoABookContactChooser *chooser, unsigned int limit)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
+
+  osso_abook_contact_view_set_minimum_selection(
+        OSSO_ABOOK_CONTACT_VIEW(PRIVATE(chooser)->contact_view), limit);
+}
+
 GList *
 osso_abook_contact_chooser_get_selection(OssoABookContactChooser *chooser)
 {
@@ -1209,4 +1219,22 @@ osso_abook_contact_chooser_new_with_capabilities(GtkWindow *parent,
                       "modal", TRUE,
                       "destroy-with-parent", TRUE,
                       NULL);
+}
+
+void
+osso_abook_contact_chooser_set_contact_order(OssoABookContactChooser *chooser,
+                                             OssoABookContactOrder order)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
+
+  g_object_set(chooser, "contact-order", order, NULL);
+}
+
+void
+osso_abook_contact_chooser_set_excluded_contacts(
+    OssoABookContactChooser *chooser, GList *contacts)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_CHOOSER(chooser));
+
+  g_object_set(chooser, "excluded-contacts", contacts, NULL);
 }

@@ -68,7 +68,9 @@ COMMON_SOURCES = \
 		osso-abook-tp-account-model.c \
 		osso-abook-tp-account-selector.c \
 		avatar.c \
-		osso-abook-send-contacts.c
+		osso-abook-send-contacts.c \
+		osso-abook-temporary-contact-dialog.c \
+		osso-abook-merge.c
 
 COMMON_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
@@ -213,7 +215,9 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-tp-account-model.c \
 		osso-abook-tp-account-selector.c \
 		avatar.c \
-		osso-abook-send-contacts.c
+		osso-abook-send-contacts.c \
+		osso-abook-temporary-contact-dialog.c \
+		osso-abook-merge.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook.h \

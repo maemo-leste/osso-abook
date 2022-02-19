@@ -22,12 +22,16 @@
 
 #include <libintl.h>
 
+#include "osso-abook-contact-chooser.h"
 #include "osso-abook-contact-field.h"
+#include "osso-abook-contact-model.h"
 #include "osso-abook-contact.h"
 #include "osso-abook-debug.h"
 #include "osso-abook-errors.h"
 #include "osso-abook-log.h"
 #include "osso-abook-message-map.h"
+#include "osso-abook-row-model.h"
+#include "osso-abook-tree-view.h"
 #include "osso-abook-utils-private.h"
 
 #include "osso-abook-merge.h"
@@ -1250,7 +1254,7 @@ struct MergeContactsData
   GtkWindow *parent;
   GList *contacts;
   OssoABookContact *merged_contact;
-  gpointer object;
+  OssoABookContact *contact;
   GSList *home_applets;
   OssoABookMergeWithCb cb;
   gpointer user_data;
@@ -1264,8 +1268,8 @@ merge_data_free(struct MergeContactsData *data)
   if (data->merged_contact)
     g_object_unref(data->merged_contact);
 
-  if (data->object)
-    g_object_unref(data->object);
+  if (data->contact)
+    g_object_unref(data->contact);
 
   g_slist_free_full(data->home_applets, g_free);
   g_slice_free(struct MergeContactsData, data);
@@ -1477,4 +1481,247 @@ osso_abook_merge_contacts_and_save(GList *contacts, GtkWindow *parent,
   g_list_foreach(data->contacts, (GFunc)g_object_ref, NULL);
 
   osso_abook_merge_contacts_and_save_real(data);
+}
+
+static void
+contact_chooser_response_cb(GtkWidget *chooser, gint response_id,
+                            gpointer user_data)
+{
+  struct MergeContactsData *data = user_data;
+
+  if (response_id == GTK_RESPONSE_OK)
+  {
+    GList *selection;
+
+    gtk_widget_hide(chooser);
+
+    selection = osso_abook_contact_chooser_get_selection(
+        OSSO_ABOOK_CONTACT_CHOOSER(chooser));
+    data->contacts = selection;
+
+    if (selection && selection->data)
+    {
+      data->contacts = g_list_prepend(selection, data->contact);
+      g_list_foreach(data->contacts, (GFunc)&g_object_ref, NULL);
+      osso_abook_merge_contacts_and_save_real(data);
+      gtk_widget_destroy(chooser);
+      return;
+    }
+  }
+
+  gtk_widget_destroy(chooser);
+
+  if (data->cb)
+    data->cb(NULL, data->user_data);
+
+  merge_data_free(data);
+}
+
+static void
+contact_view_map_cb(GtkWidget *widget, gpointer data)
+{
+  g_signal_handlers_disconnect_matched(
+    widget, G_SIGNAL_MATCH_DATA | G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
+    contact_view_map_cb, data);
+  osso_abook_tree_view_pan_to_contact(OSSO_ABOOK_TREE_VIEW(widget),
+                                      OSSO_ABOOK_CONTACT(data),
+                                      OSSO_ABOOK_TREE_VIEW_PAN_MODE_TOP);
+  g_object_unref(data);
+}
+
+static gchar **
+split_name(gchar *name)
+{
+  GPtrArray *array = g_ptr_array_new();
+
+  while (*name)
+  {
+    g_ptr_array_add(array, name);
+
+    while (*name && *name != ' ' && *name != ',')
+      name = g_utf8_next_char(name);
+
+    if (*name)
+      *name++ = 0;
+  }
+
+  if (!array->len)
+    return (gchar **)g_ptr_array_free(array, TRUE);
+
+  g_ptr_array_add(array, NULL);
+
+  return (gchar **)g_ptr_array_free(array, FALSE);
+}
+
+static void
+merge_with_dialog(OssoABookContact *contact,
+                  OssoABookContactModel *contact_model, GtkWindow *parent,
+                  OssoABookMergeWithCb cb, gpointer user_data, gboolean many)
+{
+  OssoABookContactModel *choser_model;
+  GList *excluded;
+  const char *uid;
+  GtkWidget *contact_view;
+  struct MergeContactsData *data;
+  GtkWidget *chooser;
+  gchar **names;
+  gchar *display_name;
+  OssoABookRowModel *row_model;
+  GtkTreeModel *tree_model;
+  GtkTreeIter iter;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+  g_return_if_fail(!contact_model ||
+                   OSSO_ABOOK_IS_CONTACT_MODEL(contact_model));
+  g_return_if_fail(!parent || GTK_IS_WINDOW(parent));
+
+  if (!osso_abook_check_disc_space(parent))
+    return;
+
+  chooser = osso_abook_contact_chooser_new(parent, _("addr_ti_merge_contacts"));
+
+  if (contact_model)
+  {
+    osso_abook_contact_chooser_set_model(OSSO_ABOOK_CONTACT_CHOOSER(chooser),
+                                         contact_model);
+  }
+
+  osso_abook_contact_chooser_set_maximum_selection(
+    OSSO_ABOOK_CONTACT_CHOOSER(chooser), many ? G_MAXUINT : 1);
+  osso_abook_contact_chooser_set_minimum_selection(
+    OSSO_ABOOK_CONTACT_CHOOSER(chooser), 1);
+  osso_abook_contact_chooser_set_contact_order(
+    OSSO_ABOOK_CONTACT_CHOOSER(chooser), OSSO_ABOOK_CONTACT_ORDER_NAME);
+  choser_model = osso_abook_contact_chooser_get_model(
+      OSSO_ABOOK_CONTACT_CHOOSER(chooser));
+
+  excluded = g_list_prepend(NULL, "osso-abook-vmbx");
+  uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+
+  if (uid)
+    excluded = g_list_prepend(excluded, (gchar *)uid);
+
+  osso_abook_contact_chooser_set_excluded_contacts(
+    OSSO_ABOOK_CONTACT_CHOOSER(chooser), excluded);
+  g_list_free(excluded);
+
+  tree_model = GTK_TREE_MODEL(choser_model);
+  row_model = OSSO_ABOOK_ROW_MODEL(tree_model);
+  display_name = g_utf8_casefold(
+      osso_abook_contact_get_display_name(contact), -1);
+  names = split_name(display_name);
+
+  if (names && gtk_tree_model_get_iter_first(tree_model, &iter))
+  {
+    gchar *row_display_name;
+    OssoABookContact *candidate = NULL;
+    int max_matched = 0;
+    int current_matched = 0;
+
+    do
+    {
+      OssoABookListStoreRow *row = osso_abook_row_model_iter_get_row(
+          row_model, &iter);
+      gchar **row_names;
+      gchar **row_name;
+      gchar **name;
+
+      if (contact == row->contact)
+        continue;
+
+      row_display_name = g_utf8_casefold(
+          osso_abook_contact_get_display_name(row->contact), -1);
+      row_names = split_name(row_display_name);
+
+      if (!row_names || !*names)
+      {
+        g_free(row_names);
+        g_free(row_display_name);
+        continue;
+      }
+
+      name = names;
+      row_name = row_names;
+
+      while (*name)
+      {
+        gchar *p = *name;
+
+        while (*row_name)
+        {
+          gchar *q = *row_name;
+          int matched = 0;
+
+          while (*p && *q)
+          {
+            if (g_utf8_get_char(p) != g_utf8_get_char(q))
+              break;
+
+            matched++;
+            p = g_utf8_next_char(p);
+            q = g_utf8_next_char(q);
+          }
+
+          current_matched += matched;
+          row_name++;
+        }
+
+        name++;
+      }
+
+      g_free(row_names);
+      g_free(row_display_name);
+
+      if (current_matched > max_matched)
+      {
+        candidate = row->contact;
+        max_matched = current_matched;
+      }
+    }
+    while (gtk_tree_model_iter_next(tree_model, &iter));
+
+    if (candidate)
+    {
+      contact_view = osso_abook_contact_chooser_get_contact_view(
+          OSSO_ABOOK_CONTACT_CHOOSER(chooser));
+      g_object_ref(candidate);
+
+      if (gtk_widget_get_mapped(contact_view))
+        contact_view_map_cb(GTK_WIDGET(contact_view), candidate);
+      else
+      {
+        g_signal_connect(contact_view, "map",
+                         G_CALLBACK(contact_view_map_cb), candidate);
+      }
+    }
+  }
+
+  g_free(names);
+  g_free(display_name);
+
+  data = g_slice_new0(struct MergeContactsData);
+  data->parent = parent;
+  data->contact = g_object_ref(contact);
+  data->cb = cb;
+  data->user_data = user_data;
+  g_signal_connect(chooser, "response",
+                   G_CALLBACK(contact_chooser_response_cb), data);
+  gtk_widget_show(chooser);
+}
+
+void
+osso_abook_merge_with_dialog(OssoABookContact *contact,
+                             OssoABookContactModel *model, GtkWindow *parent,
+                             OssoABookMergeWithCb cb, gpointer user_data)
+{
+  merge_with_dialog(contact, model, parent, cb, user_data, FALSE);
+}
+
+void
+osso_abook_merge_with_many_dialog(OssoABookContact *contact,
+                                  OssoABookContactModel *model,
+                                  GtkWindow *parent, OssoABookMergeWithCb cb,
+                                  gpointer user_data)
+{
+  merge_with_dialog(contact, model, parent, cb, user_data, TRUE);
 }
