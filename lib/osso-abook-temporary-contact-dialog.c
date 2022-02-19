@@ -539,3 +539,22 @@ osso_abook_temporary_contact_dialog_class_init(
                  G_TYPE_BOOLEAN,
                  1, G_TYPE_STRING);
 }
+
+GtkWidget *
+osso_abook_temporary_contact_dialog_new(GtkWindow *parent, EBook *book,
+                                        EVCardAttribute *attribute,
+                                        TpAccount *account)
+{
+  g_return_val_if_fail(!parent || GTK_IS_WINDOW(parent), NULL);
+  g_return_val_if_fail(!book || E_IS_BOOK(book), NULL);
+  g_return_val_if_fail(attribute, NULL);
+  g_return_val_if_fail(!account || TP_IS_ACCOUNT(account), NULL);
+
+  return g_object_new(OSSO_ABOOK_TYPE_TEMPORARY_CONTACT_DIALOG,
+                      "transient-for", parent,
+                      "modal", TRUE,
+                      "attribute", attribute,
+                      "account", account,
+                      "destroy-with-parent", TRUE,
+                      NULL);
+}
