@@ -6,6 +6,7 @@
 #include "config.h"
 
 #include "osso-abook-avatar-cache.h"
+#include "osso-abook-contact-model.h"
 #include "osso-abook-debug.h"
 #include "osso-abook-enums.h"
 #include "osso-abook-roster.h"
@@ -1848,4 +1849,54 @@ osso_abook_tree_view_set_aggregation_account(OssoABookTreeView *view,
   priv->aggregation_account = account;
   sync_view(view);
   sync_tree(view);
+}
+
+gboolean
+osso_abook_tree_view_pan_to_contact(OssoABookTreeView *view,
+                                    OssoABookContact *contact,
+                                    OssoABookTreeViewPanMode pan_mode)
+{
+  OssoABookListStoreRow *row;
+  OssoABookTreeViewPrivate *priv;
+  GdkRectangle rect;
+  GtkTreeIter iter;
+  GtkTreePath *path;
+  gint y;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view), FALSE);
+
+  priv = view->priv;
+
+  row = osso_abook_contact_model_find_contact(
+        OSSO_ABOOK_CONTACT_MODEL(priv->base_model),
+        e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID),
+        &iter);
+
+  if (!row)
+    return FALSE;
+
+  if (priv->filter_model)
+  {
+    if (!osso_abook_row_model_row_get_iter(
+          OSSO_ABOOK_ROW_MODEL(priv->filter_model), row, &iter))
+    {
+      return FALSE;
+    }
+  }
+
+  path = gtk_tree_model_get_path(
+        gtk_tree_view_get_model(GTK_TREE_VIEW(priv->tree_view)), &iter);
+  gtk_tree_view_get_background_area(
+        GTK_TREE_VIEW(priv->tree_view), path, NULL, &rect);
+  gtk_tree_view_convert_bin_window_to_tree_coords(
+        GTK_TREE_VIEW(priv->tree_view), 0, rect.y, 0, &y);
+
+  if (pan_mode == OSSO_ABOOK_TREE_VIEW_PAN_MODE_TOP)
+    y += priv->pannable_area->allocation.height / 2;
+
+  hildon_pannable_area_jump_to(HILDON_PANNABLE_AREA(priv->pannable_area),
+                               -1, y);
+  gtk_tree_path_free(path);
+
+  return TRUE;
 }
