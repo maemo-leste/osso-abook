@@ -717,7 +717,7 @@ contact_avatar_cell_data(GtkTreeViewColumn *tree_column, GtkCellRenderer *cell,
     if (hint != GTK_TREE_CELL_DATA_HINT_SENSITIVITY)
     {
       GtkTreePath *path = gtk_tree_model_get_path(tree_model, iter);
-      GdkPixbuf *avatar_image;
+      GdkPixbuf *avatar_image = NULL;
 
       if (!get_cached_avatar_image(view, row->contact, &avatar_image))
       {
@@ -1131,9 +1131,8 @@ contact_name_cell_data(GtkTreeViewColumn *tree_column, GtkCellRenderer *cell,
   OssoABookTreeView *view = OSSO_ABOOK_TREE_VIEW(data);
   OssoABookTreeViewPrivate *priv = OSSO_ABOOK_TREE_VIEW_PRIVATE(view);
   OssoABookListStoreRow *row;
-  const char *contact_name;
+  const char *contact_name = NULL;
   gboolean sensitive;
-
   const gchar *status_message;
   const char *location;
   GString *s_contact_name;
@@ -1157,7 +1156,7 @@ contact_name_cell_data(GtkTreeViewColumn *tree_column, GtkCellRenderer *cell,
     }
   }
 
-  if (!contact_name || !*contact_name)
+  if (IS_EMPTY(contact_name))
     contact_name = _("addr_li_unnamed_contact");
 
   if (OSSO_ABOOK_TREE_VIEW_GET_CLASS(view)->is_row_sensitive)
