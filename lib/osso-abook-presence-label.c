@@ -77,7 +77,7 @@ presence_type_changed_cb(OssoABookPresenceLabel *label)
 {
   OssoABookPresenceLabelPrivate *priv =
     OSSO_ABOOK_PRESENCE_LABEL_PRIVATE(label);
-  const char *status;
+  const char *status = NULL;
 
   icon_free(priv);
 

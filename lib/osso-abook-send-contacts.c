@@ -267,7 +267,7 @@ static GFile *
 create_temp_dir()
 {
   const char *tmp_dir = g_get_tmp_dir();
-  GFile *file;
+  GFile *file = NULL;
 
   if (g_mkdir_with_parents(tmp_dir, 01777) == -1)
   {

@@ -1043,7 +1043,6 @@ OssoABookContact *
 osso_abook_merge_contacts(GList *contacts, GtkWindow *parent)
 {
   GList *rc;
-  EVCardAttribute *replace_attr;
   OssoABookContact *source_contact;
   GHashTable *rc_table;
   EContactPhoto *photo;
@@ -1145,39 +1144,34 @@ osso_abook_merge_contacts(GList *contacts, GtkWindow *parent)
       {
         EVCardAttribute *merged_attr = g_hash_table_lookup(attr_table,
                                                            attrs->data);
+        EVCardAttribute *replace_attr = NULL;
 
         if (merged_attr)
         {
           GList *merged_params = e_vcard_attribute_get_params(merged_attr);
           GList *new_params = e_vcard_attribute_get_params(attrs->data);
 
-          if (new_params && merged_params)
+          for (;;)
           {
-            while (new_params)
+            if (!new_params || !merged_params ||
+                !param_values_compare(merged_params->data, new_params->data))
             {
-              if (!param_values_compare(merged_params->data,
-                                        new_params->data))
-              {
-                replace_attr = copy_safer_attribute(attrs->data,
-                                                    merged_attr);
-                break;
-              }
-
-              merged_params = merged_params->next;
-              new_params = new_params->next;
-
-              if (!merged_params && !new_params)
-                continue;
+              replace_attr = copy_safer_attribute(attrs->data, merged_attr);
+              break;
             }
+
+            merged_params = merged_params->next;
+            new_params = new_params->next;
           }
-          else
+
+          if (!new_params && !merged_params)
             continue;
         }
         else
           replace_attr = e_vcard_attribute_copy(attrs->data);
-      }
 
-      g_hash_table_replace(attr_table, replace_attr, replace_attr);
+        g_hash_table_replace(attr_table, replace_attr, replace_attr);
+      }
     }
   }
 
