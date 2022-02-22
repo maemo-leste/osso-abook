@@ -45,12 +45,12 @@ Depends:
  iso-codes,
 #fixme - not sure this belongs here
  evolution-data-server-addressbook-backend-telepathy,
- telepathy-mission-control-5
+ telepathy-mission-control-5,
+ osso-addressbook-l10n-mr | osso-addressbook-l10n-mr0,
+ libmodest-dbus-client,
 # Packages that could/should go in Depends, but are currently missing:
-#libmodest-dbus-client,
 #libnavigation0,
 #librtcom-accounts-ui-client0
-#osso-addressbook-l10n-mr | osso-addressbook-l10n-mr0
 #osso-statusbar-presence-l10n-mr | osso-statusbar-presence-l10n-mr0,
 #operator-wizard-settings
 Description: Library to access addressbook and presence information
