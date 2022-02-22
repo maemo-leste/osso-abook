@@ -242,13 +242,10 @@ add_alpha_shortcuts(OssoABookContactChooser *chooser)
   if (priv->alpha_shortcuts)
     return;
 
-  g_assert(0);
-
-  /*
-     priv->alpha_shortcuts = osso_abook_alpha_shortcuts_new();
-     osso_abook_alpha_shortcuts_widget_hook(
+  priv->alpha_shortcuts = osso_abook_alpha_shortcuts_new();
+  osso_abook_alpha_shortcuts_widget_hook(
         OSSO_ABOOK_ALPHA_SHORTCUTS(priv->alpha_shortcuts),
-        OSSO_ABOOK_CONTACT_VIEW(priv->contact_view));*/
+        OSSO_ABOOK_CONTACT_VIEW(priv->contact_view));
   gtk_box_pack_start(
     GTK_BOX(priv->hbox), priv->alpha_shortcuts, FALSE, FALSE, 0);
   set_model_order(chooser, priv->contact_model, priv->contact_order);

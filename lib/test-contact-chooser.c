@@ -38,6 +38,10 @@ main(int argc, char **argv)
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   GtkWidget *chooser = osso_abook_contact_chooser_new(GTK_WINDOW(window), NULL);
 
+  osso_abook_contact_chooser_set_maximum_selection(
+        OSSO_ABOOK_CONTACT_CHOOSER(chooser), 1);
+  osso_abook_contact_chooser_set_minimum_selection(
+        OSSO_ABOOK_CONTACT_CHOOSER(chooser), 1);
   g_signal_connect(window, "destroy", G_CALLBACK(loop_quit), main_loop);
 
   gtk_widget_show_all(window);

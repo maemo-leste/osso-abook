@@ -1899,3 +1899,12 @@ osso_abook_tree_view_pan_to_contact(OssoABookTreeView *view,
 
   return TRUE;
 }
+
+GtkWidget *
+osso_abook_tree_view_get_pannable_area(OssoABookTreeView *view)
+{
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view), NULL);
+
+  return view->priv->pannable_area;
+}
