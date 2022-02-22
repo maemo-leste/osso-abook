@@ -71,6 +71,7 @@ Depends:
  libebook1.2-dev,
  libtelepathy-glib-dev,
  libosso-dev,
+ librtcom-eventlogger-dev,
  pkg-config,
 Description: Library to access addressbook and presence information
  .
