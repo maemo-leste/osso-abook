@@ -27,8 +27,11 @@ enum
 {
   COLUMN_LABEL,
   COLUMN_NUM_LETTERS,
-  COLUMN_INDEX
+  COLUMN_INDEX,
+  N_COLUMNS
 };
+
+#define N_LETTER_GROUPS 9
 
 struct _OssoABookAlphaShortcutsPrivate
 {
@@ -92,11 +95,148 @@ style_set_cb(GtkWidget *widget, GtkStyle *previous_style, gpointer user_data)
   gtk_tree_view_column_set_spacing(priv->column, spacing);
 }
 
-void
+static void
+jump_after_last(GtkTreeView *view, GtkWidget *are)
+{
+  GtkTreeModel *model = gtk_tree_view_get_model(view);
+  GtkTreeIter iter;
+  GtkTreeIter last;
+  GtkTreePath *path;
+  GdkRectangle rect;
+  gint y;
+
+  if (gtk_tree_model_get_iter_first(model, &iter))
+  {
+    do
+    {
+      last = iter;
+    }
+    while (gtk_tree_model_iter_next(model, &iter));
+  }
+
+  path = gtk_tree_model_get_path(model, &last);
+  gtk_tree_view_get_background_area(GTK_TREE_VIEW(view), path, NULL, &rect);
+  gtk_tree_view_convert_bin_window_to_tree_coords(
+    GTK_TREE_VIEW(view), 0, rect.y, NULL, &y);
+  hildon_pannable_area_jump_to(HILDON_PANNABLE_AREA(are), -1, y);
+  gtk_tree_path_free(path);
+}
+
+static void
 hildon_row_tapped_cb(GtkTreeView *tree_view, GtkTreePath *path,
                      gpointer user_data)
 {
-  /* implement me :) */
+  OssoABookAlphaShortcutsPrivate *priv = PRIVATE(user_data);
+  GtkTreeView *contact_tree_view;
+  GtkWidget *pannable_area;
+  gboolean not_first_time = FALSE;
+  GtkTreeIter iter;
+  gint num_letters;
+  guint index;
+
+  if (!gtk_tree_model_get_iter(GTK_TREE_MODEL(priv->list_store), &iter, path))
+    return;
+
+  gtk_tree_model_get(GTK_TREE_MODEL(priv->list_store), &iter,
+                     COLUMN_INDEX, &index,
+                     COLUMN_NUM_LETTERS, &num_letters,
+                     -1);
+
+  g_return_if_fail((index >= 0) && (index < N_LETTER_GROUPS));
+
+  contact_tree_view = osso_abook_tree_view_get_tree_view(
+      OSSO_ABOOK_TREE_VIEW(priv->contact_view));
+  pannable_area = osso_abook_tree_view_get_pannable_area(
+      OSSO_ABOOK_TREE_VIEW(priv->contact_view));
+
+  if (priv->current_row == index)
+  {
+    priv->tap_count++;
+
+    if (priv->tap_count > num_letters)
+      priv->tap_count = 1;
+  }
+  else
+  {
+    priv->current_row = index;
+    priv->tap_count = 1;
+  }
+
+  while (index < N_LETTER_GROUPS)
+  {
+    const gchar *c;
+    gchar *msg_id_idx = g_strdup_printf("addr_li_alpha_%d%d", index, index);
+
+    for (c = _(msg_id_idx); *c == '!'; c++)
+      ;
+
+    if (!not_first_time)
+    {
+      int i;
+
+      for (i = 1; i < priv->tap_count; i++)
+        c = g_utf8_next_char(c);
+    }
+
+    while (*c)
+    {
+      gunichar letter = g_unichar_tolower(g_utf8_get_char_validated(c, -1));
+      GtkTreeModel *model = gtk_tree_view_get_model(contact_tree_view);
+      GtkTreeIter contact_iter;
+
+      if (gtk_tree_model_get_iter_first(model, &contact_iter))
+      {
+        do
+        {
+          const char *display_name;
+          OssoABookContact *contact;
+
+          gtk_tree_model_get(model, &contact_iter,
+                             OSSO_ABOOK_LIST_STORE_COLUMN_CONTACT, &contact,
+                             -1);
+          display_name = osso_abook_contact_get_display_name(contact);
+
+          if (display_name)
+          {
+            if (letter == g_unichar_tolower(g_utf8_get_char(display_name)))
+            {
+              GdkRectangle rect;
+              gint y;
+              GtkTreePath *contact_path =
+                gtk_tree_model_get_path(model, &contact_iter);
+
+              gtk_tree_view_get_background_area(
+                GTK_TREE_VIEW(contact_tree_view), contact_path, NULL, &rect);
+
+              gtk_tree_view_convert_bin_window_to_tree_coords(
+                GTK_TREE_VIEW(contact_tree_view), 0, rect.y, 0, &y);
+              y += pannable_area->allocation.height / 2;
+
+              if (not_first_time)
+                y -= rect.height;
+
+              hildon_pannable_area_jump_to(
+                HILDON_PANNABLE_AREA(pannable_area), -1, y);
+              gtk_tree_path_free(contact_path);
+              g_object_unref(contact);
+              g_free(msg_id_idx);
+              return;
+            }
+          }
+
+          g_object_unref(contact);
+        }
+        while (gtk_tree_model_iter_next(model, &contact_iter));
+      }
+
+      c = g_utf8_next_char(c);
+      not_first_time = TRUE;
+    }
+
+    g_free(msg_id_idx);
+  }
+
+  jump_after_last(contact_tree_view, pannable_area);
 }
 
 static void
@@ -109,7 +249,7 @@ osso_abook_alpha_shortcuts_init(OssoABookAlphaShortcuts *shortcuts)
   priv->contact_view = NULL;
   priv->current_row = -1;
   priv->list_store = gtk_list_store_new(
-      3, G_TYPE_STRING, G_TYPE_LONG, G_TYPE_INT);
+      N_COLUMNS, G_TYPE_STRING, G_TYPE_LONG, G_TYPE_INT);
 
   priv->tree_view =
     hildon_gtk_tree_view_new_with_model(HILDON_UI_MODE_NORMAL,
@@ -130,7 +270,11 @@ osso_abook_alpha_shortcuts_init(OssoABookAlphaShortcuts *shortcuts)
       NULL, priv->cell_renderer, "text", NULL, NULL);
   gtk_tree_view_append_column(GTK_TREE_VIEW(priv->tree_view), priv->column);
 
-  for (index = 0; index < 9; index++)
+  /* FIXME - this is really not very usable for contacts in different alphabets.
+   * A better algo shall be implemented - like gathering all contact names first
+   * letters and grouping them. Will do it, someday...
+   */
+  for (index = 0; index < N_LETTER_GROUPS; index++)
   {
     gchar *msg_id = g_strdup_printf("addr_li_alpha_%d", index);
     gchar *msg_id_idx = g_strdup_printf("addr_li_alpha_%d%d", index, index);
