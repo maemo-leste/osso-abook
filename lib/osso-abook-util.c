@@ -29,6 +29,7 @@
 
 #include "osso-abook-account-manager.h"
 #include "osso-abook-avatar-image.h"
+#include "osso-abook-debug.h"
 #include "osso-abook-filter-model.h"
 #include "osso-abook-util.h"
 #include "osso-abook-utils-private.h"
@@ -180,7 +181,44 @@ osso_abook_system_book_dup_singleton(gboolean open, GError **error)
     if (!registry)
       return NULL;
 
-    source = e_source_registry_ref_builtin_address_book(registry);
+    source = e_source_registry_ref_default_address_book(registry);
+
+    /* Do not allow non-addressbook, telepathy or sim sources */
+    if (e_source_has_extension(source, E_SOURCE_EXTENSION_ADDRESS_BOOK))
+    {
+      ESourceBackend *backend;
+      const gchar *backend_name;
+
+      backend = e_source_get_extension(source, E_SOURCE_EXTENSION_ADDRESS_BOOK);
+      backend_name = e_source_backend_get_backend_name(backend);
+
+      if (backend_name &&
+          (!strcmp(backend_name, "tp") || !strcmp(backend_name, "sim")))
+      {
+        g_clear_object(&source);
+      }
+      else
+      {
+        OSSO_ABOOK_NOTE(EDS, "Using default addressbook backend %s",
+                        backend_name);
+      }
+    }
+    else
+      g_clear_object(&source);
+
+    if (!source)
+    {
+      ESourceBackend *backend;
+      const gchar *backend_name;
+
+      source = e_source_registry_ref_builtin_address_book(registry);
+      backend = e_source_get_extension(source, E_SOURCE_EXTENSION_ADDRESS_BOOK);
+      backend_name = e_source_backend_get_backend_name(backend);
+
+      OSSO_ABOOK_NOTE(EDS, "Using built in addressbook backend %s",
+                      backend_name);
+    }
+
     book = e_book_new(source, error);
 
     g_object_unref(source);
