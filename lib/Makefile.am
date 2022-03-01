@@ -119,7 +119,8 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-send-contacts.c \
 		osso-abook-temporary-contact-dialog.c \
 		osso-abook-merge.c \
-		osso-abook-alpha-shortcuts.c
+		osso-abook-alpha-shortcuts.c \
+		osso-abook-self-contact.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook.h \

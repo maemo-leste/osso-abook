@@ -357,9 +357,10 @@ osso_abook_contact_attribute_set_readonly  (EVCardAttribute          *attribute,
 gboolean
 osso_abook_contact_attribute_is_readonly   (EVCardAttribute          *attribute);
 
+/* osso_abook_contact_attribute_set_profile */
 void
-osso_abook_contact_attribute_set_profile   (EVCardAttribute          *attribute,
-                                            const char               *profile_name);
+osso_abook_contact_attribute_set_protocol  (EVCardAttribute          *attribute,
+                                            const char               *protocol);
 
 /* replaces osso_abook_contact_attribute_get_profile */
 TpProtocol *

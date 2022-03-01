@@ -3885,3 +3885,198 @@ osso_abook_contact_set_photo_data(OssoABookContact *contact, gconstpointer data,
   else
     osso_abook_contact_set_pixbuf(contact, NULL, book, window);
 }
+
+gboolean
+osso_abook_contact_add_value(EContact *contact, const char *attr_name,
+                             GCompareFunc value_check, const char *value)
+{
+  EVCard *evc;
+  EVCardAttribute *attr;
+
+  g_return_val_if_fail(E_IS_CONTACT(contact), FALSE);
+  g_return_val_if_fail(NULL != attr_name, FALSE);
+  g_return_val_if_fail(NULL != value, FALSE);
+
+  evc = E_VCARD(contact);
+  attr = e_vcard_get_attribute(evc, attr_name);
+
+  if (!attr)
+  {
+    e_vcard_add_attribute_with_value(evc,
+                                     e_vcard_attribute_new(NULL, attr_name),
+                                     value);
+  }
+  else
+  {
+    if (value_check)
+    {
+      GList *l;
+
+      for (l = e_vcard_attribute_get_values(attr); l; l = l->next)
+      {
+        if (!value_check(value, l->data))
+          return FALSE;
+      }
+    }
+
+    e_vcard_attribute_add_value(attr, value);
+  }
+
+  osso_abook_contact_update_attributes(OSSO_ABOOK_CONTACT(contact), attr_name);
+
+  return TRUE;
+}
+
+void
+osso_abook_contact_remove_value(EContact *contact, const char *attr_name,
+                                const char *value)
+{
+  EVCard *evc;
+  GList *attrs;
+
+  g_return_if_fail(E_IS_CONTACT(contact));
+  g_return_if_fail(NULL != attr_name);
+  g_return_if_fail(NULL != value);
+
+  evc = E_VCARD(contact);
+
+  for (attrs = e_vcard_get_attributes(evc); attrs; attrs = attrs->next)
+  {
+    if (!strcmp(e_vcard_attribute_get_name(attrs->data), attr_name))
+    {
+      e_vcard_attribute_remove_value(attrs->data, value);
+
+      if (!e_vcard_attribute_get_values(attrs->data))
+        e_vcard_remove_attribute(evc, attrs->data);
+    }
+  }
+
+  osso_abook_contact_update_attributes(OSSO_ABOOK_CONTACT(contact), attr_name);
+}
+
+void
+osso_abook_contact_set_presence(OssoABookContact *contact, guint type,
+                                const gchar *status, const gchar *message)
+{
+  OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+  const char *nick;
+
+  g_return_if_fail(!priv->disposed);
+
+  priv->resetting = TRUE;
+  osso_abook_contact_set_value(E_CONTACT(contact),
+                               OSSO_ABOOK_VCA_TELEPATHY_PRESENCE, status);
+  nick = tp_connection_presence_type_get_nick((TpConnectionPresenceType)type);
+
+  if (!g_str_equal(nick, status))
+  {
+    osso_abook_contact_add_value(E_CONTACT(contact),
+                                 OSSO_ABOOK_VCA_TELEPATHY_PRESENCE, NULL, nick);
+  }
+
+  if (message)
+  {
+    osso_abook_contact_add_value(E_CONTACT(contact),
+                                 OSSO_ABOOK_VCA_TELEPATHY_PRESENCE, NULL,
+                                 message);
+  }
+
+  priv->resetting = FALSE;
+  priv->presence_parsed = FALSE;
+
+  parse_presence(contact, priv);
+}
+
+static GList *
+get_protocols_by_vcard_field(const char *vcard_field)
+{
+  GList *protocols = osso_abook_account_manager_get_protocols(NULL);
+  GList *l = NULL;
+
+  while (protocols)
+  {
+    const char *vcf = tp_protocol_get_vcard_field(protocols->data);
+
+    if (vcf && !(strcmp(vcf, vcard_field)))
+    {
+      GList *removed = g_list_remove_link(protocols, protocols);
+
+      l = g_list_concat(l, removed);
+    }
+    else
+      protocols = g_list_delete_link(protocols, protocols);
+  }
+
+  return l;
+}
+
+static TpProtocol *
+find_protocol(GList *protocols, const char *protocol_name)
+{
+  GList *l;
+
+  for (l = protocols; l; l = l->next)
+  {
+    if (!g_strcmp0(protocol_name, tp_protocol_get_name(l->data)))
+      return l->data;
+  }
+
+  return NULL;
+}
+
+void
+osso_abook_contact_attribute_set_protocol(EVCardAttribute *attribute,
+                                          const char *protocol)
+{
+  const char *vcard_field = e_vcard_attribute_get_name(attribute);
+  GList *profiles = get_protocols_by_vcard_field(vcard_field);
+
+  if (find_protocol(profiles, protocol) )
+  {
+    GList *types = NULL;
+    GList *param = e_vcard_attribute_get_param(attribute, EVC_TYPE);
+
+    while (param)
+    {
+      if (!find_protocol(profiles, param->data))
+        types = g_list_prepend(types, g_strdup(param->data));
+
+      param = param->next;
+
+      if (!param)
+      {
+        e_vcard_attribute_remove_param(attribute, EVC_TYPE);
+        param = e_vcard_attribute_get_param(attribute, EVC_TYPE);
+      }
+    }
+
+    if (protocol)
+      types = g_list_prepend(types, g_strdup(protocol));
+
+    if (types)
+    {
+      EVCardAttributeParam *type_param;
+
+      types = g_list_reverse(types);
+      type_param = e_vcard_attribute_param_new(EVC_TYPE);
+
+      while ( types )
+      {
+        gchar *type = types->data;
+
+        osso_abook_e_vcard_attribute_param_merge_value(type_param, type, NULL);
+        types = g_list_delete_link(types, types);
+        g_free(type);
+      }
+
+      e_vcard_attribute_add_param(attribute, type_param);
+    }
+  }
+  else
+  {
+    OSSO_ABOOK_WARN("Protocol %s not valid for %s attribute", protocol,
+                    vcard_field);
+  }
+
+  g_list_free(profiles);
+}

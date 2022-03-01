@@ -229,14 +229,14 @@ create_contact_fields(OssoABookContactDetailStorePrivate *priv,
 
         if (protocol)
         {
-          OssoABookCapsFlags caps_flase =
+          OssoABookCapsFlags caps_flags =
             osso_abook_caps_from_tp_protocol(protocol);
 
-          if (((caps_flase & OSSO_ABOOK_CAPS_CHAT) &&
+          if (((caps_flags & OSSO_ABOOK_CAPS_CHAT) &&
                (priv->filters & OSSO_ABOOK_CONTACT_DETAIL_IM_CHAT)) ||
-              ((caps_flase & OSSO_ABOOK_CAPS_VOICE) &&
+              ((caps_flags & OSSO_ABOOK_CAPS_VOICE) &&
                (priv->filters & OSSO_ABOOK_CONTACT_DETAIL_IM_VOICE)) ||
-              ((caps_flase & OSSO_ABOOK_CAPS_VIDEO) &&
+              ((caps_flags & OSSO_ABOOK_CAPS_VIDEO) &&
                (priv->filters & OSSO_ABOOK_CONTACT_DETAIL_IM_VIDEO)))
           {
             create_contact_field(priv, evcattr);
