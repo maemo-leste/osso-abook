@@ -1,3 +1,10 @@
+libosso-abook (4.20220301) unstable; urgency=medium
+
+  * Finish OssoABookAlphaShortcuts
+  * Add most of OssoABookSelfContact
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Tue, 01 Mar 2022 11:55:37 +0200
+
 libosso-abook (4.20220222) unstable; urgency=medium
 
   * Add most of OssoABookAlphaShortcuts
