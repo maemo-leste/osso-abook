@@ -543,7 +543,7 @@ contacts_removed_cb(EBookView *view, GList *ids, OssoABookRoster *roster)
     g_ptr_array_add(contacts, l->data);
 
   g_ptr_array_add(contacts, NULL);
-  g_signal_emit(roster, signals[CONTACTS_REMOVED], 0, contacts);
+  g_signal_emit(roster, signals[CONTACTS_REMOVED], 0, contacts->pdata);
   g_ptr_array_free(contacts, TRUE);
 }
 
