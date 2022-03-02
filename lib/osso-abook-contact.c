@@ -2391,9 +2391,7 @@ osso_abook_contact_find_roster_contacts_for_account(
 
 GList *
 osso_abook_contact_find_roster_contacts_for_attribute(
-  OssoABookContact *master_contact,
-  EVCardAttribute *
-  attribute)
+  OssoABookContact *master_contact, EVCardAttribute *attribute)
 {
   GList *values;
   GList *contacts = NULL;
@@ -2411,7 +2409,7 @@ osso_abook_contact_find_roster_contacts_for_attribute(
     if (data.protocol)
     {
       data.vcard_field = e_vcard_attribute_get_name(attribute);
-      data.username = contacts->data;
+      data.username = values->data;
       contacts =
         osso_abook_contact_real_find_roster_contacts(master_contact, &data);
       g_object_unref(data.protocol);
