@@ -895,7 +895,7 @@ osso_abook_filter_model_get_markup(OssoABookFilterModel *model,
 
   priv = OSSO_ABOOK_TYPE_FILTER_MODEL_PRIVATE(model);
 
-  if (!priv->text || !*priv->text || !text)
+  if (IS_EMPTY(priv->text) || !text)
     return NULL;
 
   attr_list = pango_attr_list_new();
@@ -907,7 +907,9 @@ osso_abook_filter_model_get_markup(OssoABookFilterModel *model,
 
     if (priv->prefix)
     {
-      for (p = text; p; p = strchr(p, ' '))
+      p = text;
+
+      while (p)
       {
         if (_osso_abook_utf8_strstartswithcasestrip(p, bit->data, &bytes_read))
         {
@@ -916,6 +918,9 @@ osso_abook_filter_model_get_markup(OssoABookFilterModel *model,
           attr->end_index = bytes_read + p - text;
           pango_attr_list_insert(attr_list, attr);
         }
+
+        if ((p = strchr(p, ' ')))
+          p++;
       }
     }
     else

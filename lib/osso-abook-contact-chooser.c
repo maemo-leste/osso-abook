@@ -144,7 +144,7 @@ osso_abook_contact_chooser_init(OssoABookContactChooser *chooser)
     GTK_DIALOG(chooser), dgettext("hildon-libs", "wdgt_bd_done"),
     DONE_BUTTON_ID);
 
-  GTK_WIDGET_UNSET_FLAGS(chooser, GTK_PARENT_SENSITIVE);
+  gtk_widget_set_can_focus(GTK_WIDGET(chooser), FALSE);
 
   g_signal_connect(G_OBJECT(chooser), "response",
                    G_CALLBACK(_response_cb), chooser);
@@ -720,7 +720,6 @@ osso_abook_contact_chooser_real_set_model(OssoABookContactChooser *chooser,
 
   priv->filter_model = osso_abook_filter_model_new(
     OSSO_ABOOK_LIST_STORE(priv->contact_model));
-  priv->filter_model = priv->filter_model;
   osso_abook_filter_model_set_visible_func(
     priv->filter_model, _contact_visible_cb, chooser, NULL);
   g_signal_connect_after(priv->filter_model, "row-inserted",
