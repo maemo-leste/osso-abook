@@ -1305,7 +1305,7 @@ osso_abook_list_store_remove_rows(OssoABookListStore *store,
 
   priv = OSSO_ABOOK_LIST_STORE_PRIVATE(store);
 
-  g_return_if_fail(priv->balloon_offset);
+  g_return_if_fail(priv->balloon_offset >= 0);
 
   if (n_rows < 0)
   {
