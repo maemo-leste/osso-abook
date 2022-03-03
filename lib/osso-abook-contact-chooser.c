@@ -706,7 +706,7 @@ osso_abook_contact_chooser_real_set_model(OssoABookContactChooser *chooser,
   priv->contact_model = g_object_ref(model);
   setup_roster_waitable(chooser);
 
-  if (priv->contact_order != -1)
+  if (priv->contact_order != OSSO_ABOOK_CONTACT_ORDER_NONE)
   {
     OssoABookContactOrder order = osso_abook_list_store_get_contact_order(
       OSSO_ABOOK_LIST_STORE(priv->contact_model));
