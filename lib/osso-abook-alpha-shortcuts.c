@@ -131,7 +131,7 @@ hildon_row_tapped_cb(GtkTreeView *tree_view, GtkTreePath *path,
   GtkWidget *pannable_area;
   gboolean not_first_time = FALSE;
   GtkTreeIter iter;
-  gint num_letters;
+  guint num_letters;
   guint index;
 
   if (!gtk_tree_model_get_iter(GTK_TREE_MODEL(priv->list_store), &iter, path))
@@ -234,6 +234,7 @@ hildon_row_tapped_cb(GtkTreeView *tree_view, GtkTreePath *path,
     }
 
     g_free(msg_id_idx);
+    index++;
   }
 
   jump_after_last(contact_tree_view, pannable_area);
@@ -242,14 +243,14 @@ hildon_row_tapped_cb(GtkTreeView *tree_view, GtkTreePath *path,
 static void
 osso_abook_alpha_shortcuts_init(OssoABookAlphaShortcuts *shortcuts)
 {
-  int index;
+  guint index;
   OssoABookAlphaShortcutsPrivate *priv = PRIVATE(shortcuts);
   GtkWidget *pannable_area;
 
   priv->contact_view = NULL;
   priv->current_row = -1;
   priv->list_store = gtk_list_store_new(
-      N_COLUMNS, G_TYPE_STRING, G_TYPE_LONG, G_TYPE_INT);
+      N_COLUMNS, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_UINT);
 
   priv->tree_view =
     hildon_gtk_tree_view_new_with_model(HILDON_UI_MODE_NORMAL,
@@ -279,11 +280,12 @@ osso_abook_alpha_shortcuts_init(OssoABookAlphaShortcuts *shortcuts)
     gchar *msg_id = g_strdup_printf("addr_li_alpha_%d", index);
     gchar *msg_id_idx = g_strdup_printf("addr_li_alpha_%d%d", index, index);
     GtkTreeIter iter;
+    guint len = g_utf8_strlen(_(msg_id_idx), -1);
 
     gtk_list_store_append(priv->list_store, &iter);
     gtk_list_store_set(priv->list_store, &iter,
                        COLUMN_LABEL, _(msg_id),
-                       COLUMN_NUM_LETTERS, g_utf8_strlen(_(msg_id_idx), -1),
+                       COLUMN_NUM_LETTERS, len,
                        COLUMN_INDEX, index,
                        -1);
     g_free(msg_id_idx);
