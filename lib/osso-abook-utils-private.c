@@ -13,6 +13,7 @@
 
 #include "osso-abook-account-manager.h"
 #include "osso-abook-contact.h"
+#include "osso-abook-debug.h"
 #include "osso-abook-log.h"
 #include "osso-abook-utils-private.h"
 
@@ -1090,4 +1091,81 @@ _is_local_file(const gchar *uri)
     return FALSE;
 
   return _is_regular_file(fname);
+}
+
+/*
+   don't really like it, but I was not able to find a way to create
+   in-memory ESource
+ */
+__attribute__ ((visibility("hidden"))) ESource *
+_osso_abook_create_source(const gchar *uid, const gchar *backend_name)
+{
+  gchar *_uid = g_strdup(uid);
+  GError *error = NULL;
+  ESourceRegistry *registry;
+  ESource *source = NULL;
+
+  registry = e_source_registry_new_sync(NULL, &error);
+
+  if (error)
+  {
+    OSSO_ABOOK_WARN("Creating ESourceRegistry for uid %s failed - %s", uid,
+                    error->message);
+    g_clear_error(&error);
+    goto err_out;
+  }
+
+  e_filename_make_safe(_uid);
+  source = e_source_registry_ref_source(registry, _uid);
+
+  if (source)
+  {
+    g_warn_if_fail(e_source_has_extension(source,
+                                          E_SOURCE_EXTENSION_ADDRESS_BOOK));
+    g_warn_if_fail(e_source_has_extension(source, E_SOURCE_EXTENSION_RESOURCE));
+  }
+  else
+  {
+    OSSO_ABOOK_NOTE(TP, "creating new EDS source %s for %s", _uid, uid);
+    source = e_source_new_with_uid(_uid, NULL, &error);
+
+    if (source)
+    {
+      ESourceBackend *backend =
+        e_source_get_extension(source, E_SOURCE_EXTENSION_ADDRESS_BOOK);
+      ESourceResource *resource =
+        e_source_get_extension(source, E_SOURCE_EXTENSION_RESOURCE);
+      GList *sources = NULL;
+
+      e_source_resource_set_identity(resource, uid);
+      e_source_backend_set_backend_name(backend, backend_name);
+      e_source_set_display_name(source, uid);
+
+      sources = g_list_append(sources, source);
+      e_source_registry_create_sources_sync(registry, sources, NULL, &error);
+
+      g_list_free(sources);
+    }
+
+    if (error)
+    {
+      OSSO_ABOOK_WARN("Creating ESource for uid %s failed - %s", uid,
+                      error->message);
+      g_clear_error(&error);
+
+      if (source)
+      {
+        g_object_unref(source);
+        source = NULL;
+      }
+    }
+  }
+
+  g_object_unref(registry);
+
+err_out:
+
+  g_free(_uid);
+
+  return source;
 }

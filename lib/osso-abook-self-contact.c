@@ -29,6 +29,10 @@
 
 #include "osso-abook-self-contact.h"
 
+/* FIXME - this is defined in modest headers, but we can't include because there
+ * will be circular dependency */
+#define MODEST_ACCOUNT_NAMESPACE "/apps/modest/accounts"
+
 struct _OssoABookSelfContactPrivate
 {
   OssoABookAccountManager *manager;
@@ -415,4 +419,157 @@ OssoABookSelfContact *
 osso_abook_self_contact_new()
 {
   return g_object_new(OSSO_ABOOK_TYPE_SELF_CONTACT, NULL);
+}
+
+static void
+add_modest_emails(OssoABookSelfContact *self)
+{
+  GConfClient *gconf = osso_abook_get_gconf_client();
+  GSList *accounts;
+
+  for (accounts = gconf_client_all_dirs(gconf, MODEST_ACCOUNT_NAMESPACE, NULL);
+       accounts; accounts = g_slist_delete_link(accounts, accounts))
+  {
+    gchar *email = g_strconcat(accounts->data, "/email", NULL);
+    gchar *value = gconf_client_get_string(gconf, email, NULL);
+
+    if (value)
+    {
+      osso_abook_gconf_contact_add_ro_attribute(OSSO_ABOOK_GCONF_CONTACT(self),
+                                                EVC_EMAIL, value);
+    }
+
+    g_free(email);
+    g_free(value);
+    g_free(accounts->data);
+  }
+}
+
+static void
+modest_account_notify(GConfClient *client, guint cnxn_id, GConfEntry *entry,
+                      gpointer user_data)
+{
+  GList *attrs;
+
+  for (attrs = e_vcard_get_attributes(E_VCARD(user_data)); attrs;
+       attrs = attrs->next)
+  {
+    if (!strcmp(e_vcard_attribute_get_name(attrs->data), EVC_EMAIL) &&
+        osso_abook_contact_attribute_is_readonly(attrs->data))
+    {
+      e_vcard_remove_attribute(E_VCARD(user_data), attrs->data);
+    }
+  }
+
+  add_modest_emails(user_data);
+  g_signal_emit_by_name(user_data, "reset");
+}
+
+static void
+add_phone_numbers(OssoABookSelfContact *self)
+{
+  ESource *source = _osso_abook_create_source("msisdn", OSSO_ABOOK_BACKEND_SIM);
+  EBook *book;
+  GError *error = NULL;
+
+  if (!source)
+    return;
+
+  book = e_book_new(source, &error);
+  g_object_unref(source);
+
+  if (!book)
+  {
+    OSSO_ABOOK_WARN("%s", error->message);
+    g_clear_error(&error);
+
+    return;
+  }
+
+  if (e_book_open(book, TRUE, &error))
+  {
+    EBookQuery *q = e_book_query_field_exists(E_CONTACT_TEL);
+    GList *contacts = NULL;
+
+    if (e_book_get_contacts(book, q, &contacts, &error))
+    {
+      for (; contacts; contacts = g_list_delete_link(contacts, contacts))
+      {
+        GList *l;
+
+        for (l = e_contact_get(contacts->data, E_CONTACT_TEL); l;
+             l = g_list_delete_link(l, l))
+        {
+
+          osso_abook_gconf_contact_add_ro_attribute(
+                OSSO_ABOOK_GCONF_CONTACT(self), EVC_TEL, l->data);
+          g_free(l->data);
+        }
+
+        g_object_unref(contacts->data);
+      }
+    }
+    else
+    {
+      OSSO_ABOOK_WARN("%s", error->message);
+      g_clear_error(&error);
+    }
+
+    g_object_unref(book);
+    e_book_query_unref(q);
+  }
+  else
+  {
+    OSSO_ABOOK_WARN("%s", error->message);
+    g_clear_error(&error);
+  }
+
+  g_object_unref(book);
+}
+
+OssoABookSelfContact *
+osso_abook_self_contact_get_default(void)
+{
+  static OssoABookSelfContact *self_contact = NULL;
+  GList *accounts;
+  OssoABookSelfContactPrivate *priv;
+  GConfClient *gconf;
+
+  if (self_contact)
+    return g_object_ref(self_contact);
+
+  self_contact = osso_abook_self_contact_new();
+  g_object_add_weak_pointer((GObject *)self_contact, (gpointer *)&self_contact);
+  osso_abook_gconf_contact_load(OSSO_ABOOK_GCONF_CONTACT(self_contact));
+
+  priv = PRIVATE(self_contact);
+  priv->accounts = g_hash_table_new_full((GHashFunc)&g_direct_hash,
+                                         (GEqualFunc)&g_direct_equal,
+                                         (GDestroyNotify)&g_object_unref,
+                                         (GDestroyNotify)&g_object_unref);
+
+  priv->manager = osso_abook_account_manager_get_default();
+  g_signal_connect(priv->manager, "account-created",
+                   G_CALLBACK(account_created), self_contact);
+  g_signal_connect(priv->manager, "account-removed",
+                   G_CALLBACK(account_removed), self_contact);
+
+  for (accounts = osso_abook_account_manager_list_accounts(
+         priv->manager, NULL, NULL);
+       accounts; accounts = g_list_delete_link(accounts, accounts))
+  {
+    account_created(priv->manager, accounts->data, self_contact);
+  }
+
+  gconf = osso_abook_get_gconf_client();
+  gconf_client_add_dir(gconf, MODEST_ACCOUNT_NAMESPACE,
+                       GCONF_CLIENT_PRELOAD_ONELEVEL, NULL);
+  priv->gconf_handler = gconf_client_notify_add(
+        gconf, MODEST_ACCOUNT_NAMESPACE, modest_account_notify, self_contact,
+        NULL, NULL);
+
+  add_modest_emails(self_contact);
+  add_phone_numbers(self_contact);
+
+  return self_contact;
 }

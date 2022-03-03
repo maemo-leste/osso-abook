@@ -193,7 +193,8 @@ osso_abook_system_book_dup_singleton(gboolean open, GError **error)
       backend_name = e_source_backend_get_backend_name(backend);
 
       if (backend_name &&
-          (!strcmp(backend_name, "tp") || !strcmp(backend_name, "sim")))
+          (!strcmp(backend_name, OSSO_ABOOK_BACKEND_TELEPATHY) ||
+           !strcmp(backend_name, OSSO_ABOOK_BACKEND_SIM)))
       {
         g_clear_object(&source);
       }

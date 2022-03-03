@@ -13,6 +13,9 @@ G_BEGIN_DECLS
 
 #define FILE_SCHEME "file://"
 
+#define OSSO_ABOOK_BACKEND_TELEPATHY "tp"
+#define OSSO_ABOOK_BACKEND_SIM "sim"
+
 void
 disconnect_signal_if_connected(gpointer instance, gulong handler);
 
@@ -80,6 +83,9 @@ _osso_abook_tp_account_get_vcard_field(TpAccount *account);
 
 gboolean
 _is_local_file(const gchar *uri);
+
+ESource *
+_osso_abook_create_source(const gchar *uid, const gchar *backend_name);
 
 G_END_DECLS
 
