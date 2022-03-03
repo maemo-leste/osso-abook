@@ -540,7 +540,7 @@ contacts_removed_cb(EBookView *view, GList *ids, OssoABookRoster *roster)
   GList *l;
 
   for (l = ids; l; l = l->next)
-    g_ptr_array_add(contacts, l->data);
+    g_ptr_array_add(contacts, g_strdup(l->data));
 
   g_ptr_array_add(contacts, NULL);
   g_signal_emit(roster, signals[CONTACTS_REMOVED], 0, contacts->pdata);
