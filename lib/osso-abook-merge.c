@@ -1444,7 +1444,7 @@ osso_abook_merge_contacts_and_save_real(struct MergeContactsData *merge_data)
   if (applet_uid)
   {
     applets = g_slist_prepend(
-        applets, g_strconcat("osso-abook-applet-", applet_uid, NULL));
+        applets, g_strconcat(OSSO_ABOOK_HOME_APPLET_PREFIX, applet_uid, NULL));
   }
 
   merge_data->home_applets = applets;

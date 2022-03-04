@@ -4078,3 +4078,50 @@ osso_abook_contact_attribute_set_protocol(EVCardAttribute *attribute,
 
   g_list_free(profiles);
 }
+
+gboolean
+osso_abook_contact_shortcut_exists(OssoABookContact *contact, GSList **ret_list)
+{
+  OssoABookContactPrivate *priv;
+  gboolean exists;
+  const char *uid;
+  GSList *applets;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+  uid = osso_abook_contact_get_persistent_uid(contact);
+
+  g_return_val_if_fail(!IS_EMPTY(uid), FALSE);
+
+
+  for (applets = osso_abook_settings_get_home_applets(); applets;
+       applets = applets->next)
+  {
+
+    if (g_str_has_prefix(applets->data, OSSO_ABOOK_HOME_APPLET_PREFIX))
+    {
+      gchar *applet_uid =
+          (gchar *)applets->data + strlen(OSSO_ABOOK_HOME_APPLET_PREFIX);
+
+      if (!strcmp(applet_uid, uid))
+        break;
+
+      if (priv->roster_contacts)
+      {
+        if (g_hash_table_lookup(priv->roster_contacts, applet_uid))
+          break;
+      }
+    }
+  }
+
+  if (applets)
+    exists = TRUE;
+
+  if (ret_list)
+    *ret_list = applets;
+  else
+    g_slist_free_full(applets, g_free);
+
+  return exists;
+}
