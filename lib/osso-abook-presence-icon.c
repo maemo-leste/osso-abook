@@ -195,3 +195,11 @@ osso_abook_presence_icon_get_presence(OssoABookPresenceIcon *icon)
 
   return PRIVATE(icon)->presence;
 }
+
+GtkWidget *
+osso_abook_presence_icon_new(OssoABookPresence *presence)
+{
+  return g_object_new(OSSO_ABOOK_TYPE_PRESENCE_ICON,
+                      "presence", presence,
+                      NULL);
+}
