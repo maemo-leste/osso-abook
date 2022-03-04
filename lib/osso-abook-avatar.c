@@ -240,3 +240,11 @@ osso_abook_avatar_get_server_image(OssoABookAvatar *avatar)
 
   return pixbuf;
 }
+
+GdkPixbuf *
+osso_abook_avatar_get_image_scaled(OssoABookAvatar *avatar, int width,
+                                   int height, gboolean crop)
+{
+  return osso_abook_avatar_get_image_rounded(
+    avatar, width, height, crop, 0, NULL);
+}

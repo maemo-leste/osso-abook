@@ -241,3 +241,17 @@ osso_abook_settings_get_home_applets()
                                OSSO_ABOOK_SETTINGS_KEY_HOME_APPLETS,
                                GCONF_VALUE_STRING, NULL);
 }
+
+gboolean
+osso_abook_settings_set_name_order(OssoABookNameOrder order)
+{
+  gboolean rv;
+  GError *error = NULL;
+
+  rv = gconf_client_set_int(osso_abook_get_gconf_client(),
+                            OSSO_ABOOK_SETTINGS_KEY_NAME_ORDER, order, &error);
+
+  osso_abook_handle_gerror(NULL, error);
+
+  return rv;
+}

@@ -1693,7 +1693,7 @@ osso_abook_touch_contact_starter_init(OssoABookTouchContactStarter *starter)
   g_signal_connect(starter, "screen-changed",
                    G_CALLBACK(screen_changed_cb), NULL);
   priv->cnxn = gconf_client_notify_add(
-    osso_abook_get_gconf_client(), "/apps/osso-addressbook/name-order",
+    osso_abook_get_gconf_client(), OSSO_ABOOK_SETTINGS_KEY_NAME_ORDER,
     name_order_changed_cb, starter, NULL, NULL);
   priv->started_action = OSSO_ABOOK_CONTACT_ACTION_NONE;
   priv->highlighted_attribute = OSSO_ABOOK_CONTACT_ACTION_NONE;
