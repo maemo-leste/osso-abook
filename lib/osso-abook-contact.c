@@ -4125,3 +4125,67 @@ osso_abook_contact_shortcut_exists(OssoABookContact *contact, GSList **ret_list)
 
   return exists;
 }
+
+void
+osso_abook_contact_accept(OssoABookContact *contact, OssoABookContact *master,
+                          GtkWindow *parent)
+{
+  const char *uid = NULL;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+  g_return_if_fail(!master || OSSO_ABOOK_IS_CONTACT(master));
+  g_return_if_fail(!parent || GTK_IS_WINDOW(parent));
+
+  if (master)
+  {
+    uid = e_contact_get_const(E_CONTACT(master), E_CONTACT_UID);
+
+    if (e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID) )
+      osso_abook_contact_attach(master, contact);
+  }
+
+  osso_abook_contact_accept_for_uid(contact, uid, parent);
+}
+
+gboolean
+osso_abook_contact_shortcut_create(OssoABookContact *contact)
+{
+  const char *uid;
+  gboolean created;
+  GSList *applets;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
+
+  uid = osso_abook_contact_get_persistent_uid(contact);
+
+  g_return_val_if_fail(!IS_EMPTY(uid), FALSE);
+
+  if (osso_abook_contact_shortcut_exists(contact, &applets))
+    created = TRUE;
+  else
+  {
+    applets = g_slist_prepend(
+          applets, g_strconcat(OSSO_ABOOK_HOME_APPLET_PREFIX, uid, NULL));
+    created = osso_abook_settings_set_home_applets(applets);
+  }
+
+  g_slist_free_full(applets, g_free);
+
+
+  return created;
+}
+
+GdkPixbuf *
+osso_abook_contact_get_photo(OssoABookContact *contact)
+{
+  GdkPixbuf *photo;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  photo = get_avatar_image(contact);
+
+  if (photo)
+    return g_object_ref(photo);
+
+  return NULL;
+}

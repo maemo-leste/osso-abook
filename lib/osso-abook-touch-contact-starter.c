@@ -1847,3 +1847,45 @@ osso_abook_touch_contact_starter_start_editor(
 
   gtk_widget_show(dialog);
 }
+
+static GtkWidget *
+osso_abook_touch_contact_starter_new_full(GtkWindow *parent,
+                                          OssoABookContact *contact,
+                                          gboolean editable)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  return g_object_new(OSSO_ABOOK_TYPE_TOUCH_CONTACT_STARTER,
+                      /* parent was not used in the original code */
+                      "parent", parent,
+                      "contact", contact,
+                      "editable", editable,
+                      "single-attribute", FALSE,
+                      NULL);
+}
+
+GtkWidget *
+osso_abook_touch_contact_starter_new_with_editor(GtkWindow *parent,
+                                                 OssoABookContact *contact)
+{
+  return osso_abook_touch_contact_starter_new_full(parent, contact, TRUE);
+}
+
+GtkWidget *
+osso_abook_touch_contact_starter_new_with_contact(GtkWindow *parent,
+                                                  OssoABookContact *contact)
+{
+  return osso_abook_touch_contact_starter_new_full(parent, contact, FALSE);
+}
+
+OssoABookContact *
+osso_abook_touch_contact_starter_get_contact(OssoABookTouchContactStarter *starter)
+{
+  OssoABookTouchContactStarterPrivate *priv;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_TOUCH_CONTACT_STARTER(starter), NULL);
+
+  priv = OSSO_ABOOK_TOUCH_CONTACT_STARTER_PRIVATE(starter);
+
+  return get_details_contact(priv);
+}

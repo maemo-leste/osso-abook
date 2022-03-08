@@ -1908,3 +1908,22 @@ osso_abook_tree_view_get_pannable_area(OssoABookTreeView *view)
 
   return view->priv->pannable_area;
 }
+
+OssoABookFilterModel *
+osso_abook_tree_view_get_filter_model(OssoABookTreeView *view)
+{
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view), NULL);
+
+  return view->priv->filter_model;
+}
+
+void
+osso_abook_tree_view_set_avatar_view(OssoABookTreeView *view, gboolean enable)
+{
+  g_return_if_fail(OSSO_ABOOK_IS_TREE_VIEW(view));
+
+  g_object_set(G_OBJECT(view),
+               "show-contact-avatar", enable,
+               NULL);
+}
