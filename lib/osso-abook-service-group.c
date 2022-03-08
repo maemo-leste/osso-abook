@@ -21,6 +21,12 @@
 
 #include <gtk/gtkprivate.h>
 
+#include "osso-abook-account-manager.h"
+#include "osso-abook-log.h"
+#include "osso-abook-roster.h"
+#include "osso-abook-roster-manager.h"
+#include "osso-abook-util.h"
+
 #include "osso-abook-service-group.h"
 
 struct _OssoABookServiceGroupPrivate
@@ -294,6 +300,153 @@ osso_abook_service_group_lookup_by_name(const char *unique_name)
 
   if (!group)
     return NULL;
+
+  return OSSO_ABOOK_GROUP(group);
+}
+
+__attribute__((destructor)) static void
+osso_abook_service_group_destructor()
+{
+  g_hash_table_destroy(service_groups_by_name);
+}
+
+static void
+_account_changed_cb(OssoABookAccountManager *manager, TpAccount *account,
+                    GQuark property, const GValue *value, gpointer user_data)
+{
+  OssoABookServiceGroup *group =
+      g_hash_table_lookup(service_groups_by_name,
+                          tp_account_get_path_suffix(account));
+
+  if (group)
+  {
+    OssoABookServiceGroupPrivate *priv =
+        OSSO_ABOOK_SERVICE_GROUP_PRIVATE(group);
+    gchar *display_name = osso_abook_tp_account_get_display_string(
+          account, NULL, "%s - %s");
+
+    if (strcmp(display_name, priv->name))
+    {
+      g_object_set(G_OBJECT(group),
+                   "display-name", display_name,
+                   NULL);
+    }
+
+    g_free(display_name);
+    g_signal_emit(group, signals[REFILTER_GROUP], 0);
+  }
+}
+
+static void
+_roster_created_cb(OssoABookRosterManager *manager, OssoABookRoster *roster,
+                   gpointer user_data)
+{
+  if (roster)
+  {
+    TpAccount *account = osso_abook_roster_get_account(roster);
+
+    if (account)
+      _account_changed_cb(NULL, account, 0, NULL, user_data);
+  }
+}
+
+static void
+_roster_removed_cb(OssoABookRosterManager *manager, OssoABookRoster *roster,
+                   gpointer user_data)
+{
+  if (roster)
+  {
+    TpAccount *account = osso_abook_roster_get_account(roster);
+
+    if (account)
+    {
+      g_hash_table_remove(service_groups_by_name,
+                          tp_account_get_path_suffix(account));
+    }
+  }
+}
+
+OssoABookGroup *
+osso_abook_service_group_get(TpAccount *account)
+{
+  OssoABookServiceGroup *group;
+  const char *protocol;
+  gchar *display_name;
+  OssoABookServiceGroupPrivate *priv;
+  OssoABookAccountManager *manager;
+  TpProtocol *protocol_object;
+  static gulong account_changed_id = 0;
+  static gulong roster_created_id = 0;
+  static gulong roster_removed_id = 0;
+
+  if (!service_groups_by_name)
+  {
+    service_groups_by_name = g_hash_table_new_full(
+                               (GHashFunc)&g_str_hash,
+                               (GEqualFunc)&g_str_equal,
+                               (GDestroyNotify)&g_free,
+                               (GDestroyNotify)&g_object_unref);
+  }
+
+  group = g_hash_table_lookup(service_groups_by_name,
+                              tp_account_get_path_suffix(account));
+
+  if (group)
+    return OSSO_ABOOK_GROUP(group);
+
+  protocol = tp_account_get_protocol_name(account);
+
+  if (protocol)
+  {
+    protocol_object =
+        osso_abook_account_manager_get_protocol_object(NULL, protocol);
+  }
+
+  if (!protocol_object)
+  {
+    OSSO_ABOOK_WARN("Cannot get protocol");
+    return NULL;
+  }
+
+  if (!tp_protocol_get_vcard_field(protocol_object))
+    return NULL;
+
+  display_name = osso_abook_tp_account_get_display_string(
+        account, osso_abook_tp_account_get_bound_name(account), "%s - %s");
+
+  group = g_object_new(OSSO_ABOOK_TYPE_SERVICE_GROUP,
+                       "service-name", tp_account_get_path_suffix(account),
+                       "display-name", display_name,
+                       NULL);
+  g_free(display_name);
+  g_hash_table_insert(service_groups_by_name,
+                      g_strdup(tp_account_get_path_suffix(account)), group);
+
+  priv = OSSO_ABOOK_SERVICE_GROUP_PRIVATE(group);
+  priv->account = account;
+  priv->icon_name = g_strdup(tp_protocol_get_icon_name(protocol_object));
+  priv->vcard_field = g_strdup(tp_protocol_get_vcard_field(protocol_object));
+
+  manager = osso_abook_account_manager_get_default();
+
+  if (!account_changed_id)
+  {
+    account_changed_id =
+        g_signal_connect(manager, "account-changed",
+                         G_CALLBACK(_account_changed_cb), NULL);
+  }
+
+  if (!roster_created_id)
+  {
+    roster_created_id = g_signal_connect(manager, "roster-created",
+                                         G_CALLBACK(_roster_created_cb), NULL);
+  }
+
+  if (!roster_removed_id)
+  {
+    roster_removed_id = g_signal_connect(manager, "roster-removed",
+                                         G_CALLBACK(_roster_removed_cb), NULL);
+  }
 
   return OSSO_ABOOK_GROUP(group);
 }
