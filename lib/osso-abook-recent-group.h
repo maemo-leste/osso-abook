@@ -44,7 +44,6 @@ G_BEGIN_DECLS
 struct _OssoABookRecentGroup {
         /*< private >*/
         OssoABookGroup parent;
-        OssoABookRecentGroupPrivate *priv;
 };
 
 struct _OssoABookRecentGroupClass {

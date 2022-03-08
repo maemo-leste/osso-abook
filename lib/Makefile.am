@@ -122,7 +122,8 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-alpha-shortcuts.c \
 		osso-abook-self-contact.c \
 		osso-abook-presence-icon.c \
-		osso-abook-contact-detail-selector.c
+		osso-abook-contact-detail-selector.c \
+		osso-abook-recent-group.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook.h \
