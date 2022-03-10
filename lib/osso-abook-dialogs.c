@@ -22,6 +22,8 @@
 #include <glib.h>
 
 #include "osso-abook-gconf-contact.h"
+#include "osso-abook-init.h"
+#include "osso-abook-log.h"
 #include "osso-abook-roster.h"
 #include "osso-abook-utils-private.h"
 
@@ -32,9 +34,9 @@ get_delete_confirmation_description(OssoABookContact *contact)
 {
   GList *contacts = g_list_prepend(NULL, contact);
   gchar *confirmation = _osso_abook_get_delete_confirmation_string(
-    contacts, TRUE, "addr_nc_notification16",
-    "addr_nc_notification_im_username",
-    "addr_nc_notification_im_username_several_services");
+      contacts, TRUE, "addr_nc_notification16",
+      "addr_nc_notification_im_username",
+      "addr_nc_notification_im_username_several_services");
 
   g_list_free(contacts);
 
@@ -138,4 +140,30 @@ osso_abook_delete_contact_dialog_run(GtkWindow *parent, OssoABookRoster *roster,
     book = osso_abook_roster_get_book(roster);
 
   return osso_abook_contact_delete(contact, book, NULL);
+}
+
+gboolean
+osso_abook_launch_applet(GtkWindow *parent, const char *applet)
+{
+  osso_context_t *ctx;
+  osso_return_t rc;
+
+  g_return_val_if_fail(!IS_EMPTY(applet), FALSE);
+  g_return_val_if_fail(!parent || GTK_IS_WINDOW(parent), FALSE);
+
+  ctx = osso_abook_get_osso_context();
+
+  if (ctx)
+  {
+    rc = osso_cp_plugin_execute(ctx, applet, parent, TRUE);
+
+    if (!rc)
+      return TRUE;
+
+    OSSO_ABOOK_WARN("Launching `%s' failed, rc=%d", applet, rc);
+  }
+  else
+    OSSO_ABOOK_WARN("OSSO context not set");
+
+  return FALSE;
 }
