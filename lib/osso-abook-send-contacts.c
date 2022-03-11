@@ -413,3 +413,102 @@ osso_abook_send_contacts_email(OssoABookContact *contact, gboolean send_avatar)
     g_object_unref(dir);
   }
 }
+
+void
+osso_abook_send_contacts_detail_dialog(OssoABookContact *contact,
+                                       OssoABookContactDetailFilters filters,
+                                       GtkWindow *parent_window)
+{
+  OssoABookContactDetailStore *store;
+  GtkWidget *dialog;
+  GtkWidget *label;
+  GtkWidget *send_contacts_dialog;
+  const char *attr_name;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+  g_return_if_fail(parent_window == NULL || GTK_IS_WINDOW (parent_window));
+
+  store = osso_abook_contact_detail_store_new(contact, (OssoABookContactDetailFilters)223);
+
+  if (osso_abook_contact_detail_store_get_fields(store))
+  {
+    dialog = osso_abook_contact_detail_selector_new_for_contact(
+          parent_window, contact, filters);
+  }
+  else
+  {
+    dialog = gtk_dialog_new();
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), parent_window);
+    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_destroy_with_parent(GTK_WINDOW(dialog), TRUE);
+
+    label = gtk_label_new(_("addr_ia_no_details"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
+    hildon_helper_set_logical_font(label, "LargeSystemFont");
+    hildon_helper_set_logical_color(label, GTK_RC_FG, GTK_STATE_NORMAL,
+                                    "SecondaryTextColor");
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label, TRUE, TRUE, 0);
+    gtk_widget_set_size_request(dialog, -1, 150);
+    gtk_widget_set_no_show_all(GTK_DIALOG(dialog)->action_area, TRUE);
+    gtk_widget_hide(GTK_DIALOG(dialog)->action_area);
+    gtk_widget_show_all(dialog);
+  }
+
+  gtk_window_set_title(GTK_WINDOW(dialog), _("addr_ti_select_contact_detail"));
+
+  if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK)
+  {
+    EVCardAttribute *detail = osso_abook_contact_detail_selector_get_detail(
+          OSSO_ABOOK_CONTACT_DETAIL_SELECTOR(dialog));
+    OssoABookContact *detail_contact = osso_abook_contact_new();
+    EVCardAttribute *n = e_vcard_get_attribute(E_VCARD(contact), EVC_N);
+    EVCardAttribute *fn = e_vcard_get_attribute(E_VCARD(contact), EVC_FN);
+
+    if (!n && !fn && detail)
+    {
+      attr_name = e_vcard_attribute_get_name(detail);
+
+      if (g_strcmp0(attr_name, EVC_NICKNAME) && g_strcmp0(attr_name, EVC_ORG))
+      {
+        n = e_vcard_get_attribute(E_VCARD(contact), EVC_NICKNAME);
+
+        if (!n)
+          n = e_vcard_get_attribute(E_VCARD(contact), EVC_ORG);
+      }
+    }
+
+    if (n)
+      e_vcard_add_attribute(E_VCARD(detail_contact), e_vcard_attribute_copy(n));
+
+    if (fn)
+    {
+      e_vcard_add_attribute(E_VCARD(detail_contact),
+                            e_vcard_attribute_copy(fn));
+    }
+
+    if (detail)
+    {
+      e_vcard_add_attribute(E_VCARD(detail_contact),
+                            e_vcard_attribute_copy(detail));
+    }
+
+    send_contacts_dialog = osso_abook_send_contacts_dialog_new(
+          parent_window, detail_contact, TRUE);
+    g_signal_connect(send_contacts_dialog, "response",
+                     G_CALLBACK(gtk_widget_destroy), NULL);
+    gtk_widget_show(send_contacts_dialog);
+    g_object_unref(detail_contact);
+  }
+
+  gtk_widget_destroy(dialog);
+}
+
+void
+osso_abook_send_contacts_detail_dialog_default(OssoABookContact *contact,
+                                               GtkWindow *parent_window)
+{
+  osso_abook_send_contacts_detail_dialog(
+        contact,
+        OSSO_ABOOK_CONTACT_DETAIL_ALL & ~OSSO_ABOOK_CONTACT_DETAIL_NICKNAME,
+        parent_window);
+}

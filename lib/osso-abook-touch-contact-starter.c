@@ -1879,7 +1879,8 @@ osso_abook_touch_contact_starter_new_with_contact(GtkWindow *parent,
 }
 
 OssoABookContact *
-osso_abook_touch_contact_starter_get_contact(OssoABookTouchContactStarter *starter)
+osso_abook_touch_contact_starter_get_contact(
+    OssoABookTouchContactStarter *starter)
 {
   OssoABookTouchContactStarterPrivate *priv;
 
@@ -1888,4 +1889,14 @@ osso_abook_touch_contact_starter_get_contact(OssoABookTouchContactStarter *start
   priv = OSSO_ABOOK_TOUCH_CONTACT_STARTER_PRIVATE(starter);
 
   return get_details_contact(priv);
+}
+
+OssoABookContactAction
+osso_abook_touch_contact_starter_get_started_action(
+    OssoABookTouchContactStarter *starter)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_TOUCH_CONTACT_STARTER(starter),
+                       OSSO_ABOOK_CONTACT_ACTION_NONE);
+
+  return OSSO_ABOOK_TOUCH_CONTACT_STARTER_PRIVATE(starter)->started_action;
 }
