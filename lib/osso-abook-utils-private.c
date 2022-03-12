@@ -731,7 +731,7 @@ _mbpi_get_name(int mnc, int mcc)
 
       g_free(xpath);
 
-      if (obj)
+      if (obj && obj->nodesetval)
       {
         xmlNodeSetPtr nodes = obj->nodesetval;
 
