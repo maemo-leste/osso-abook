@@ -2378,3 +2378,12 @@ osso_abook_aggregator_find_contacts_for_email_address(
                                                   filter_emails_predicate,
                                                   (gpointer)address);
 }
+
+GList *
+osso_abook_aggregator_list_roster_contacts(OssoABookAggregator *aggregator)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_AGGREGATOR(aggregator), NULL);
+
+  return g_hash_table_get_values(
+        OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator)->roster_contacts);
+}

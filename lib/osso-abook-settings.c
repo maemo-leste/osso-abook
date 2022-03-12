@@ -269,3 +269,31 @@ osso_abook_settings_set_contact_order(OssoABookContactOrder order)
 
   return rv;
 }
+
+gboolean
+osso_abook_settings_set_video_button(gboolean enabled)
+{
+  gboolean rv;
+  GError *error = NULL;
+
+  rv = gconf_client_set_bool(osso_abook_get_gconf_client(),
+                             OSSO_ABOOK_SETTINGS_KEY_VIDEO_BUTTON, enabled,
+                             &error);
+  osso_abook_handle_gerror(NULL, error);
+
+  return rv;
+}
+
+gboolean
+osso_abook_settings_set_sms_button(gboolean enabled)
+{
+  gboolean rv;
+  GError *error = NULL;
+
+  rv = gconf_client_set_bool(osso_abook_get_gconf_client(),
+                             OSSO_ABOOK_SETTINGS_KEY_SMS_BUTTON, enabled,
+                             &error);
+  osso_abook_handle_gerror(NULL, error);
+
+  return rv;
+}
