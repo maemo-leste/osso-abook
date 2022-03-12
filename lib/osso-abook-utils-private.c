@@ -725,8 +725,8 @@ _mbpi_get_name(int mnc, int mcc)
     if (ctx)
     {
       gchar *xpath = g_strdup_printf(
-        "//network-id[@mcc='%03d' and @mnc='%02d']/../../name/text()", mnc,
-        mcc);
+        "//network-id[@mcc='%03d' and @mnc='%02d']/../../name/text()", mcc,
+        mnc);
       xmlXPathObjectPtr obj = xmlXPathEvalExpression(BAD_CAST xpath, ctx);
 
       g_free(xpath);
