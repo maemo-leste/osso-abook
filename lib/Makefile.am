@@ -3,7 +3,8 @@ bin_PROGRAMS = \
 		test_avatar_editor_dialog \
 		test_avatar_chooser_dialog \
 		test_contact_chooser \
-		test_contact_editor
+		test_contact_editor \
+		test_settings
 
 COMMON_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
@@ -41,6 +42,10 @@ test_voicemail_selector_LDADD = $(TEST_LIBS)
 test_contact_editor_SOURCES = test-contact-editor.c
 test_contact_editor_CFLAGS = $(COMMON_CFLAGS) -DTEST
 test_contact_editor_LDADD = $(TEST_LIBS)
+
+test_settings_SOURCES = test-settings.c
+test_settings_CFLAGS = $(COMMON_CFLAGS) -DTEST
+test_settings_LDADD = $(TEST_LIBS)
 
 lib_LTLIBRARIES = libosso-abook-@API_VERSION_MAJOR@.la
 
