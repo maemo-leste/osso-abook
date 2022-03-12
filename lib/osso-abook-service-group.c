@@ -307,7 +307,11 @@ osso_abook_service_group_lookup_by_name(const char *unique_name)
 __attribute__((destructor)) static void
 osso_abook_service_group_destructor()
 {
-  g_hash_table_destroy(service_groups_by_name);
+  if (service_groups_by_name)
+  {
+    g_hash_table_destroy(service_groups_by_name);
+    service_groups_by_name = NULL;
+  }
 }
 
 static void
