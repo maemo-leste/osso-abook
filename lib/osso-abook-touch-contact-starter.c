@@ -109,6 +109,14 @@ struct contacts_added_data
   gchar *uid;
 };
 
+struct start_merge_data
+{
+  OssoABookTouchContactStarter *starter;
+  gchar *uid;
+  OssoABookMergeWithCb cb;
+  gpointer user_data;
+};
+
 static OssoABookMessageMapping message_map[] =
 {
   { NULL, "addr_bd_cont_starter" },
@@ -1899,4 +1907,80 @@ osso_abook_touch_contact_starter_get_started_action(
                        OSSO_ABOOK_CONTACT_ACTION_NONE);
 
   return OSSO_ABOOK_TOUCH_CONTACT_STARTER_PRIVATE(starter)->started_action;
+}
+
+static void
+merge_with_cb(const char *uid, gpointer user_data)
+{
+  struct start_merge_data *merge_data = user_data;
+  OssoABookTouchContactStarterPrivate *priv =
+      OSSO_ABOOK_TOUCH_CONTACT_STARTER_PRIVATE(merge_data->starter);
+
+  if (merge_data->cb)
+    merge_data->cb(uid, merge_data->user_data);
+
+  if (uid)
+  {
+    if (g_strcmp0(merge_data->uid, uid))
+    {
+      OssoABookRoster *aggregator = osso_abook_aggregator_get_default(NULL);
+      GList *contact =
+          osso_abook_aggregator_lookup(OSSO_ABOOK_AGGREGATOR(aggregator),uid);
+
+      if (contact)
+      {
+        if (g_list_length(contact) == 1)
+        {
+          osso_abook_contact_detail_store_set_contact(priv->details,
+                                                      contact->data);
+        }
+        else
+          g_critical("Unexpected multiple contacts matching UID %s", uid);
+      }
+      else
+      {
+        struct contacts_added_data *data =
+            g_new0(struct contacts_added_data, 1);
+
+        data->starter = merge_data->starter;
+        data->aggregator = aggregator;
+        data->uid = g_strdup(uid);
+        g_signal_connect(aggregator, "contacts-added",
+                         G_CALLBACK(contacts_added_cb), data);
+      }
+
+      g_list_free(contact);
+    }
+  }
+
+  g_object_unref(merge_data->starter);
+  g_free(merge_data->uid);
+  g_free(merge_data);
+}
+
+void
+osso_abook_touch_contact_starter_start_merge(
+    OssoABookTouchContactStarter *starter, OssoABookContactModel *contact_model,
+    OssoABookMergeWithCb cb, gpointer user_data)
+{
+  OssoABookTouchContactStarterPrivate *priv;
+  OssoABookContact *contact;
+  struct start_merge_data *data;
+  gpointer parent;
+
+  g_return_if_fail(OSSO_ABOOK_IS_TOUCH_CONTACT_STARTER(starter));
+
+  priv = OSSO_ABOOK_TOUCH_CONTACT_STARTER_PRIVATE(starter);
+  contact = get_details_contact(priv);
+  parent = gtk_widget_get_ancestor(GTK_WIDGET(starter), GTK_TYPE_WINDOW);
+
+  data = g_new0(struct start_merge_data, 1);
+
+  data->starter = g_object_ref(starter);
+  data->cb = cb;
+  data->user_data = user_data;
+  data->uid = g_strdup(e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID));
+
+  osso_abook_merge_with_many_dialog(contact, contact_model, parent,
+                                    merge_with_cb, data);
 }
