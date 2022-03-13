@@ -378,7 +378,7 @@ osso_abook_service_group_get(TpAccount *account)
   gchar *display_name;
   OssoABookServiceGroupPrivate *priv;
   OssoABookAccountManager *manager;
-  TpProtocol *protocol_object;
+  TpProtocol *protocol_object = NULL;
   static gulong account_changed_id = 0;
   static gulong roster_created_id = 0;
   static gulong roster_removed_id = 0;
