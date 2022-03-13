@@ -3997,7 +3997,9 @@ get_protocols_by_vcard_field(const char *vcard_field)
 
     if (vcf && !(strcmp(vcf, vcard_field)))
     {
-      GList *removed = g_list_remove_link(protocols, protocols);
+      GList *removed = protocols;
+
+      protocols = g_list_remove_link(protocols, removed);
 
       l = g_list_concat(l, removed);
     }
