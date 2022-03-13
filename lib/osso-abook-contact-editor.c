@@ -2169,7 +2169,7 @@ osso_abook_contact_editor_set_contact(OssoABookContactEditor *editor,
       for (rc = osso_abook_contact_get_roster_contacts(priv->contact); rc;
            rc = rc->next)
       {
-        OSSO_ABOOK_DUMP_VCARD(EDITOR, rc, "roster contact");
+        OSSO_ABOOK_DUMP_VCARD(EDITOR, rc->data, "roster contact");
       }
     }
   }
