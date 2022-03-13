@@ -237,6 +237,7 @@ osso_abook_contact_detail_selector_set_property(GObject *object,
       }
 
       contact_store_changed(selector);
+      break;
     }
     default:
     {
