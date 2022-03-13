@@ -4,7 +4,8 @@ bin_PROGRAMS = \
 		test_avatar_chooser_dialog \
 		test_contact_chooser \
 		test_contact_editor \
-		test_settings
+		test_settings \
+		test_mecard_view
 
 COMMON_CFLAGS = \
 		-D_GNU_SOURCE $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(EBOOK_CFLAGS) \
@@ -46,6 +47,10 @@ test_contact_editor_LDADD = $(TEST_LIBS)
 test_settings_SOURCES = test-settings.c
 test_settings_CFLAGS = $(COMMON_CFLAGS) -DTEST
 test_settings_LDADD = $(TEST_LIBS)
+
+test_mecard_view_SOURCES = test-mecard-view.c
+test_mecard_view_CFLAGS = $(COMMON_CFLAGS) -DTEST
+test_mecard_view_LDADD = $(TEST_LIBS)
 
 lib_LTLIBRARIES = libosso-abook-@API_VERSION_MAJOR@.la
 
@@ -129,7 +134,8 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-presence-icon.c \
 		osso-abook-contact-detail-selector.c \
 		osso-abook-recent-group.c \
-		osso-abook-settings-dialog.c
+		osso-abook-settings-dialog.c \
+		osso-abook-mecard-view.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook.h \
