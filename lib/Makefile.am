@@ -135,7 +135,8 @@ libosso_abook_@API_VERSION_MAJOR@_la_SOURCES = \
 		osso-abook-contact-detail-selector.c \
 		osso-abook-recent-group.c \
 		osso-abook-settings-dialog.c \
-		osso-abook-mecard-view.c
+		osso-abook-mecard-view.c \
+		osso-abook-profile-group.c
 
 libosso_abook_@API_VERSION_MAJOR@_public_headers = \
 		osso-abook.h \
