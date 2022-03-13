@@ -122,9 +122,7 @@ osso_abook_send_contacts_dialog_get_property(GObject *object,
 static void
 send_sms_clicked_cb(GtkButton *button, gpointer user_data)
 {
-  g_assert(0);
-  /*
-     osso_abook_send_contacts_sms(PRIVATE(user_data)->contact);*/
+  osso_abook_send_contacts_sms(PRIVATE(user_data)->contact);
   gtk_dialog_response(GTK_DIALOG(user_data), GTK_RESPONSE_NONE);
 }
 
@@ -410,6 +408,48 @@ osso_abook_send_contacts_email(OssoABookContact *contact, gboolean send_avatar)
   {
     osso_abook_contact_write_to_file(contact, EVC_FORMAT_VCARD_30, send_avatar,
                                      TRUE, dir, send_vcard_email, NULL);
+    g_object_unref(dir);
+  }
+}
+
+static void
+send_vcard_sms(OssoABookContact *contact, GFile *file, const GError *error,
+               gpointer user_data)
+{
+  if (error)
+    osso_abook_handle_gerror(NULL, g_error_copy(error));
+  else
+  {
+    osso_context_t *osso = osso_abook_get_osso_context();
+
+    if (osso)
+    {
+      gchar *uri = g_file_get_uri(file);
+
+      osso_rpc_run_with_defaults(osso, "MessagingUI",
+                                 "messaging_ui_interface_send_vcard", NULL,
+                                 DBUS_TYPE_STRING, uri,
+                                 DBUS_TYPE_INVALID);
+      g_free(uri);
+    }
+    else
+      OSSO_ABOOK_WARN("osso_context is not set");
+  }
+}
+
+void
+osso_abook_send_contacts_sms(OssoABookContact *contact)
+{
+  GFile *dir;
+
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT(contact));
+
+  dir = create_temp_dir();
+
+  if (dir)
+  {
+    osso_abook_contact_write_to_file(contact, EVC_FORMAT_VCARD_21, FALSE, TRUE,
+                                     dir, send_vcard_sms, NULL);
     g_object_unref(dir);
   }
 }
