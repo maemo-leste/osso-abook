@@ -449,15 +449,18 @@ static void
 modest_account_notify(GConfClient *client, guint cnxn_id, GConfEntry *entry,
                       gpointer user_data)
 {
-  GList *attrs;
+  GList *attrs = e_vcard_get_attributes(E_VCARD(user_data));
 
-  for (attrs = e_vcard_get_attributes(E_VCARD(user_data)); attrs;
-       attrs = attrs->next)
+  while (attrs)
   {
-    if (!strcmp(e_vcard_attribute_get_name(attrs->data), EVC_EMAIL) &&
-        osso_abook_contact_attribute_is_readonly(attrs->data))
+    EVCardAttribute *attr = attrs->data;
+
+    attrs = attrs->next;
+
+    if (!strcmp(e_vcard_attribute_get_name(attr), EVC_EMAIL) &&
+        osso_abook_contact_attribute_is_readonly(attr))
     {
-      e_vcard_remove_attribute(E_VCARD(user_data), attrs->data);
+      e_vcard_remove_attribute(E_VCARD(user_data), attr);
     }
   }
 
