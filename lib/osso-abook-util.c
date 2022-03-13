@@ -1217,3 +1217,13 @@ osso_abook_strip_sip_prefix(const gchar *address)
 
   return address;
 }
+
+void
+osso_abook_enforce_label_width(GtkLabel *label, int width)
+{
+  gint height;
+
+  gtk_widget_get_size_request(GTK_WIDGET(label), NULL, &height);
+  gtk_widget_set_size_request(GTK_WIDGET(label), width, height);
+  pango_layout_set_width(gtk_label_get_layout(label), width * PANGO_SCALE);
+}
