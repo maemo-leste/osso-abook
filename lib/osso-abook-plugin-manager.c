@@ -67,7 +67,7 @@ osso_abook_plugin_manager_load_plugins(OssoABookPluginManager *manager)
   GError *error = NULL;
   guint n_children;
 
-  g_assert(priv->menu_plugins);
+  g_assert(!priv->menu_plugins);
 
   dir = g_dir_open(PLUGINS_DIR, 0, &error);
 
@@ -219,15 +219,14 @@ collect_params(GType extension_type, const char *property_name, va_list va)
   GParamSpec *pspec;
   gchar *error;
   GValue *value;
-  int num_params = 16;
+  int max_params = 16;
   struct extension_parameters *parameters =
-    g_new(struct extension_parameters, 1);
+    g_new0(struct extension_parameters, 1);
 
-  parameters->names = g_new(const char *, num_params);
-  parameters->values = g_new(GValue, num_params);
+  parameters->names = g_new(const char *, max_params);
+  parameters->values = g_new(GValue, max_params);
 
   GObjectClass *klass = g_type_class_ref(extension_type);
-  ;
 
   do
   {
@@ -240,11 +239,11 @@ collect_params(GType extension_type, const char *property_name, va_list va)
       goto out;
     }
 
-    if (num_params <= parameters->num)
+    if (parameters->num >= max_params)
     {
-      num_params += 16;
-      parameters->names = g_renew(const char *, parameters->names, num_params);
-      parameters->values = g_renew(GValue, parameters->values, num_params);
+      max_params += 16;
+      parameters->names = g_renew(const char *, parameters->names, max_params);
+      parameters->values = g_renew(GValue, parameters->values, max_params);
     }
 
     pspec = G_PARAM_SPEC(property);
