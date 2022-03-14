@@ -397,8 +397,9 @@ osso_abook_button_size_request(GtkWidget *widget, GtkRequisition *requisition)
   gint screen_width = gdk_screen_get_width(gtk_widget_get_screen(widget));
   OssoABookButtonStyleHints *hints =
     g_object_get_qdata(G_OBJECT(widget), style_hints_quark);
-  gint width;
+  gint req_height = widget->requisition.height;
   GtkBorder inner_border;
+  gint width;
 
   _get_inner_border(widget, priv, hints, &inner_border);
 
@@ -417,7 +418,7 @@ osso_abook_button_size_request(GtkWidget *widget, GtkRequisition *requisition)
   else
     requisition->height = _get_note_style_height(widget);
 
-  if (requisition->height != widget->requisition.height)
+  if (requisition->height != req_height)
   {
     gint height = widget->requisition.height;
 
