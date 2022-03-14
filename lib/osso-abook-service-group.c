@@ -43,7 +43,7 @@ typedef struct _OssoABookServiceGroupPrivate OssoABookServiceGroupPrivate;
 G_DEFINE_TYPE_WITH_PRIVATE(
   OssoABookServiceGroup,
   osso_abook_service_group,
-  OSSO_ABOOK_TYPE_SERVICE_GROUP
+  OSSO_ABOOK_TYPE_GROUP
 );
 
 #define OSSO_ABOOK_SERVICE_GROUP_PRIVATE(group) \
