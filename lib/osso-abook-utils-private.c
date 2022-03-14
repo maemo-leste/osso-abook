@@ -697,8 +697,12 @@ _osso_abook_get_imsi(const char *modem_path, GError **error)
 __attribute__ ((visibility("hidden"))) gchar *
 _osso_abook_get_operator_id(const char *modem_path, GError **error)
 {
-  gchar *imsi = _osso_abook_get_imsi(modem_path, error);
+  gchar *imsi;
   gchar *id;
+
+  gdk_threads_leave();
+  imsi = _osso_abook_get_imsi(modem_path, error);
+  gdk_threads_enter();
 
   if (!imsi)
     return NULL;
@@ -779,6 +783,8 @@ _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
 
   if (!IS_EMPTY(imsi))
   {
+    gdk_threads_leave();
+
     if (sscanf(imsi, "%03d%02d", &mcc, &mnc) == 2)
     {
       OfonoManager *manager = ofono_manager_new();
@@ -877,6 +883,8 @@ _osso_abook_get_operator_name(const char *modem_path, const char *imsi,
         error, OSSO_ABOOK_PHONE_NET_ERROR, 1001,
         "Invalid IMSI. First five numbers should be MCC and MNC.");
     }
+
+    gdk_threads_enter();
   }
 
   g_free(operator_id);
