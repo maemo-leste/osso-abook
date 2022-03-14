@@ -1161,11 +1161,26 @@ _osso_abook_create_source(const gchar *uid, const gchar *backend_name)
     }
   }
 
-  g_object_unref(registry);
+  _osso_abook_unref_registry_idle(registry);
 
 err_out:
 
   g_free(_uid);
 
   return source;
+}
+
+static gboolean
+_unref_registry_idle(gpointer data)
+{
+  g_object_unref(data);
+
+  return FALSE;
+}
+
+/* This is ugly workaround for ESourceRegistry unref hang with gdk_threads */
+void
+_osso_abook_unref_registry_idle(ESourceRegistry *registry)
+{
+  g_idle_add(_unref_registry_idle, registry);
 }

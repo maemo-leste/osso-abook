@@ -159,14 +159,6 @@ osso_abook_get_work_dir()
   return work_dir;
 }
 
-static gboolean
-unref_registry(gpointer data)
-{
-  g_object_unref(data);
-
-  return FALSE;
-}
-
 EBook *
 osso_abook_system_book_dup_singleton(gboolean open, GError **error)
 {
@@ -223,9 +215,7 @@ osso_abook_system_book_dup_singleton(gboolean open, GError **error)
     book = e_book_new(source, error);
 
     g_object_unref(source);
-    /* This is ugly workaround for ESourceRegistry unref hang with gdk_threads
-     */
-    g_idle_add(unref_registry, registry);
+    _osso_abook_unref_registry_idle(registry);
 
     if (!book)
       return NULL;
