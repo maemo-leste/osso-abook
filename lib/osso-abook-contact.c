@@ -3482,7 +3482,7 @@ osso_abook_contact_delete(OssoABookContact *contact, EBook *book,
       "e_book_async_remove_contact() always succeeds, since it sometiems "
       "returns false negatives",
       uid);
-    e_book_async_remove_contact(book, E_CONTACT(contact_class),
+    e_book_async_remove_contact(book, E_CONTACT(contact),
                                 osso_abook_contact_delete_async_remove_cb,
                                 NULL);
   }

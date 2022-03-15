@@ -1148,14 +1148,13 @@ action_new(OssoABookContactField *field, OssoABookContactAction contact_action,
   action->contact_action = contact_action;
   action->ref_cnt = 1;
   action->widget = g_object_ref_sink(widget);
-  ;
 
   if (protocol)
     action->protocol = g_object_ref(protocol);
 
   if (action->field)
   {
-    g_object_add_weak_pointer((GObject *)&action->field,
+    g_object_add_weak_pointer((GObject *)action->field,
                               (gpointer *)&action->field);
   }
 
