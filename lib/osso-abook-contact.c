@@ -3472,8 +3472,10 @@ osso_abook_contact_delete(OssoABookContact *contact, EBook *book,
       OSSO_ABOOK_CONTACT_GET_CLASS(contact);
 
     if (contact_class->async_remove)
+    {
       return contact_class->async_remove(
         contact, book, osso_abook_contact_delete_async_remove_cb, NULL);
+    }
 
     OSSO_ABOOK_NOTE(
       EDS, "now removing %s; note that we're assuming that "
@@ -4190,4 +4192,102 @@ osso_abook_contact_get_photo(OssoABookContact *contact)
     return g_object_ref(photo);
 
   return NULL;
+}
+
+void
+osso_abook_contact_delete_many(GList *contacts, EBook *book, GtkWindow *window)
+{
+  GList *group;
+  GHashTable *contacts_per_type;
+  GHashTableIter iter;
+
+  if (!osso_abook_check_disc_space(window))
+    return;
+
+  if (book)
+    g_object_ref(book);
+  else
+    book = osso_abook_system_book_dup_singleton(TRUE, NULL);
+
+  g_return_if_fail(E_IS_BOOK(book));
+
+  contacts_per_type = g_hash_table_new((GHashFunc)&g_str_hash,
+                                       (GEqualFunc)&g_str_equal);
+
+  while (contacts)
+  {
+    OssoABookContact *contact = OSSO_ABOOK_CONTACT(contacts->data);
+
+    if (contact)
+    {
+      OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+      const char *uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+
+      append_last_photo_uri(contact);
+      delete_temporary_photo_files(contact);
+
+      if (priv->roster_contacts)
+      {
+        struct roster_link *link;
+
+        g_hash_table_iter_init(&iter, priv->roster_contacts);
+
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&link))
+          osso_abook_contact_reject_for_uid(link->roster_contact, uid, window);
+      }
+
+      if (!osso_abook_is_temporary_uid(uid))
+      {
+        gchar *tn = (gchar *)g_type_name(G_TYPE_FROM_INSTANCE(contact));
+
+        OSSO_ABOOK_NOTE(EDS, "removing %s", uid);
+        group = g_hash_table_lookup(contacts_per_type, tn);
+        group = g_list_prepend(group, contact);
+        g_hash_table_replace(contacts_per_type, tn, group);
+      }
+    }
+    else
+      OSSO_ABOOK_WARN("contact list contained NULL contact");
+
+    contacts = contacts->next;
+  }
+
+  g_hash_table_iter_init(&iter, contacts_per_type);
+
+  while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&group))
+  {
+    OssoABookContactClass *contact_class =
+      OSSO_ABOOK_CONTACT_GET_CLASS(group->data);
+
+    if (contact_class->async_remove_many)
+    {
+      contact_class->async_remove_many(
+            group, g_object_ref(book),
+            osso_abook_contact_delete_async_remove_cb, NULL);
+    }
+    else
+    {
+      GList *ids = NULL;
+      GList *l;
+
+      for (l = group; l && l->data; l = l->next)
+      {
+        ids = g_list_prepend(ids,
+                             g_strdup(e_contact_get_const(E_CONTACT(l->data),
+                                                          E_CONTACT_UID)));
+      }
+
+      e_book_async_remove_contacts(g_object_ref(book), ids,
+                                   osso_abook_contact_delete_async_remove_cb,
+                                   NULL);
+      osso_abook_string_list_free(ids);
+    }
+
+    g_list_free(group);
+  }
+
+  g_hash_table_destroy(contacts_per_type);
+  g_object_unref(book);
+
+  return;
 }

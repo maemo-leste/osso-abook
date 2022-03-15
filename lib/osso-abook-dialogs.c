@@ -179,3 +179,57 @@ osso_abook_add_im_account_dialog_run(GtkWindow *parent)
   g_object_unref(auic);
 #endif
 }
+
+void
+osso_abook_confirm_delete_contacts_dialog_run(GtkWindow *parent,
+                                              OssoABookRoster *roster,
+                                              GList *contacts)
+{
+  GList *l = NULL;
+  gchar *confirm;
+  GtkWidget *note;
+  gint response_id;
+  EBook *book = NULL;
+
+  g_return_if_fail(!parent || GTK_IS_WINDOW(parent));
+  g_return_if_fail(!roster || OSSO_ABOOK_IS_ROSTER(roster));
+
+  if (!contacts)
+    return;
+
+  for (; contacts; contacts = contacts->next)
+  {
+    l = g_list_prepend(l, contacts->data);
+
+    osso_abook_weak_ref((GObject **)&(l->data));
+  }
+
+  if (l->next)
+  {
+    confirm = _osso_abook_get_delete_confirmation_string(
+        l, FALSE, "addr_nc_notification7",
+        "addr_nc_notification_im_username_multiple",
+        "addr_nc_notification_im_username_multiple_several_services");
+  }
+  else
+    confirm = get_delete_confirmation_description(l->data);
+
+  note = hildon_note_new_confirmation(parent, confirm);
+  response_id = gtk_dialog_run(GTK_DIALOG(note));
+  gtk_widget_destroy(note);
+  g_free(confirm);
+
+  if (response_id == GTK_RESPONSE_OK)
+  {
+    l = g_list_remove_all(l, NULL);
+
+    if (roster)
+      book = osso_abook_roster_get_book(roster);
+
+    if (l)
+      osso_abook_contact_delete_many(l, book, parent);
+  }
+
+  for (; l; l = g_list_delete_link(l, l))
+    osso_abook_weak_unref((GObject **)&(l->data));
+}
