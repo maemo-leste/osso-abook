@@ -1426,6 +1426,9 @@ create_account_manager(TpDBusDaemon *tp_dbus)
     0
   };
 
+  if (!tp_account_manager_can_set_default())
+    return tp_account_manager_dup();
+
   factory = tp_simple_client_factory_new(tp_dbus);
   tp_simple_client_factory_add_account_features(factory, account_features);
   tp_simple_client_factory_add_connection_features(factory,
