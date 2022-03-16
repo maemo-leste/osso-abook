@@ -3578,7 +3578,7 @@ osso_abook_contact_field_list_supported_fields(
     OssoABookRoster *roster = rosters->data;
     const char *vcard_field = osso_abook_roster_get_vcard_field(roster);
 
-    if (vcard_field && strcmp(vcard_field, EVC_TEL))
+    if (vcard_field && strcmp(vcard_field, "tel"))
     {
       TpProtocol *protocol;
       OssoABookContactField *field;
@@ -3621,7 +3621,7 @@ osso_abook_contact_field_list_supported_fields(
     {
       const char *vcard_field = tp_protocol_get_vcard_field(protocol);
 
-      if (vcard_field && strcmp(vcard_field, EVC_TEL))
+      if (vcard_field && strcmp(vcard_field, "tel"))
       {
         EVCardAttribute *attr = e_vcard_attribute_new(NULL, vcard_field);
         OssoABookContactField *field;
@@ -3667,7 +3667,7 @@ osso_abook_contact_field_list_account_fields(GHashTable *message_map,
     gchar *vcard_field = _osso_abook_tp_account_get_vcard_field(accounts->data);
     const char *protocol = tp_account_get_protocol_name(account);
 
-    if (vcard_field && protocol && strcmp(vcard_field, EVC_TEL))
+    if (vcard_field && protocol && strcmp(vcard_field, "tel"))
     {
       OssoABookRoster *roster = osso_abook_roster_manager_get_roster(
           NULL, tp_account_get_path_suffix(account));
@@ -3975,8 +3975,7 @@ osso_abook_contact_field_action_request_account(
   }
   else if (action->protocol)
   {
-    gboolean is_tel = !g_strcmp0(e_vcard_attribute_get_name(field_attr),
-                                 EVC_TEL);
+    gboolean is_tel = !g_strcmp0(e_vcard_attribute_get_name(field_attr), "tel");
 
     accounts = osso_abook_account_manager_list_by_protocol(
         NULL, tp_protocol_get_name(action->protocol));

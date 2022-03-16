@@ -330,7 +330,7 @@ _osso_abook_eventlogger_update(OssoABookContact *new_contact,
 
     if (accounts)
     {
-      gboolean is_tel = !g_strcmp0(vcf->data, EVC_TEL);
+      gboolean is_tel = !g_strcmp0(vcf->data, "tel");
       GList *old_list = contact_get_attribute_values(old_contact, vcf->data);
       GList *new_list = contact_get_attribute_values(new_contact, vcf->data);
       GList *to_remove;

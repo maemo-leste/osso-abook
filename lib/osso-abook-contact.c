@@ -386,16 +386,11 @@ parse_capabilities(OssoABookContact *contact, OssoABookContactPrivate *priv)
   for (l = osso_abook_account_manager_list_protocols(NULL, NULL, TRUE); l;
        l = g_list_delete_link(l, l))
   {
-    const char *vcf = tp_protocol_get_vcard_field(l->data);
+    const char *vcard_field = tp_protocol_get_vcard_field(l->data);
 
-    /*
-     * FIXME revisit - seems upstream TP returns vcard fields in lowercase,
-     * however, telepathy-ring in its current shape does not devine vcard-field
-     * at all.
-     */
-    if (vcf && g_strcmp0(vcf, EVC_TEL))
+    if (vcard_field && g_strcmp0(vcard_field, "tel"))
     {
-      if (e_vcard_get_attribute(E_VCARD(contact), vcf))
+      if (e_vcard_get_attribute(E_VCARD(contact), vcard_field))
         priv->caps |= osso_abook_caps_from_tp_protocol(l->data);
     }
 
@@ -411,7 +406,7 @@ parse_capabilities(OssoABookContact *contact, OssoABookContactPrivate *priv)
 
     attr_name = e_vcard_attribute_get_name(attr->data);
 
-    if (!g_strcmp0(attr_name, "EMAIL"))
+    if (!g_strcmp0(attr_name, EVC_EMAIL))
     {
       GList *v = e_vcard_attribute_get_values(attr->data);
 

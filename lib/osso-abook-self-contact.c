@@ -279,9 +279,7 @@ account_created(OssoABookAccountManager *manager, TpAccount *account,
 
   vcard_field = _osso_abook_tp_account_get_vcard_field(account);
 
-  /* FIXME - check if EVC_TEL is correct, see the note in parse_capabilities()
-   */
-  if (vcard_field && strcmp(vcard_field, EVC_TEL))
+  if (vcard_field && strcmp(vcard_field, "tel"))
   {
     const gchar *account_name = osso_abook_tp_account_get_bound_name(account);
     const gchar *protocol_name;
