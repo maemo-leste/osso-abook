@@ -4241,6 +4241,20 @@ is_online_connected(TpAccount *account, GError **error)
   return TRUE;
 }
 
+static void
+ensure_channel_async_cb(GObject *source_object, GAsyncResult *res,
+                               gpointer user_data)
+{
+  TpAccountChannelRequest *request = TP_ACCOUNT_CHANNEL_REQUEST(source_object);
+  GError *error;
+
+  if (!tp_account_channel_request_ensure_channel_finish(
+        request, res, &error))
+  {
+    osso_abook_handle_gerror(NULL, error);
+  }
+}
+
 static gboolean
 request_channel(TpAccount *account, OssoABookContactAction action,
                 gchar *target_id, GError **error)
@@ -4287,8 +4301,13 @@ request_channel(TpAccount *account, OssoABookContactAction action,
       g_return_val_if_reached(FALSE);
   }
 
-  tp_account_channel_request_set_target_id(request,
-                                           TP_HANDLE_TYPE_CONTACT, target_id);
+  tp_account_channel_request_set_target_id(request, TP_HANDLE_TYPE_CONTACT,
+                                           target_id);
+
+  tp_account_channel_request_ensure_channel_async(
+        request, NULL, NULL, ensure_channel_async_cb, NULL);
+
+  g_object_unref(request);
 
   return TRUE;
 }
