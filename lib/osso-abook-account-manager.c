@@ -1966,3 +1966,15 @@ osso_abook_account_manager_list_by_vcard_field(OssoABookAccountManager *manager,
 
   return rv;
 }
+
+const GList *
+osso_abook_account_manager_get_secondary_vcard_fields(
+    OssoABookAccountManager *manager)
+{
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+
+  return OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->uri_schemes;
+}

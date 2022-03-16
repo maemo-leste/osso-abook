@@ -20,6 +20,7 @@
 #include "config.h"
 
 #include <gtk/gtkprivate.h>
+#include <hildon-uri.h>
 #include <hildon/hildon.h>
 
 #include <langinfo.h>
@@ -33,11 +34,13 @@
 #include "osso-abook-button.h"
 #include "osso-abook-contact-field-selector.h"
 #include "osso-abook-contact-field.h"
+#include "osso-abook-dialogs.h"
 #include "osso-abook-entry.h"
 #include "osso-abook-enums.h"
 #include "osso-abook-message-map.h"
 #include "osso-abook-msgids.h"
 #include "osso-abook-string-list.h"
+#include "osso-abook-tp-account-selector.h"
 #include "osso-abook-util.h"
 #include "osso-abook-utils-private.h"
 
@@ -3912,15 +3915,382 @@ osso_abook_contact_field_get_label_widget(OssoABookContactField *field)
   return priv->label;
 }
 
+static gboolean
+secondary_vcard_field_is_tel(TpAccount *account)
+{
+  const gchar *const *schemes = tp_account_get_uri_schemes(account);
+
+  while (*schemes)
+  {
+    if (!strcmp(*schemes, "tel"))
+      return TRUE;
+
+    schemes++;
+  }
+
+  return FALSE;
+}
+
 TpAccount *
 osso_abook_contact_field_action_request_account(
   OssoABookContactFieldAction *action,
   GtkWindow *parent,
   gboolean *aborted)
 {
-  g_assert(0);
+  GList *accounts = NULL;
+  EVCardAttribute *field_attr;
+  GtkWidget *account_selector;
+  const gchar *msgid;
+  TpAccount *account = NULL;
 
-  return NULL;
+  if (aborted)
+    *aborted = FALSE;
+
+  g_return_val_if_fail(action != NULL, NULL);
+  g_return_val_if_fail(!parent || GTK_IS_WINDOW(parent), NULL);
+  g_return_val_if_fail(NULL != action->field, NULL);
+
+  field_attr = osso_abook_contact_field_get_attribute(action->field);
+
+  if (osso_abook_contact_field_get_roster_contact(action->field))
+  {
+    OssoABookContact *master_contact;
+    GList *roster_contacts;
+    GList *l;
+    gchar *attr_val;
+
+    master_contact = osso_abook_contact_field_get_master_contact(action->field);
+    attr_val = e_vcard_attribute_get_value(field_attr);
+    roster_contacts = osso_abook_contact_find_roster_contacts_for_attribute(
+        master_contact, field_attr);
+
+    for (l = roster_contacts; l; l = l->next)
+    {
+      accounts = g_list_prepend(accounts,
+                                osso_abook_contact_get_account(l->data));
+    }
+
+    g_list_free(roster_contacts);
+    g_free(attr_val);
+  }
+  else if (action->protocol)
+  {
+    gboolean is_tel = !g_strcmp0(e_vcard_attribute_get_name(field_attr),
+                                 EVC_TEL);
+
+    accounts = osso_abook_account_manager_list_by_protocol(
+        NULL, tp_protocol_get_name(action->protocol));
+
+    while (accounts)
+    {
+      GList *next = accounts->next;
+
+      if (!tp_account_is_enabled(accounts->data) ||
+          (is_tel && !secondary_vcard_field_is_tel(accounts->data)))
+      {
+        accounts = g_list_delete_link(accounts, accounts);
+      }
+
+      accounts = next;
+    }
+  }
+  else
+  {
+    if (action->contact_action == OSSO_ABOOK_CONTACT_ACTION_BIND)
+    {
+      GList *l;
+
+      accounts = osso_abook_account_manager_list_by_vcard_field(
+          NULL, e_vcard_attribute_get_name(field_attr));
+
+      l = accounts;
+
+      while (l)
+      {
+        GList *next = l->next;
+
+        if (!tp_account_is_enabled(l->data))
+          accounts = g_list_delete_link(accounts, l);
+
+        l = next;
+      }
+    }
+  }
+
+  if (accounts)
+  {
+    if (!accounts->next &&
+        (action->contact_action != OSSO_ABOOK_CONTACT_ACTION_BIND))
+    {
+      account = g_object_ref(accounts->data);
+      g_list_free(accounts);
+    }
+    else
+    {
+      OssoABookTpAccountModel *model = osso_abook_tp_account_model_new();
+
+      osso_abook_tp_account_model_set_allowed_accounts(model, accounts);
+      account_selector = osso_abook_tp_account_selector_new(parent, model);
+      g_object_unref(model);
+      g_list_free(accounts);
+
+      if (action->contact_action == OSSO_ABOOK_CONTACT_ACTION_CHATTO)
+        msgid = "addr_ti_choose_own_account_chat";
+      else if (action->contact_action == OSSO_ABOOK_CONTACT_ACTION_BIND)
+        msgid = "addr_ti_choose_own_account_bind";
+      else
+        msgid = "addr_ti_choose_own_account_voip";
+
+      gtk_window_set_title(GTK_WINDOW(account_selector), _(msgid));
+
+      if (gtk_dialog_run(GTK_DIALOG(account_selector)) == GTK_RESPONSE_OK)
+      {
+        account = osso_abook_tp_account_selector_get_account(
+            OSSO_ABOOK_TP_ACCOUNT_SELECTOR(account_selector));
+      }
+      else
+      {
+        if (aborted)
+          *aborted = 1;
+      }
+
+      gtk_widget_destroy(account_selector);
+    }
+  }
+
+  return account;
+}
+
+struct action_start_data
+{
+  OssoABookContactActionStartCb cb;
+  gpointer cb_data;
+  guint timeout_id;
+  GtkWindow *parent;
+  gchar *uid;
+  OssoABookContact *contact;
+};
+
+static void
+destroy_action_start_data(struct action_start_data *data)
+{
+  if (data)
+  {
+    if (data->contact)
+      g_object_unref(data->contact);
+
+    g_free(data->uid);
+
+    if (data->parent)
+    {
+      hildon_gtk_window_set_progress_indicator(data->parent, 0);
+      g_object_remove_weak_pointer((GObject *)data->parent,
+                                   (gpointer *)&data->parent);
+    }
+
+    if (data->timeout_id)
+      g_source_remove(data->timeout_id);
+
+    g_slice_free(struct action_start_data, data);
+  }
+}
+
+static gboolean
+contact_action_date(GtkWindow *parent, OssoABookContact *contact)
+{
+  GError *error = NULL;
+  DBusGConnection *dbus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
+
+  if (dbus)
+  {
+    DBusGProxy *proxy = dbus_g_proxy_new_for_name(dbus,
+                                                  "com.nokia.calendar",
+                                                  "/",
+                                                  "com.nokia.calendar");
+    const char *uid = e_contact_get_const(E_CONTACT(contact), E_CONTACT_UID);
+
+    dbus_g_proxy_call_no_reply(proxy,
+                               "open_bday_event",
+                               G_TYPE_UINT, 4, /* hmm, what is this? */
+                               G_TYPE_STRING, uid,
+                               G_TYPE_INVALID,
+                               G_TYPE_INVALID);
+    g_object_unref(proxy);
+  }
+  else
+    osso_abook_handle_gerror(parent, error);
+
+  return TRUE;
+}
+
+static void
+open_url(GtkWindow *parent, const gchar *url)
+{
+  GError *error = NULL;
+
+  if (!hildon_uri_open(url, NULL, &error))
+    osso_abook_handle_gerror(parent, error);
+}
+
+static gboolean
+contact_action_mailto(GtkWindow *parent, OssoABookContact *contact,
+                      const char *address)
+{
+  const char *display_name;
+  GString *s;
+  gchar *url;
+
+  if (!address)
+    return TRUE;
+
+  display_name = osso_abook_contact_get_display_name(contact);
+
+  s = g_string_new("mailto:");
+
+  if (!IS_EMPTY(display_name) && strcmp(display_name, address))
+  {
+    gchar *tmp;
+
+    g_string_append_c(s, '"');
+
+    tmp = g_uri_escape_string(display_name, NULL, FALSE);
+    g_string_append(s, tmp);
+    g_free(tmp);
+
+    g_string_append(s, "\" <");
+
+    tmp = g_uri_escape_string(address, NULL, FALSE);
+    g_string_append(s, tmp);
+    g_free(tmp);
+
+    g_string_append_c(s, '>');
+  }
+  else
+  {
+    gchar *tmp = g_uri_escape_string(address, NULL, FALSE);
+
+    g_string_append(s, tmp);
+    g_free(tmp);
+  }
+
+  url = g_string_free(s, FALSE);
+  open_url(parent, url);
+  g_free(url);
+
+  return TRUE;
+}
+
+static gboolean
+contact_action_url(GtkWindow *parent, const char *url)
+{
+  gchar *_url;
+
+  if (g_regex_match_simple("^[A-Za-z][A-Za-z0-9-+.]*:", url, 0, 0))
+    _url = g_strdup(url);
+  else
+    _url = g_strconcat("http://", url, NULL);
+
+  open_url(parent, _url);
+  g_free(_url);
+
+  return TRUE;
+}
+
+static gboolean
+contact_action_error(GtkWindow *parent, const char *msgid, const char *msg)
+{
+  gchar *s = g_strdup_printf(_(msgid), msg);
+
+  hildon_banner_show_information(GTK_WIDGET(parent), NULL, s);
+  g_free(s);
+
+  return FALSE;
+}
+
+static gboolean
+is_online_connected(TpAccount *account, GError **error)
+{
+  const gchar *msgid;
+
+  if (!account)
+  {
+    g_set_error_literal(
+          error, OSSO_ABOOK_ERROR, OSSO_ABOOK_ERROR_CANCELLED, "");
+    return FALSE;
+  }
+
+  if (tp_account_get_connection_status(account, NULL) !=
+      TP_CONNECTION_STATUS_CONNECTED)
+  {
+    TpConnectionPresenceType type =
+        tp_account_get_requested_presence(account, NULL, NULL);
+
+    if (type == TP_CONNECTION_PRESENCE_TYPE_OFFLINE ||
+        type == TP_CONNECTION_PRESENCE_TYPE_UNSET)
+    {
+      msgid = "pres_ib_must_be_online";
+    }
+    else
+      msgid = "pres_ib_must_be_network_connected";
+
+    g_set_error_literal(error, OSSO_ABOOK_ERROR, OSSO_ABOOK_ERROR_OFFLINE,
+                        g_dgettext("osso-statusbar-presence", msgid));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+request_channel(TpAccount *account, OssoABookContactAction action,
+                gchar *target_id, GError **error)
+{
+  guint32 user_action_time;
+
+  g_return_val_if_fail(TP_IS_ACCOUNT(account), FALSE);
+
+  if (!is_online_connected(account, error))
+    return FALSE;
+
+  TpAccountChannelRequest *request;
+
+  user_action_time = gtk_get_current_event_time();
+
+  switch (action)
+  {
+    case OSSO_ABOOK_CONTACT_ACTION_TEL:
+    case OSSO_ABOOK_CONTACT_ACTION_VOIPTO:
+    case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_AUDIO:
+    {
+      request = tp_account_channel_request_new_audio_call(account,
+                                                          user_action_time);
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_SMS:
+    {
+      request = tp_account_channel_request_new_text(account, user_action_time);
+      tp_account_channel_request_set_sms_channel(request, TRUE);
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_CHATTO:
+    {
+      request = tp_account_channel_request_new_text(account, user_action_time);
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_VIDEO:
+    {
+      request = tp_account_channel_request_new_audio_video_call(
+          account, user_action_time);
+      break;
+    }
+    default:
+      g_return_val_if_reached(FALSE);
+  }
+
+  tp_account_channel_request_set_target_id(request,
+                                           TP_HANDLE_TYPE_CONTACT, target_id);
+
+  return TRUE;
 }
 
 /* *INDENT-OFF* */
@@ -3931,7 +4301,87 @@ osso_abook_contact_action_start_with_callback(
   OssoABookContactActionStartCb callback, gpointer callback_data)
 /* *INDENT-ON* */
 {
-  g_assert(0);
+  GList *values;
+  gboolean rv;
+  GError *error = NULL;
+  struct action_start_data *data = NULL;
 
-  return FALSE;
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
+  g_return_val_if_fail(NULL != attribute, FALSE);
+  g_return_val_if_fail(!parent || GTK_IS_WINDOW(parent), FALSE);
+  g_return_val_if_fail(!account || TP_IS_ACCOUNT(account), FALSE);
+
+  values = e_vcard_attribute_get_values(attribute);
+
+  g_return_val_if_fail(values != NULL, FALSE);
+
+  if (!account &&
+      ((action == OSSO_ABOOK_CONTACT_ACTION_TEL) ||
+       (action == OSSO_ABOOK_CONTACT_ACTION_SMS)))
+  {
+    account = osso_abook_account_manager_lookup_by_name(
+        osso_abook_account_manager_get_default(), "ring/tel/account0");
+  }
+
+  switch (action)
+  {
+    case OSSO_ABOOK_CONTACT_ACTION_SMS:
+    case OSSO_ABOOK_CONTACT_ACTION_CHATTO:
+    case OSSO_ABOOK_CONTACT_ACTION_VOIPTO:
+    case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_AUDIO:
+    case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_VIDEO:
+    {
+      rv = request_channel(account, action, values->data, &error);
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_DATE:
+    {
+      rv = contact_action_date(parent, contact);
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_MAILTO:
+    {
+      rv = contact_action_mailto(parent, contact, values->data);
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_URL:
+    {
+      rv = contact_action_url(parent, values->data);
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_CREATE_ACCOUNT:
+    {
+      osso_abook_add_im_account_dialog_run(parent);
+      rv = TRUE;
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_CHATTO_ERROR:
+    {
+      rv = contact_action_error(parent, "addr_ib_invalid_username_chat",
+                                values->data);
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_ERROR:
+    {
+      rv = contact_action_error(parent, "addr_ib_invalid_username_call",
+                                values->data);
+      break;
+    }
+    default:
+    {
+      rv = TRUE;
+      break;
+    }
+  }
+
+  if (callback)
+    callback(error, parent, callback_data);
+
+  if (data)
+    destroy_action_start_data(data);
+
+  if (error)
+    g_error_free(error);
+
+  return rv;
 }
