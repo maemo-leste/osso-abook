@@ -1069,24 +1069,25 @@ osso_abook_contact_set_value(EContact *contact, const char *attr_name,
 gboolean
 osso_abook_contact_has_invalid_username(OssoABookContact *contact)
 {
-  const char *vcf;
+  const char *vcard_field;
   EVCardAttribute *attr;
   GList *l;
 
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), TRUE);
   g_return_val_if_fail(osso_abook_contact_is_roster_contact(contact), TRUE);
 
-  vcf = osso_abook_contact_get_vcard_field(contact);
+  vcard_field = osso_abook_contact_get_vcard_field(contact);
 
-  if (!vcf)
+  if (!vcard_field)
     return TRUE;
 
-  attr = e_vcard_get_attribute(E_VCARD(contact), vcf);
+  attr = e_vcard_get_attribute(E_VCARD(contact), vcard_field);
 
   if (!attr)
     return TRUE;
 
-  for (l = e_vcard_attribute_get_param(attr, "X-OSSO-VALID"); l; l = l->next)
+  for (l = e_vcard_attribute_get_param(attr, OSSO_ABOOK_VCP_OSSO_VALID); l;
+       l = l->next)
   {
     if (!g_ascii_strcasecmp(l->data, "no"))
       return TRUE;
@@ -2149,8 +2150,8 @@ osso_abook_contact_matches_username(OssoABookContact *contact,
     if (!attr_values || IS_EMPTY(attr_values->data))
       continue;
 
-    if (username)
-      compare_username_with_alternatives(username, attr->data);
+    if (username && !compare_username_with_alternatives(username, attr->data))
+      continue;
 
     attr_name = e_vcard_attribute_get_name(attr->data);
 
@@ -2333,14 +2334,17 @@ osso_abook_contact_real_find_roster_contacts(OssoABookContact *master_contact,
               g_object_unref(protocol);
 
             if (protocol == data->protocol)
+            {
+              g_list_free(attr);
               break;
+            }
           }
         }
-
-        g_list_free(attr);
-
-        if (!l || data->username)
+        else if (!attr || data->username)
+        {
+          g_list_free(attr);
           continue;
+        }
       }
     }
 
