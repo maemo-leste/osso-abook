@@ -1864,8 +1864,6 @@ osso_abook_touch_contact_starter_new_full(GtkWindow *parent,
   g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
 
   return g_object_new(OSSO_ABOOK_TYPE_TOUCH_CONTACT_STARTER,
-                      /* parent was not used in the original code */
-                      "parent", parent,
                       "contact", contact,
                       "editable", editable,
                       "single-attribute", FALSE,
