@@ -292,18 +292,17 @@ _osso_abook_eventlogger_update(OssoABookContact *new_contact,
 
   uid = e_contact_get_const(E_CONTACT(new_contact), E_CONTACT_UID);
 
-#if 0
-
   if (!vcard_fields)
   {
     GList *l;
 
-    for (l = mc_profiles_list(); l; l = g_list_delete_link(l, l))
+    for (l = osso_abook_account_manager_get_protocols(NULL); l;
+         l = g_list_delete_link(l, l))
     {
-      if (!(mc_profile_get_capabilities(l->data) &
-            MC_PROFILE_CAPABILITY_SUPPORTS_ROSTER))
+      if (!(osso_abook_caps_from_tp_protocol(l->data) &
+            OSSO_ABOOK_CAPS_ADDRESSBOOK))
       {
-        const char *vcard_field = mc_profile_get_vcard_field(l->data);
+        const char *vcard_field = tp_protocol_get_vcard_field(l->data);
 
         if (vcard_field &&
             !g_list_find_custom(vcard_fields, vcard_field,
@@ -312,14 +311,8 @@ _osso_abook_eventlogger_update(OssoABookContact *new_contact,
           vcard_fields = g_list_prepend(vcard_fields, g_strdup(vcard_field));
         }
       }
-
-      g_object_unref(l->data);
     }
   }
-
-#else
-  g_assert(0);
-#endif
 
   for (vcf = vcard_fields; vcf; vcf = vcf->next)
   {
