@@ -108,6 +108,7 @@ book_open_cb(EBook *book, EBookStatus status, gpointer user_data)
   {
     gboolean res;
 
+    g_object_set_data(G_OBJECT(book), "opened", GINT_TO_POINTER(1));
     g_signal_connect(book, "backend-died",
                      G_CALLBACK(backend_died_cb), closure);
     res = e_book_async_get_book_view(book, closure->query,
@@ -147,7 +148,7 @@ _osso_abook_async_get_book_view(EBook *book, EBookQuery *query,
   else
     closure->query = e_book_query_any_field_contains("");
 
-  if (e_book_is_opened(book))
+  if (GPOINTER_TO_INT(g_object_get_data(G_OBJECT(book), "opened")))
     book_open_cb(book, E_BOOK_ERROR_OK, closure);
   else if (!e_book_async_open(book, FALSE, book_open_cb, closure))
     book_open_cb(book, E_BOOK_ERROR_INVALID_ARG, closure);
