@@ -43,6 +43,7 @@ Depends:
  gconf2,
  hildon-common-strings-l10n-mr0,
  iso-codes,
+ mobile-broadband-provider-info,
 #fixme - not sure this belongs here
  evolution-data-server-addressbook-backend-telepathy,
  telepathy-mission-control-5,
