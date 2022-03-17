@@ -231,6 +231,7 @@ osso_abook_system_book_dup_singleton(gboolean open, GError **error)
 
   if (e_book_open(book, FALSE, error))
   {
+    g_object_set_data(G_OBJECT(book), "opened", GINT_TO_POINTER(1));
     is_opened = TRUE;
     return book;
   }
