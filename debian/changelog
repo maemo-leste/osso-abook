@@ -1,3 +1,9 @@
+libosso-abook (4.20220318) unstable; urgency=medium
+
+  * make telepathy chat/sms working
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Thu, 18 Mar 2022 16:04:21 +0200
+
 libosso-abook (4.20220317) unstable; urgency=medium
 
   * new git release
