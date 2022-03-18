@@ -3,6 +3,7 @@
 #include "osso-abook-avatar.h"
 #include "osso-abook-gconf-contact.h"
 #include "osso-abook-settings.h"
+
 #include "osso-abook-voicemail-contact.h"
 
 static void
