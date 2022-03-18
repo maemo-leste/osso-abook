@@ -104,9 +104,12 @@ osso_abook_presence_get_location_string         (OssoABookPresence *presence);
 const char *
 osso_abook_presence_get_icon_name               (OssoABookPresence *presence);
 
+#if 0
+/* telepathy does not support protocol-specific presence icons */
 const char *
 osso_abook_presence_get_branded_icon_name       (OssoABookPresence *presence,
                                                  TpProtocol        *protocol);
+#endif
 
 OssoABookPresenceState
 osso_abook_presence_get_blocked                 (OssoABookPresence *presence);
