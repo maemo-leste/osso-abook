@@ -43,6 +43,7 @@
 #include "osso-abook-tp-account-selector.h"
 #include "osso-abook-util.h"
 #include "osso-abook-utils-private.h"
+#include "osso-abook-voicemail-contact.h"
 
 typedef struct _OssoABookContactFieldTemplate OssoABookContactFieldTemplate;
 
@@ -1226,9 +1227,98 @@ get_url_actions(OssoABookContactField *field)
 static GList *
 get_phone_actions(OssoABookContactField *field)
 {
-  g_assert(0);
+  OssoABookContact *master_contact;
+  OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
+  TpProtocol *protocol_tel =
+      osso_abook_account_manager_get_protocol_object(NULL, "tel");
+  GList *actions = NULL;
 
-  return NULL;
+  if ((osso_abook_contact_field_get_flags(field) &
+       OSSO_ABOOK_CONTACT_FIELD_FLAGS_DEVICE_MASK) ==
+      OSSO_ABOOK_CONTACT_FIELD_FLAGS_FAX)
+  {
+    GtkWidget *button =
+        osso_abook_contact_field_create_button_with_label(field);
+
+    actions = g_list_prepend(
+          NULL,
+          action_new(field, OSSO_ABOOK_CONTACT_ACTION_NONE,
+                     protocol_tel, button,
+                     OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY));
+  }
+  else
+  {
+    master_contact = osso_abook_contact_field_get_master_contact(field);
+
+    if (!OSSO_ABOOK_IS_VOICEMAIL_CONTACT(master_contact))
+    {
+      const char *other_id = NULL;
+      gchar *sms_title = NULL;
+      GtkWidget *button;
+
+      if (priv->template)
+      {
+        if (!g_str_has_prefix(priv->template->msgid, "sms_"))
+        {
+          if (priv->template->msgid)
+          {
+            other_id = strrchr(priv->template->msgid, '_');
+
+            if (other_id && !strcmp(other_id, "_other"))
+              other_id = NULL;
+          }
+        }
+        else
+          sms_title = create_field_title(field, NULL, NULL);
+      }
+
+      if (!sms_title)
+      {
+        gchar *detail_id;
+        const char *title;
+        const char *stitle;
+
+        if (!other_id)
+          other_id = "";
+
+        title = "sms";
+        detail_id = g_strconcat("sms", other_id, "_detail", NULL);
+        stitle = detail_id;
+
+        if (priv->message_map)
+        {
+          title = osso_abook_message_map_lookup(priv->message_map, "sms");
+
+          if (priv->message_map)
+          {
+            stitle = osso_abook_message_map_lookup(priv->message_map,
+                                                   detail_id);
+          }
+        }
+
+        sms_title = create_field_title(field, title, stitle);
+        g_free(detail_id);
+      }
+
+      button = osso_abook_contact_field_create_button(field, sms_title,
+                                                      "general_sms");
+      actions = g_list_prepend(
+            actions,
+            action_new(field, OSSO_ABOOK_CONTACT_ACTION_SMS,
+                       protocol_tel, button,
+                       OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_EXPANDABLE));
+      g_free(sms_title);
+    }
+
+    actions = g_list_prepend(
+          actions, action_new(field, OSSO_ABOOK_CONTACT_ACTION_TEL,
+                              protocol_tel, NULL,
+                              OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY));
+  }
+
+  g_object_unref(protocol_tel);
+
+  return actions;
 }
 
 static gchar *
@@ -3374,7 +3464,7 @@ osso_abook_contact_field_action_unref(OssoABookContactFieldAction *action)
 {
   g_return_if_fail(NULL != action);
 
-  if (g_atomic_int_add(&action->ref_cnt, -1) == 1)
+  if (g_atomic_int_add(&action->ref_cnt, -1) == 0)
   {
     if (action->field)
       g_object_remove_weak_pointer((GObject *)action->field,
