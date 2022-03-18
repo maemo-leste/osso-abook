@@ -1081,14 +1081,15 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
       }
 
       g_list_free(contacts);
-
 #if 0
-      protocol = mc_profile_lookup(
-        mc_account_compat_get_profile(priv->aggregation_account));
+      /* telepathy does not support protocol-specific presence icons */
+      TpProtocol *protocol =
+          osso_abook_account_manager_get_account_protocol_object(
+            NULL, priv->aggregation_account);
       icon_name =
         osso_abook_presence_get_branded_icon_name(max_presence, protocol);
 #else
-      g_assert(0);
+      icon_name = osso_abook_presence_get_icon_name(max_presence);
 #endif
     }
     else
