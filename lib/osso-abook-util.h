@@ -135,6 +135,9 @@ osso_abook_file_set_contents             (const char         *filename,
 const char *
 osso_abook_get_work_dir                  (void);
 
+const char *
+osso_abook_get_photos_dir                (void);
+
 void
 osso_abook_enforce_label_width           (GtkLabel           *label,
                                           int                 width);
@@ -180,6 +183,9 @@ gboolean
 osso_abook_attributes_match (EVCardAttribute *attr_a,
                              EVCardAttribute *attr_b,
                              gboolean         fuzzy_match);
+
+gboolean
+osso_abook_e_contact_persist_data(EContact *contact, const char *dir);
 
 G_END_DECLS
 

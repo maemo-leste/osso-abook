@@ -19,13 +19,13 @@
 
 #include "config.h"
 
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
 #include <errno.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <glib/gstdio.h>
 #include <math.h>
-#include <X11/Xatom.h>
-#include <X11/Xlib.h>
 
 #include "osso-abook-account-manager.h"
 #include "osso-abook-avatar-image.h"
@@ -157,6 +157,17 @@ osso_abook_get_work_dir()
     work_dir = g_build_filename(g_get_home_dir(), ".osso-abook", NULL);
 
   return work_dir;
+}
+
+const char *
+osso_abook_get_photos_dir()
+{
+  static gchar *photos_dir = NULL;
+
+  if (!photos_dir)
+    photos_dir = g_build_filename(osso_abook_get_work_dir(), "photos", NULL);
+
+  return photos_dir;
 }
 
 EBook *
@@ -855,7 +866,7 @@ osso_abook_load_pixbuf_finish(GFile *file, GAsyncResult *result, GError **error)
   g_return_val_if_fail(G_IS_FILE(file), NULL);
 
   source_tag = g_simple_async_result_get_source_tag(
-    G_SIMPLE_ASYNC_RESULT(result));
+      G_SIMPLE_ASYNC_RESULT(result));
 
   g_return_val_if_fail(osso_abook_load_pixbuf_async == source_tag, NULL);
 
@@ -863,7 +874,7 @@ osso_abook_load_pixbuf_finish(GFile *file, GAsyncResult *result, GError **error)
                                              error))
   {
     pixbuf = g_simple_async_result_get_op_res_gpointer(
-      G_SIMPLE_ASYNC_RESULT(result));
+        G_SIMPLE_ASYNC_RESULT(result));
   }
 
   if (pixbuf)
@@ -1103,8 +1114,8 @@ account_get_display_string(TpAccount *account, const char *username,
                color.red >> 8, color.green >> 8, color.blue >> 8);
 
     display_string = g_markup_printf_escaped(
-      "%s\n<span size=\"x-small\" foreground=\"%s\">%s</span>",
-      display_name, foreground, username);
+        "%s\n<span size=\"x-small\" foreground=\"%s\">%s</span>",
+        display_name, foreground, username);
   }
   else
     display_string = g_strdup_printf(format, display_name, username);
@@ -1217,4 +1228,128 @@ osso_abook_enforce_label_width(GtkLabel *label, int width)
   gtk_widget_get_size_request(GTK_WIDGET(label), NULL, &height);
   gtk_widget_set_size_request(GTK_WIDGET(label), width, height);
   pango_layout_set_width(gtk_label_get_layout(label), width * PANGO_SCALE);
+}
+
+/*
+ * Returns TRUE if @photo is changed, FALSE otherwise.
+ */
+static gboolean
+_e_contact_photo_convert_to_uri (EContactPhoto *photo, const char *dir)
+{
+  GError *err = NULL;
+  char *path;
+  char *filename;
+  char *suffix;
+  int fd;
+
+  g_return_val_if_fail (photo, FALSE);
+  g_return_val_if_fail (dir, FALSE);
+
+  if (photo->type == E_CONTACT_PHOTO_TYPE_URI)
+    return FALSE;
+
+  if (!g_file_test (dir, G_FILE_TEST_IS_DIR))
+  {
+    if (g_mkdir_with_parents (dir, 0755))
+    {
+      g_warning ("Cannot create directory '%s': %s", dir, g_strerror (errno));
+      return FALSE;
+    }
+  }
+
+  /* guess the suffix */
+  if (photo->data.inlined.mime_type &&
+      (suffix = strchr (photo->data.inlined.mime_type, '/')))
+  {
+    filename = g_strdup_printf ("XXXXXX.%s", suffix + 1);
+  }
+  else
+    filename = g_strdup ("XXXXXX");
+
+  path = g_build_filename (dir, filename, NULL);
+  g_free (filename);
+  fd = g_mkstemp (path);
+
+  if (fd == -1)
+  {
+    g_warning ("Cannot save file: %s", g_strerror (errno));
+    g_free (path);
+    return FALSE;
+  }
+
+  if (!g_file_set_contents (path, (gchar *) photo->data.inlined.data,
+                            photo->data.inlined.length, &err))
+  {
+    g_warning ("Cannot save file '%s': %s", path, err->message);
+    g_error_free (err);
+    g_free (path);
+    close (fd);
+    return FALSE;
+  }
+
+  /* free photo->data.inlined struct before modifying photo->data */
+  g_free (photo->data.inlined.mime_type);
+  g_free (photo->data.inlined.data);
+
+  photo->type = E_CONTACT_PHOTO_TYPE_URI;
+  photo->data.uri = g_strdup_printf (FILE_SCHEME "%s", path);
+  close (fd);
+  g_free (path);
+
+  return TRUE;
+}
+
+/**
+ * e_contact_persist_data:
+ * @contact: an #EContact
+ * @dir: the directory where the inlined data should be saved.
+ *
+ * Persist the inlined data from @contact in @dir. Creates @dir if it does not
+ * exists.
+ *
+ * Return value: TRUE if the @contact is changed during the operation, FALSE
+ * otherwise.
+ */
+gboolean
+osso_abook_e_contact_persist_data(EContact *contact, const char *dir)
+{
+  EContactPhoto *photo;
+  EContactPhoto *logo;
+  gboolean photo_changed = FALSE, logo_changed = FALSE;
+  char *photo_dir;
+
+  g_return_val_if_fail(contact && E_IS_CONTACT(contact), FALSE);
+
+  if (!dir)
+    photo_dir = g_strdup(osso_abook_get_photos_dir());
+  else
+    photo_dir = g_strdup(dir);
+
+  photo = e_contact_get(contact, E_CONTACT_PHOTO);
+
+  if (photo)
+  {
+    photo_changed = _e_contact_photo_convert_to_uri(photo, photo_dir);
+
+    if (photo_changed)
+      e_contact_set(contact, E_CONTACT_PHOTO, photo);
+
+    e_contact_photo_free(photo);
+  }
+
+  logo = e_contact_get(contact, E_CONTACT_LOGO);
+
+  if (logo)
+  {
+    logo_changed = _e_contact_photo_convert_to_uri(logo, photo_dir);
+
+    if (logo_changed)
+      e_contact_set(contact, E_CONTACT_LOGO, logo);
+
+    e_contact_photo_free(logo);
+  }
+
+  g_free(photo_dir);
+
+  return photo_changed || logo_changed;
 }

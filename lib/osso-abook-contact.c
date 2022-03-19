@@ -2886,17 +2886,6 @@ _add_async_add_cb(EBook *book, EBookStatus status, const gchar *id,
   g_object_unref(book);
 }
 
-static const char *
-_get_photos_dir()
-{
-  static gchar *photos_dir = NULL;
-
-  if (!photos_dir)
-    photos_dir = g_build_filename(osso_abook_get_work_dir(), "photos", NULL);
-
-  return photos_dir;
-}
-
 static EBookStatus
 _e_book_status_from_gerror_file_code(gint code)
 {
@@ -2988,7 +2977,7 @@ osso_abook_contact_detach_photo(OssoABookContact *contact)
   {
     if (photo->type == E_CONTACT_PHOTO_TYPE_INLINED)
     {
-      photos_dir = _get_photos_dir();
+      photos_dir = osso_abook_get_photos_dir();
       g_mkdir_with_parents(photos_dir, 0755);
       filename = g_build_filename(photos_dir, "XXXXXX", NULL);
       fd = g_mkstemp(filename);
@@ -3036,7 +3025,7 @@ osso_abook_contact_detach_photo(OssoABookContact *contact)
 static void
 delete_temporary_photo_files(OssoABookContact *contact)
 {
-  GFile *photo_prefix = g_file_new_for_path(_get_photos_dir());
+  GFile *photo_prefix = g_file_new_for_path(osso_abook_get_photos_dir());
   GList *uri;
 
   for (uri = g_object_get_data(G_OBJECT(contact), "last-photo-uri"); uri;
