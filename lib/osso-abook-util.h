@@ -185,7 +185,12 @@ osso_abook_attributes_match (EVCardAttribute *attr_a,
                              gboolean         fuzzy_match);
 
 gboolean
-osso_abook_e_contact_persist_data(EContact *contact, const char *dir);
+osso_abook_e_contact_persist_data (EContact *contact,
+                                   const char *dir);
+
+GList *
+osso_abook_e_vcard_util_split_cards (const char *str,
+                                     gsize *len);
 
 G_END_DECLS
 

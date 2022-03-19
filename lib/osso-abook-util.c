@@ -1242,59 +1242,59 @@ _e_contact_photo_convert_to_uri (EContactPhoto *photo, const char *dir)
   char *suffix;
   int fd;
 
-  g_return_val_if_fail (photo, FALSE);
-  g_return_val_if_fail (dir, FALSE);
+  g_return_val_if_fail(photo, FALSE);
+  g_return_val_if_fail(dir, FALSE);
 
   if (photo->type == E_CONTACT_PHOTO_TYPE_URI)
     return FALSE;
 
-  if (!g_file_test (dir, G_FILE_TEST_IS_DIR))
+  if (!g_file_test(dir, G_FILE_TEST_IS_DIR))
   {
-    if (g_mkdir_with_parents (dir, 0755))
+    if (g_mkdir_with_parents(dir, 0755))
     {
-      g_warning ("Cannot create directory '%s': %s", dir, g_strerror (errno));
+      g_warning("Cannot create directory '%s': %s", dir, g_strerror(errno));
       return FALSE;
     }
   }
 
   /* guess the suffix */
   if (photo->data.inlined.mime_type &&
-      (suffix = strchr (photo->data.inlined.mime_type, '/')))
+      (suffix = strchr(photo->data.inlined.mime_type, '/')))
   {
-    filename = g_strdup_printf ("XXXXXX.%s", suffix + 1);
+    filename = g_strdup_printf("XXXXXX.%s", suffix + 1);
   }
   else
-    filename = g_strdup ("XXXXXX");
+    filename = g_strdup("XXXXXX");
 
-  path = g_build_filename (dir, filename, NULL);
-  g_free (filename);
-  fd = g_mkstemp (path);
+  path = g_build_filename(dir, filename, NULL);
+  g_free(filename);
+  fd = g_mkstemp(path);
 
   if (fd == -1)
   {
-    g_warning ("Cannot save file: %s", g_strerror (errno));
-    g_free (path);
+    g_warning("Cannot save file: %s", g_strerror(errno));
+    g_free(path);
     return FALSE;
   }
 
-  if (!g_file_set_contents (path, (gchar *) photo->data.inlined.data,
-                            photo->data.inlined.length, &err))
+  if (!g_file_set_contents(path, (gchar *)photo->data.inlined.data,
+                           photo->data.inlined.length, &err))
   {
-    g_warning ("Cannot save file '%s': %s", path, err->message);
-    g_error_free (err);
-    g_free (path);
-    close (fd);
+    g_warning("Cannot save file '%s': %s", path, err->message);
+    g_error_free(err);
+    g_free(path);
+    close(fd);
     return FALSE;
   }
 
   /* free photo->data.inlined struct before modifying photo->data */
-  g_free (photo->data.inlined.mime_type);
-  g_free (photo->data.inlined.data);
+  g_free(photo->data.inlined.mime_type);
+  g_free(photo->data.inlined.data);
 
   photo->type = E_CONTACT_PHOTO_TYPE_URI;
-  photo->data.uri = g_strdup_printf (FILE_SCHEME "%s", path);
-  close (fd);
-  g_free (path);
+  photo->data.uri = g_strdup_printf(FILE_SCHEME "%s", path);
+  close(fd);
+  g_free(path);
 
   return TRUE;
 }
@@ -1352,4 +1352,62 @@ osso_abook_e_contact_persist_data(EContact *contact, const char *dir)
   g_free(photo_dir);
 
   return photo_changed || logo_changed;
+}
+
+/**
+ * e_vcard_util_split_cards:
+ * @str: string that will be split
+ * @len: out value, the length of the split cards.
+ *
+ * Splits the input string to separate vcard strings.
+ *
+ * Return value: a #GList with the newly allocated split cards.
+ **/
+GList *
+osso_abook_e_vcard_util_split_cards(const char *str, gsize *len)
+{
+  GList *vcards = NULL;
+  const char *end, *begin;
+  gsize begin_len = strlen("BEGIN:VCARD");
+  gsize end_len = strlen("END:VCARD");
+  const char *last_pos = str;
+
+  begin = strcasestr(str, "BEGIN:VCARD");
+
+  while (begin != NULL)
+  {
+    const char *current = begin + begin_len;
+
+    while ((end = strcasestr(current, "END:VCARD")))
+    {
+      if ((*(end - 1) == '\n') || (*(end - 1) == '\r'))
+        break;
+
+      current += end_len;
+    }
+
+    if (end == NULL)
+    {
+      /* BEGIN without END */
+      break;
+    }
+
+    vcards = g_list_prepend(vcards, g_strndup(begin, (end + end_len) - begin));
+    last_pos = end + end_len;
+
+    current = last_pos;
+
+    while ((begin = strcasestr(current, "BEGIN:VCARD")))
+    {
+      if ((*(begin - 1) == '\n') || (*(begin - 1) == '\r'))
+        break;
+
+      current += begin_len;
+    }
+  }
+
+  if (len)
+    *len = last_pos - str;
+
+  return g_list_reverse(vcards);
 }
