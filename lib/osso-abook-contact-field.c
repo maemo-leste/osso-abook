@@ -1248,6 +1248,84 @@ get_phone_actions(OssoABookContactField *field)
   }
   else
   {
+#if 0
+    if (!OSSO_ABOOK_IS_VOICEMAIL_CONTACT(priv->master_contact))
+    {
+      accounts = osso_abook_account_manager_list_accounts(NULL, NULL, NULL);
+
+      if (accounts)
+      {
+        link_ = 0;
+        l = accounts;
+        do
+        {
+          v22 = (McAccount *)l->data;
+          if ( mc_account_is_enabled((McAccount *)l->data) )
+          {
+            if ( secondary_vcard_field_is_tel(v22) )
+            {
+              profile_id = mc_account_compat_get_profile(v22);
+              if ( profile_id )
+              {
+                if ( *profile_id )
+                {
+                  profile = mc_profile_lookup(profile_id);
+                  if ( profile )
+                  {
+                    if ( g_list_find(link_, profile) )
+                      g_object_unref(profile);
+                    else
+                      link_ = g_list_prepend(link_, profile);
+                  }
+                }
+              }
+            }
+          }
+          l = l->next;
+        }
+        while ( l );
+        g_list_free(accounts);
+
+        if (link_)
+        {
+          actions = 0;
+          do
+          {
+            protocol = (McProfile *)link_->data;
+            v26 = mc_profile_actions_list_by_vcard_field((McProfile *)link_->data, "TEL");
+            for ( profile_actions = v26; v26; v26 = v26->next )
+            {
+              v28 = (const gchar *)v26->data;
+              v29 = mc_profile_action_get_properties(protocol, (const gchar *)v26->data);
+              if ( v29 )
+              {
+                action = OSSO_ABOOK_CONTACT_ACTION_VOIPTO_AUDIO;
+                v32 = tp_asv_get_string(v29, "org.freedesktop.Telepathy.Channel.ChannelType");
+                layout_flags = OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_EXTRA|OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY;
+                if ( !tp_strdiff(v32, "org.freedesktop.Telepathy.Channel.Type.StreamedMedia")
+                     || (action = OSSO_ABOOK_CONTACT_ACTION_CHATTO,
+                         layout_flags = OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_EXTRA,
+                         !tp_strdiff(v32, "org.freedesktop.Telepathy.Channel.Type.Text")) )
+                {
+                  v33 = mc_profile_action_get_name(protocol, v28);
+                  v34 = g_dgettext("osso-addressbook", v33);
+                  v35 = mc_profile_action_get_icon_name(protocol, v28);
+                  button = j_osso_abook_contact_field_create_button(field, v34, v35);
+                  v37 = action_new(field, action, protocol, button, layout_flags);
+                  actions = g_list_prepend(actions, v37);
+                }
+                g_hash_table_destroy(v29);
+              }
+            }
+            g_object_unref(protocol);
+            link_ = g_list_delete_link(link_, link_);
+            mc_profile_actions_list_free(profile_actions);
+          }
+          while ( link_ );
+        }
+      }
+    }
+#endif
     master_contact = osso_abook_contact_field_get_master_contact(field);
 
     if (!OSSO_ABOOK_IS_VOICEMAIL_CONTACT(master_contact))
