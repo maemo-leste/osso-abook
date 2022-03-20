@@ -242,13 +242,25 @@ _contact_get_first_name_display_value(OssoABookContact *contact,
 }
 
 static gchar *
-contact_get(OssoABookContact *contact, EContactField e_field,
-            const gchar *attr_name)
+contact_get_by_id(OssoABookContact *contact, EContactField e_field,
+                  const gchar *attr_name)
 {
   if (e_field > E_CONTACT_FIELD_LAST)
     return NULL;
 
   return e_contact_get(E_CONTACT(contact), e_field);
+}
+
+static gchar *
+contact_get_by_attr_name(OssoABookContact *contact, EContactField e_field,
+                         const gchar *attr_name)
+{
+  EVCardAttribute *attr = e_vcard_get_attribute(E_VCARD(contact), attr_name);
+
+  if (!attr)
+    return NULL;
+
+  return e_vcard_attribute_get_value(attr);
 }
 
 static void
@@ -613,7 +625,7 @@ static MergeConflictResolver resolvers[] =
     NULL,
     merge_widget_text_create,
     merge_widget_text_get,
-    contact_get,
+    contact_get_by_id,
     contact_get_data,
     contact_set
   },
@@ -625,7 +637,7 @@ static MergeConflictResolver resolvers[] =
     NULL,
     merge_widget_text_create,
     merge_widget_text_get,
-    contact_get,
+    contact_get_by_id,
     contact_get_data,
     contact_set
   },
@@ -637,7 +649,7 @@ static MergeConflictResolver resolvers[] =
     NULL,
     merge_widget_text_create,
     merge_widget_text_get,
-    contact_get,
+    contact_get_by_id,
     contact_get_data,
     contact_set
   },
@@ -649,7 +661,7 @@ static MergeConflictResolver resolvers[] =
     NULL,
     merge_widget_text_create,
     merge_widget_text_get,
-    contact_get,
+    contact_get_by_id,
     contact_get_data,
     contact_set
   },
@@ -673,7 +685,7 @@ static MergeConflictResolver resolvers[] =
     NULL,
     merge_widget_contact_field_create,
     merge_widget_contact_get_data,
-    contact_get,
+    contact_get_by_attr_name,
     contact_get_data,
     e_vcard_set
   }
