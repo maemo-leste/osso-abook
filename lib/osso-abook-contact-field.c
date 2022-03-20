@@ -1167,6 +1167,25 @@ action_new(OssoABookContactField *field, OssoABookContactAction contact_action,
   return action;
 }
 
+static gboolean
+secondary_vcard_field_is_tel(TpAccount *account)
+{
+  const gchar *const *schemes = tp_account_get_uri_schemes(account);
+
+  if (!schemes)
+    return FALSE;
+
+  while (*schemes)
+  {
+    if (!strcmp(*schemes, "tel"))
+      return TRUE;
+
+    schemes++;
+  }
+
+  return FALSE;
+}
+
 static GList *
 get_mail_actions(OssoABookContactField *field)
 {
@@ -1225,6 +1244,33 @@ get_url_actions(OssoABookContactField *field)
 }
 
 static GList *
+get_tel_protocols()
+{
+  GList *all = osso_abook_account_manager_list_accounts(NULL, NULL, NULL);
+  GList *tel_accounts = NULL;
+  GList *l;
+
+  for (l = all; l; l = l->next)
+  {
+    if (tp_account_is_enabled(l->data))
+    {
+      if (secondary_vcard_field_is_tel(l->data))
+      {
+        TpProtocol *protocol =
+            osso_abook_account_manager_get_account_protocol_object(NULL,
+                                                                   l->data);
+        if (protocol && !g_list_find(tel_accounts, protocol))
+          tel_accounts = g_list_prepend(tel_accounts, protocol);
+      }
+    }
+  }
+
+  g_list_free(all);
+
+  return tel_accounts;
+}
+
+static GList *
 get_phone_actions(OssoABookContactField *field)
 {
   OssoABookContact *master_contact;
@@ -1241,91 +1287,62 @@ get_phone_actions(OssoABookContactField *field)
         osso_abook_contact_field_create_button_with_label(field);
 
     actions = g_list_prepend(
-          NULL,
+          actions,
           action_new(field, OSSO_ABOOK_CONTACT_ACTION_NONE,
                      protocol_tel, button,
                      OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY));
   }
   else
   {
-#if 0
     if (!OSSO_ABOOK_IS_VOICEMAIL_CONTACT(priv->master_contact))
     {
-      accounts = osso_abook_account_manager_list_accounts(NULL, NULL, NULL);
+      GList *protocols;
 
-      if (accounts)
+      for (protocols = get_tel_protocols(); protocols;
+           protocols = g_list_delete_link(protocols, protocols))
       {
-        link_ = 0;
-        l = accounts;
-        do
-        {
-          v22 = (McAccount *)l->data;
-          if ( mc_account_is_enabled((McAccount *)l->data) )
-          {
-            if ( secondary_vcard_field_is_tel(v22) )
-            {
-              profile_id = mc_account_compat_get_profile(v22);
-              if ( profile_id )
-              {
-                if ( *profile_id )
-                {
-                  profile = mc_profile_lookup(profile_id);
-                  if ( profile )
-                  {
-                    if ( g_list_find(link_, profile) )
-                      g_object_unref(profile);
-                    else
-                      link_ = g_list_prepend(link_, profile);
-                  }
-                }
-              }
-            }
-          }
-          l = l->next;
-        }
-        while ( l );
-        g_list_free(accounts);
+        TpProtocol *protocol = protocols->data;
+        TpCapabilities *caps = tp_protocol_get_capabilities(protocol);
 
-        if (link_)
+        if (tp_capabilities_supports_text_chats(caps))
         {
-          actions = 0;
-          do
-          {
-            protocol = (McProfile *)link_->data;
-            v26 = mc_profile_actions_list_by_vcard_field((McProfile *)link_->data, "TEL");
-            for ( profile_actions = v26; v26; v26 = v26->next )
-            {
-              v28 = (const gchar *)v26->data;
-              v29 = mc_profile_action_get_properties(protocol, (const gchar *)v26->data);
-              if ( v29 )
-              {
-                action = OSSO_ABOOK_CONTACT_ACTION_VOIPTO_AUDIO;
-                v32 = tp_asv_get_string(v29, "org.freedesktop.Telepathy.Channel.ChannelType");
-                layout_flags = OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_EXTRA|OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY;
-                if ( !tp_strdiff(v32, "org.freedesktop.Telepathy.Channel.Type.StreamedMedia")
-                     || (action = OSSO_ABOOK_CONTACT_ACTION_CHATTO,
-                         layout_flags = OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_EXTRA,
-                         !tp_strdiff(v32, "org.freedesktop.Telepathy.Channel.Type.Text")) )
-                {
-                  v33 = mc_profile_action_get_name(protocol, v28);
-                  v34 = g_dgettext("osso-addressbook", v33);
-                  v35 = mc_profile_action_get_icon_name(protocol, v28);
-                  button = j_osso_abook_contact_field_create_button(field, v34, v35);
-                  v37 = action_new(field, action, protocol, button, layout_flags);
-                  actions = g_list_prepend(actions, v37);
-                }
-                g_hash_table_destroy(v29);
-              }
-            }
-            g_object_unref(protocol);
-            link_ = g_list_delete_link(link_, link_);
-            mc_profile_actions_list_free(profile_actions);
-          }
-          while ( link_ );
+          const char *msgid = _("addr_bd_cont_starter_chat");
+          GtkWidget *button;
+          gchar *title = g_strdup_printf(
+                msgid, tp_protocol_get_english_name(protocol));
+
+          button = osso_abook_contact_field_create_button(
+                field, title, tp_protocol_get_icon_name(protocol));
+          actions = g_list_prepend(
+                actions,
+                action_new(field, OSSO_ABOOK_CONTACT_ACTION_CHATTO,
+                           protocol, button,
+                           OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_EXTRA |
+                           OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY));
+          g_free(title);
+        }
+
+        if (tp_capabilities_supports_audio_call(caps, TP_HANDLE_TYPE_CONTACT))
+        {
+          const char *msgid = _("addr_bd_cont_starter_call");
+          GtkWidget *button;
+          gchar *title = g_strdup_printf(
+                msgid, tp_protocol_get_english_name(protocol));
+
+          button = osso_abook_contact_field_create_button(
+                field, title, tp_protocol_get_icon_name(protocol));
+          actions = g_list_prepend(
+                actions,
+                action_new(field, OSSO_ABOOK_CONTACT_ACTION_VOIPTO_AUDIO,
+                           protocol, button,
+                           OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_EXTRA |
+                           OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY));
+          g_free(title);
+
         }
       }
     }
-#endif
+
     master_contact = osso_abook_contact_field_get_master_contact(field);
 
     if (!OSSO_ABOOK_IS_VOICEMAIL_CONTACT(master_contact))
@@ -4081,22 +4098,6 @@ osso_abook_contact_field_get_label_widget(OssoABookContactField *field)
   g_list_free(templates);
 
   return priv->label;
-}
-
-static gboolean
-secondary_vcard_field_is_tel(TpAccount *account)
-{
-  const gchar *const *schemes = tp_account_get_uri_schemes(account);
-
-  while (*schemes)
-  {
-    if (!strcmp(*schemes, "tel"))
-      return TRUE;
-
-    schemes++;
-  }
-
-  return FALSE;
 }
 
 TpAccount *
