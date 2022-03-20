@@ -37,6 +37,7 @@
 #include "osso-abook-dialogs.h"
 #include "osso-abook-entry.h"
 #include "osso-abook-enums.h"
+#include "osso-abook-log.h"
 #include "osso-abook-message-map.h"
 #include "osso-abook-msgids.h"
 #include "osso-abook-string-list.h"
@@ -4284,6 +4285,7 @@ contact_action_date(GtkWindow *parent, OssoABookContact *contact)
                                G_TYPE_INVALID,
                                G_TYPE_INVALID);
     g_object_unref(proxy);
+    dbus_g_connection_unref(dbus);
   }
   else
     osso_abook_handle_gerror(parent, error);
@@ -4360,6 +4362,61 @@ contact_action_url(GtkWindow *parent, const char *url)
 
   open_url(parent, _url);
   g_free(_url);
+
+  return TRUE;
+}
+
+static void
+handle_mmi_code_cb(DBusGProxy *proxy, DBusGProxyCall *call_id,
+                   gpointer user_data)
+{
+  struct action_start_data *data = user_data;
+  GError *error = NULL;
+
+  dbus_g_proxy_end_call(proxy, call_id, &error, G_TYPE_INVALID);
+
+  if (data && data->cb)
+    data->cb(error, data->parent, data->cb_data);
+
+  if (error)
+    g_error_free(error);
+
+  g_object_unref(proxy);
+}
+
+static gboolean
+contact_action_mmicode(struct action_start_data *data, const char *code)
+{
+  DBusGConnection *dbus;
+  DBusGProxy *proxy;
+  GError *error = NULL;
+
+  if (!g_str_has_suffix(code, "#") ||
+      code[strcspn(code, OSSO_ABOOK_DTMF_CHARS)])
+  {
+    return FALSE;
+  }
+
+  dbus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
+
+  if (error)
+  {
+    OSSO_ABOOK_WARN("%s", error->message);
+    g_clear_error(&error);
+    return FALSE;
+  }
+
+  proxy = dbus_g_proxy_new_for_name(dbus,
+                                    "com.nokia.CallUI",
+                                    "/com/nokia/CallUI",
+                                    "com.nokia.CallUI");
+  dbus_g_proxy_begin_call(proxy,
+                          "HandleMMICode", handle_mmi_code_cb, data,
+                          (GDestroyNotify)destroy_action_start_data,
+                          G_TYPE_STRING, code,
+                          G_TYPE_INVALID);
+
+  dbus_g_connection_unref(dbus);
 
   return TRUE;
 }
@@ -4480,6 +4537,38 @@ request_channel(TpAccount *account, OssoABookContactAction action,
   return TRUE;
 }
 
+static gboolean
+set_action_progress_indicator(gpointer user_data)
+{
+  struct action_start_data *data = user_data;
+
+  if (data->parent)
+    hildon_gtk_window_set_progress_indicator(data->parent, 1);
+
+  data->timeout_id = 0;
+
+  return FALSE;
+}
+
+static struct action_start_data *
+create_action_start_data(OssoABookContactActionStartCb cb, gpointer cb_data,
+                         GtkWindow *parent)
+{
+  struct action_start_data *data = g_slice_new0(struct action_start_data);
+
+  data->cb = cb;
+  data->cb_data = cb_data;
+  data->parent = parent;
+
+  if (parent)
+  {
+    data->timeout_id = g_timeout_add(250, set_action_progress_indicator, data);
+    g_object_add_weak_pointer((GObject *)data->parent, (gpointer *)&data->parent);
+  }
+
+  return data;
+}
+
 /* *INDENT-OFF* */
 gboolean
 osso_abook_contact_action_start_with_callback(
@@ -4512,6 +4601,17 @@ osso_abook_contact_action_start_with_callback(
 
   switch (action)
   {
+    case OSSO_ABOOK_CONTACT_ACTION_TEL:
+    {
+      data = create_action_start_data(callback, callback_data, parent);
+
+      if (contact_action_mmicode(data, values->data))
+        return TRUE;
+
+      rv = request_channel(account, OSSO_ABOOK_CONTACT_ACTION_TEL,
+                           values->data, &error);
+      break;
+    }
     case OSSO_ABOOK_CONTACT_ACTION_SMS:
     case OSSO_ABOOK_CONTACT_ACTION_CHATTO:
     case OSSO_ABOOK_CONTACT_ACTION_VOIPTO:
