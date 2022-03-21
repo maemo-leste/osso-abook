@@ -4674,7 +4674,7 @@ osso_abook_contact_action_start_with_callback(
 /* *INDENT-ON* */
 {
   GList *values;
-  gboolean rv;
+  gboolean rv = FALSE;
   GError *error = NULL;
   struct action_start_data *data = NULL;
 
