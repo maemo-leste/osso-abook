@@ -558,7 +558,7 @@ sequence_complete_cb(EBookView *view, gint status, OssoABookRoster *roster)
 
     if (status)
     {
-      GError *error = g_error_new(e_book_error_quark(), 20,
+      GError *error = g_error_new(E_BOOK_ERROR, E_BOOK_ERROR_OTHER_ERROR,
                                   "EBookViewStatus=%d", status);
 
       osso_abook_waitable_notify(OSSO_ABOOK_WAITABLE(roster), error);

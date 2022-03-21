@@ -82,7 +82,7 @@ _osso_abook_handle_estatus(GtkWindow *parent, const char *strloc,
   const char *on;
   const char *msg;
 
-  if (!status)
+  if (status == E_BOOK_ERROR_OK)
     return;
 
   if (E_IS_BOOK(book))
@@ -144,4 +144,13 @@ _osso_abook_check_disc_space(GtkWindow *parent, const char *strloc,
   }
 
   return !disk_full;
+}
+
+GError *
+osso_abook_error_new_from_estatus(EBookStatus status)
+{
+  if (status == E_BOOK_ERROR_OK)
+    return NULL;
+
+  return g_error_new_literal(OSSO_ABOOK_ERROR, 1, estatus_to_string(status));
 }

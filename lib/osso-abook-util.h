@@ -192,6 +192,10 @@ GList *
 osso_abook_e_vcard_util_split_cards (const char *str,
                                      gsize *len);
 
+gboolean
+osso_abook_e_vcard_attribute_equal(EVCardAttribute *attr_a,
+                                   EVCardAttribute *attr_b);
+
 G_END_DECLS
 
 #endif

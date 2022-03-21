@@ -279,7 +279,7 @@ contact_removed_cb(EBook *book, EBookStatus status, gpointer closure)
     gtk_widget_set_sensitive(gtk_bin_get_child(GTK_BIN(closure)), TRUE);
   }
 
-  if (status)
+  if (status != E_BOOK_ERROR_OK)
     osso_abook_handle_estatus(NULL, status, book);
 
   g_object_unref(closure);

@@ -1289,7 +1289,7 @@ commit_contact_cb(EBook *book, EBookStatus status, gpointer closure)
   const char *merged_uid = NULL;
   GList *contact;
 
-  if (!status)
+  if (status == E_BOOK_ERROR_OK)
   {
     merged_uid = e_contact_get_const(E_CONTACT(data->merged_contact),
                                      E_CONTACT_UID);

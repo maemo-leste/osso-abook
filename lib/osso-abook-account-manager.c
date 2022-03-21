@@ -331,7 +331,7 @@ roster_get_book_view_cb(EBook *book, EBookStatus status, EBookView *book_view,
 
   OSSO_ABOOK_NOTE(TP, "got book view for %s", path_suffix);
 
-  if (status)
+  if (status != E_BOOK_ERROR_OK)
     osso_abook_handle_estatus(NULL, status, book);
   else if (info->is_pending)
   {
@@ -646,7 +646,7 @@ osso_abook_account_manager_account_created(OssoABookAccountManager *manager,
 static void
 async_book_remove_cb(EBook *book, EBookStatus status, gpointer closure)
 {
-  if (status)
+  if (status != E_BOOK_ERROR_OK)
     g_warning("%s: cannot remove book: %d", __FUNCTION__, status);
 
   g_object_unref(book);

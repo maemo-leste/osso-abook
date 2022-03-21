@@ -1285,7 +1285,7 @@ aggregator_get_book_view_cb(EBook *book, EBookStatus status,
 
   g_signal_emit(user_data, signals[EBOOK_STATUS], 0, status, &result);
 
-  if (status)
+  if (status != E_BOOK_ERROR_OK)
   {
     if (!result)
       osso_abook_handle_estatus(NULL, status, book);
@@ -1392,7 +1392,7 @@ restore_master_contact_cb(EBook *book, EBookStatus status, EContact *econtact,
   OssoABookAggregator *aggregator = closure;
   OssoABookAggregatorPrivate *priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
 
-  if (status)
+  if (status != E_BOOK_ERROR_OK)
   {
     if (status == E_BOOK_ERROR_CONTACT_NOT_FOUND)
       OSSO_ABOOK_NOTE(TODO, "unload contact with unknown UID");

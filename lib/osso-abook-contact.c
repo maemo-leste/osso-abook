@@ -2753,14 +2753,14 @@ static void
 _commit_async_add_cb(EBook *book, EBookStatus status, const gchar *id,
                      gpointer closure)
 {
-  if (status)
+  if (status != E_BOOK_ERROR_OK)
     osso_abook_handle_estatus(closure, status, book);
 }
 
 static void
 _commit_async_commit_cb(EBook *book, EBookStatus status, gpointer closure)
 {
-  if (status)
+  if (status != E_BOOK_ERROR_OK)
     osso_abook_handle_estatus(closure, status, book);
 }
 
@@ -4021,7 +4021,7 @@ osso_abook_contact_attribute_set_protocol(EVCardAttribute *attribute,
   const char *vcard_field = e_vcard_attribute_get_name(attribute);
   GList *profiles = get_protocols_by_vcard_field(vcard_field);
 
-  if (find_protocol(profiles, protocol) )
+  if (find_protocol(profiles, protocol))
   {
     GList *types = NULL;
     GList *param = e_vcard_attribute_get_param(attribute, EVC_TYPE);

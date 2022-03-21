@@ -4569,6 +4569,102 @@ create_action_start_data(OssoABookContactActionStartCb cb, gpointer cb_data,
   return data;
 }
 
+static void
+bind_accept_contact_cb(EBook *book, EBookStatus status, const gchar *id,
+                       gpointer closure)
+{
+  struct action_start_data *data = closure;
+  GError *error;
+
+  if (status != E_BOOK_ERROR_OK)
+    error = osso_abook_error_new_from_estatus(status);
+  else
+    error = g_error_new(OSSO_ABOOK_ERROR, OSSO_ABOOK_ERROR_CANCELLED, "%s", "");
+
+  if (data && data->cb )
+    data->cb(error, data->parent, data->cb_data);
+
+  if (error)
+    g_error_free(error);
+
+  destroy_action_start_data(data);
+}
+
+static void
+bind_commit_contact_cb(EBook *book, EBookStatus status, gpointer closure)
+{
+  struct action_start_data *data = closure;
+
+  if (status != E_BOOK_ERROR_OK)
+  {
+    if (data && data->cb)
+    {
+      GError *error = osso_abook_error_new_from_estatus(status);
+      data->cb(error, data->parent, data->cb_data);
+      g_error_free(error);
+    }
+
+    destroy_action_start_data(data);
+  }
+  else
+  {
+    osso_abook_contact_async_accept(data->contact, data->uid,
+                                    bind_accept_contact_cb, data);
+  }
+}
+
+
+static GList *
+find_attribute(GList *attrs, EVCardAttribute *attr)
+{
+  GList *l;
+
+  for (l = attrs; l; l = l->next)
+  {
+    if (osso_abook_e_vcard_attribute_equal(attr, l->data))
+      break;
+  }
+
+  return l;
+}
+
+static void
+contact_action_bind(GtkWindow *parent, TpAccount *account,
+                    OssoABookContact *contact,
+                    EVCardAttribute *attribute,
+                    struct action_start_data *data)
+{
+    OssoABookRoster *roster = osso_abook_roster_manager_get_roster(
+        NULL, tp_account_get_path_suffix(account));
+    OssoABookContact *new_contact;
+    EVCardAttribute *protocol_attribute;
+    GList *found;
+
+    data->uid = g_strdup(e_contact_get_const(E_CONTACT(contact),
+                                             E_CONTACT_UID));
+    data->contact = osso_abook_contact_new();
+    osso_abook_contact_set_roster(data->contact, roster);
+    e_vcard_add_attribute(E_VCARD(data->contact),
+                          e_vcard_attribute_copy(attribute));
+    new_contact = osso_abook_contact_new_from_template(E_CONTACT(contact));
+    found = find_attribute(e_vcard_get_attributes(E_VCARD(new_contact)),
+                           attribute);
+
+    if (found)
+      protocol_attribute = found->data;
+    else
+    {
+      protocol_attribute = e_vcard_attribute_copy(attribute);
+      e_vcard_add_attribute(E_VCARD(new_contact), protocol_attribute);
+    }
+
+    osso_abook_contact_attribute_set_protocol(
+          protocol_attribute, tp_account_get_protocol_name(account));
+    osso_abook_contact_async_commit(new_contact, NULL, bind_commit_contact_cb,
+                                    data);
+    g_object_unref(new_contact);
+}
+
 /* *INDENT-OFF* */
 gboolean
 osso_abook_contact_action_start_with_callback(
@@ -4640,6 +4736,17 @@ osso_abook_contact_action_start_with_callback(
     {
       osso_abook_add_im_account_dialog_run(parent);
       rv = TRUE;
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_BIND:
+    {
+      if (is_online_connected(account, &error))
+      {
+        data = create_action_start_data(callback, callback_data, parent);
+        contact_action_bind(parent, account, contact, attribute, data);
+        return TRUE;
+      }
+
       break;
     }
     case OSSO_ABOOK_CONTACT_ACTION_CHATTO_ERROR:
