@@ -7,6 +7,7 @@
 #include "eds.h"
 #include "osso-abook-debug.h"
 #include "osso-abook-init.h"
+#include "osso-abook-util.h"
 
 static osso_context_t *osso_abook_osso_context = NULL;
 
@@ -39,6 +40,8 @@ _osso_abook_init_with_args(int *argc, char ***argv,
     if (gtk_icon_size_from_name("hildon-finger") == GTK_ICON_SIZE_INVALID)
       hildon_init();
   }
+
+  g_mkdir_with_parents(osso_abook_get_work_dir(), 0755);
 
   return rv;
 }
