@@ -23,9 +23,10 @@
 
 #include "osso-abook-account-manager.h"
 #include "osso-abook-log.h"
-#include "osso-abook-roster.h"
 #include "osso-abook-roster-manager.h"
+#include "osso-abook-roster.h"
 #include "osso-abook-util.h"
+#include "osso-abook-utils-private.h"
 
 #include "osso-abook-service-group.h"
 
@@ -47,8 +48,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(
 );
 
 #define OSSO_ABOOK_SERVICE_GROUP_PRIVATE(group) \
-  ((OssoABookServiceGroupPrivate *)osso_abook_service_group_get_instance_private( \
-     group))
+  ((OssoABookServiceGroupPrivate *) \
+   osso_abook_service_group_get_instance_private(group))
 
 enum
 {
@@ -221,8 +222,8 @@ osso_abook_service_group_sort_func(const OssoABookListStoreRow *row_a,
                                    gpointer user_data)
 {
   return osso_abook_presence_compare_for_display(
-    OSSO_ABOOK_PRESENCE(row_a->contact),
-    OSSO_ABOOK_PRESENCE(row_b->contact));
+           OSSO_ABOOK_PRESENCE(row_a->contact),
+           OSSO_ABOOK_PRESENCE(row_b->contact));
 }
 
 static OssoABookListStoreCompareFunc
@@ -319,15 +320,15 @@ _account_changed_cb(OssoABookAccountManager *manager, TpAccount *account,
                     GQuark property, const GValue *value, gpointer user_data)
 {
   OssoABookServiceGroup *group =
-      g_hash_table_lookup(service_groups_by_name,
-                          tp_account_get_path_suffix(account));
+    g_hash_table_lookup(service_groups_by_name,
+                        tp_account_get_path_suffix(account));
 
   if (group)
   {
     OssoABookServiceGroupPrivate *priv =
-        OSSO_ABOOK_SERVICE_GROUP_PRIVATE(group);
+      OSSO_ABOOK_SERVICE_GROUP_PRIVATE(group);
     gchar *display_name = osso_abook_tp_account_get_display_string(
-          account, NULL, "%s - %s");
+        account, NULL, "%s - %s");
 
     if (strcmp(display_name, priv->name))
     {
@@ -375,6 +376,7 @@ osso_abook_service_group_get(TpAccount *account)
 {
   OssoABookServiceGroup *group;
   const char *protocol;
+  const char *icon_name;
   gchar *display_name;
   OssoABookServiceGroupPrivate *priv;
   OssoABookAccountManager *manager;
@@ -386,10 +388,10 @@ osso_abook_service_group_get(TpAccount *account)
   if (!service_groups_by_name)
   {
     service_groups_by_name = g_hash_table_new_full(
-                               (GHashFunc)&g_str_hash,
-                               (GEqualFunc)&g_str_equal,
-                               (GDestroyNotify)&g_free,
-                               (GDestroyNotify)&g_object_unref);
+        (GHashFunc)&g_str_hash,
+        (GEqualFunc)&g_str_equal,
+        (GDestroyNotify)&g_free,
+        (GDestroyNotify)&g_object_unref);
   }
 
   group = g_hash_table_lookup(service_groups_by_name,
@@ -403,7 +405,7 @@ osso_abook_service_group_get(TpAccount *account)
   if (protocol)
   {
     protocol_object =
-        osso_abook_account_manager_get_protocol_object(NULL, protocol);
+      osso_abook_account_manager_get_protocol_object(NULL, protocol);
   }
 
   if (!protocol_object)
@@ -416,7 +418,7 @@ osso_abook_service_group_get(TpAccount *account)
     return NULL;
 
   display_name = osso_abook_tp_account_get_display_string(
-        account, osso_abook_tp_account_get_bound_name(account), "%s - %s");
+      account, osso_abook_tp_account_get_bound_name(account), "%s - %s");
 
   group = g_object_new(OSSO_ABOOK_TYPE_SERVICE_GROUP,
                        "service-name", tp_account_get_path_suffix(account),
@@ -428,7 +430,13 @@ osso_abook_service_group_get(TpAccount *account)
 
   priv = OSSO_ABOOK_SERVICE_GROUP_PRIVATE(group);
   priv->account = account;
-  priv->icon_name = g_strdup(tp_protocol_get_icon_name(protocol_object));
+
+  icon_name = tp_account_get_icon_name(account);
+
+  if (!IS_EMPTY(icon_name))
+    icon_name = tp_protocol_get_icon_name(protocol_object);
+
+  priv->icon_name = g_strdup(icon_name);
   priv->vcard_field = g_strdup(tp_protocol_get_vcard_field(protocol_object));
 
   manager = osso_abook_account_manager_get_default();
@@ -436,8 +444,8 @@ osso_abook_service_group_get(TpAccount *account)
   if (!account_changed_id)
   {
     account_changed_id =
-        g_signal_connect(manager, "account-changed",
-                         G_CALLBACK(_account_changed_cb), NULL);
+      g_signal_connect(manager, "account-changed",
+                       G_CALLBACK(_account_changed_cb), NULL);
   }
 
   if (!roster_created_id)

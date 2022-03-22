@@ -3354,6 +3354,7 @@ osso_abook_contact_field_constructed(GObject *object)
   TpProtocol *protocol = NULL;
   GList *contacts = NULL;
   const gchar *name;
+  gchar *icon_name = NULL;
   gboolean titles_set = FALSE;
   int i;
 
@@ -3439,6 +3440,7 @@ osso_abook_contact_field_constructed(GObject *object)
     if (account)
     {
       const gchar *display_title = NULL;
+      const gchar *tmp_icon_name;
       protocol = osso_abook_contact_get_protocol(priv->roster_contact);
 
       if (contacts && !contacts->next)
@@ -3451,6 +3453,11 @@ osso_abook_contact_field_constructed(GObject *object)
       priv->secondary_title =
         g_strdup(osso_abook_tp_account_get_bound_name(account));
       titles_set = TRUE;
+
+      tmp_icon_name = tp_account_get_icon_name(account);
+
+      if (!IS_EMPTY(tmp_icon_name))
+        icon_name = g_strdup(tmp_icon_name);
     }
   }
 
@@ -3479,7 +3486,11 @@ osso_abook_contact_field_constructed(GObject *object)
     priv->template = g_slice_new(OssoABookContactFieldTemplate);
     *priv->template = t;
     priv->template->actions = get_dynamic_actions;
-    priv->template->icon_name = g_strdup(tp_protocol_get_icon_name(protocol));
+
+    if (!icon_name)
+      icon_name = g_strdup(tp_protocol_get_icon_name(protocol));
+
+    priv->template->icon_name = icon_name;
 
     if (!priv->display_title)
       priv->display_title = g_strdup(tp_protocol_get_english_name(protocol));
