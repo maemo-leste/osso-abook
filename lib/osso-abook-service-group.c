@@ -433,7 +433,7 @@ osso_abook_service_group_get(TpAccount *account)
 
   icon_name = tp_account_get_icon_name(account);
 
-  if (!IS_EMPTY(icon_name))
+  if (IS_EMPTY(icon_name))
     icon_name = tp_protocol_get_icon_name(protocol_object);
 
   priv->icon_name = g_strdup(icon_name);
