@@ -1084,16 +1084,11 @@ account_get_display_string(TpAccount *account, const char *username,
 
   if (IS_EMPTY(display_name))
   {
-    const char *protocol = tp_account_get_protocol_name(account);
+    TpProtocol *protocol_object =
+      osso_abook_account_manager_get_account_protocol_object(NULL, account);
 
-    if (protocol)
-    {
-      TpProtocol *protocol_object =
-        osso_abook_account_manager_get_protocol_object(NULL, protocol);
-
-      if (protocol_object)
-        display_name = tp_protocol_get_english_name(protocol_object);
-    }
+    if (protocol_object)
+      display_name = tp_protocol_get_english_name(protocol_object);
 
     if (IS_EMPTY(display_name))
       display_name = tp_account_get_path_suffix(account);
