@@ -274,7 +274,10 @@ modify_account(OssoABookTpAccountModel *model, TpAccount *account,
         priv->account_manager, tp_account_get_protocol_name(account));
       char *display_string = osso_abook_tp_account_get_display_string(
         account, NULL, NULL);
-      const gchar *icon_name = tp_protocol_get_icon_name(protocol);
+      const gchar *icon_name = tp_account_get_icon_name(account);
+
+      if (IS_EMPTY(icon_name))
+        icon_name = tp_protocol_get_icon_name(protocol);
 
       gtk_list_store_insert_with_values(
         store, &iter, 0,
