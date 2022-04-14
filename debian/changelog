@@ -1,3 +1,9 @@
+libosso-abook (4.20220414) unstable; urgency=medium
+
+  * fix contact search
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Thu, 14 Apr 2022 18:25:54 +0300
+
 libosso-abook (4.20220322) unstable; urgency=medium
 
   * new git release
