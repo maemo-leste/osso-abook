@@ -1324,6 +1324,7 @@ am_prepared_cb(GObject *object, GAsyncResult *res, gpointer user_data)
     OSSO_ABOOK_WARN("Error preparing AM: %s\n", error->message);
 
     priv->error = g_error_copy(error);
+    g_error_free(error);
   }
   else
   {
