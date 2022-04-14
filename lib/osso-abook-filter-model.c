@@ -642,6 +642,7 @@ visible_func(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
   OssoABookFilterModelPrivate *priv = data;
   OssoABookListStoreRow *row;
   const char *name;
+  gboolean rv = TRUE;
 
   if (priv->visible_cb && !priv->visible_cb(model, iter, priv->visible_data))
     return FALSE;
@@ -664,42 +665,31 @@ visible_func(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
   if (!name || !*name)
     return priv->show_unnamed;
 
-  if (!priv->bits)
-    return TRUE;
-
-  if (!priv->prefix)
+  for (GList *l = priv->bits; l; l = l->next)
   {
-    /* text match */
-    for (GList *l = priv->bits; l; l = l->next)
+    if (priv->prefix)
     {
-      if (!_osso_abook_utf8_strstrcasestrip(name, l->data, NULL))
-        return FALSE;
-    }
-  }
-  else
-  {
-    /* prefix match */
-    const char *next = name;
+      const char *next = name;
 
-    for (GList *l = priv->bits; l; l = l->next)
-    {
-      if (!_osso_abook_utf8_strstartswithcasestrip(next, l->data, NULL))
-        return FALSE;
-    }
-
-    while ((next = strchr(next, ' ')))
-    {
-      next++;
-
-      for (GList *l = priv->bits; l; l = l->next)
+      while (!(rv = _osso_abook_utf8_strstartswithcasestrip(
+                 next, l->data, NULL)))
       {
-        if (!_osso_abook_utf8_strstartswithcasestrip(next, l->data, NULL))
-          return FALSE;
+        if (!(next = strchr(next, ' ')))
+          return rv;
+
+        next++;
       }
     }
+    else
+    {
+      rv = _osso_abook_utf8_strstrcasestrip(name, l->data, NULL) != NULL;
+
+      if (!rv)
+        break;
+    }
   }
 
-  return TRUE;
+  return rv;
 }
 
 static void
