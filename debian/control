@@ -22,15 +22,12 @@ Build-Depends:
  libmodest-dbus-client-dev,
  iso-codes,
  libglibutil-dev,
+ librtcom-accounts-ui-client-dev
 Section: libs
 Standards-Version: 4.3.0
 # Packages that could/should go in Build-Depends, but are currently missing:
-#libgtk2.0-dev,
-#libdbus-glib-1-dev,
 #conbtdialogs-dev,
-#libmcclient-dev (>= 5.0.beta59),
 #libnavigation-dev (>= 0.105),
-#librtcom-accounts-ui-client-dev,
 
 Package: libosso-abook
 Section: libs

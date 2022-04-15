@@ -30,71 +30,18 @@ API_VERSION_MAJOR=1.0
 AC_SUBST(API_VERSION_MAJOR)
 
 PKG_CHECK_MODULES(OSSO, libosso)
-AC_SUBST(OSSO_CFLAGS)
-AC_SUBST(OSSO_LIBS)
-
 PKG_CHECK_MODULES(HILDON, hildon-1 hildon-fm-2 libhildonmime)
-AC_SUBST(HILDON_CFLAGS)
-AC_SUBST(HILDON_LIBS)
-
 PKG_CHECK_MODULES(EBOOK, libebook-contacts-1.2 libebook-1.2)
-AC_SUBST(EBOOK_CFLAGS)
-AC_SUBST(EBOOK_LIBS)
-
 PKG_CHECK_MODULES(GMODULE, gmodule-2.0)
-AC_SUBST(GMODULE_CFLAGS)
-AC_SUBST(GMODULE_LIBS)
-
 PKG_CHECK_MODULES(GCONF, gconf-2.0)
-AC_SUBST(GCONF_CFLAGS)
-AC_SUBST(GCONF_LIBS)
-
 PKG_CHECK_MODULES(TPGLIB, telepathy-glib)
-AC_SUBST(TPGLIB_CFLAGS)
-AC_SUBST(TPGLIB_LIBS)
-
-PKG_CHECK_MODULES(RTCOM, rtcom-eventlogger)
-AC_SUBST(RTCOM_CFLAGS)
-AC_SUBST(RTCOM_LIBS)
-
+PKG_CHECK_MODULES(RTCOM, rtcom-eventlogger rtcom-accounts-ui-client)
 PKG_CHECK_MODULES(XML, [libxml-2.0 iso-codes])
-AC_SUBST(XML_CFLAGS)
-AC_SUBST(XML_LIBS)
-
 PKG_CHECK_MODULES(CAIRO, [cairo])
-AC_SUBST(CAIRO_CFLAGS)
-AC_SUBST(CAIRO_LIBS)
-
 PKG_CHECK_MODULES(GOFONO, [libgofono libglibutil])
-AC_SUBST(GOFONO_CFLAGS)
-AC_SUBST(GOFONO_LIBS)
-
 PKG_CHECK_MODULES(MBPI, [mobile-broadband-provider-info])
 PKG_CHECK_MODULES(ISO_CODES, [iso-codes])
-
 PKG_CHECK_MODULES(MODEST_DBUS, [libmodest-dbus-client-1.0])
-
-
-AC_ARG_ENABLE([maemo-launcher],
-              [AS_HELP_STRING([--enable-maemo-launcher],
-                              [build with maemo-launcher support])],
-                              [case "${enableval}" in
-                               yes) maemo_launcher=true ;;
-                               no)  maemo_launcher=false ;;
-                               *) AC_MSG_ERROR([bad value ${enableval} for --enable-maemo-launcher]) ;;
-                               esac], [maemo_launcher=false])
-
-MAEMO_LAUNCHER_PACKAGE=""
-if test "x$maemo_launcher" = "xtrue"; then
-  MAEMO_LAUNCHER_PACKAGE="maemo-launcher-app"
-  PKG_CHECK_MODULES(LAUNCHER_DEPS, $MAEMO_LAUNCHER_PACKAGE)
-else
-  LAUNCHER_DEPS_CFLAGS=""
-  LAUNCHER_DEPS_LIBS=""
-fi
-
-AC_SUBST(LAUNCHER_DEPS_CFLAGS)
-AC_SUBST(LAUNCHER_DEPS_LIBS)
 
 #+++++++++++++++++++
 # Directories setup

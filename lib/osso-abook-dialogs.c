@@ -20,6 +20,7 @@
 #include "config.h"
 
 #include <glib.h>
+#include <rtcom-accounts-ui-client/client.h>
 
 #include "osso-abook-gconf-contact.h"
 #include "osso-abook-init.h"
@@ -171,13 +172,10 @@ osso_abook_launch_applet(GtkWindow *parent, const char *applet)
 void
 osso_abook_add_im_account_dialog_run(GtkWindow *parent)
 {
-  g_assert(0);
-#if 0
   AuicClient *auic = auic_client_new(parent);
 
   auic_client_open_accounts_list(auic);
   g_object_unref(auic);
-#endif
 }
 
 void
