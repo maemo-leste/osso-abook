@@ -1,3 +1,9 @@
+libosso-abook (4.20220415) unstable; urgency=medium
+
+  * implement osso_abook_add_im_account_dialog_run
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Fri, 15 Apr 2022 10:20:11 +0300
+
 libosso-abook (4.20220414) unstable; urgency=medium
 
   * fix contact search
