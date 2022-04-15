@@ -215,6 +215,9 @@ osso_abook_profile_group_get(TpProtocol *protocol)
   }
 
   vcard_field = tp_protocol_get_vcard_field(protocol);
+
+  g_return_val_if_fail(vcard_field != NULL, NULL);
+
   group = g_hash_table_lookup(groups, vcard_field);
 
   if (!group)

@@ -1820,7 +1820,7 @@ osso_abook_account_manager_list_protocols(OssoABookAccountManager *manager,
     {
       const gchar *vcf = tp_protocol_get_vcard_field(protocol);
 
-      if (strcmp(attr_name, vcf))
+      if (!vcf || strcmp(attr_name, vcf))
         continue;
     }
 
