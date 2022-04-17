@@ -1982,3 +1982,20 @@ osso_abook_touch_contact_starter_start_merge(
   osso_abook_merge_with_many_dialog(contact, contact_model, parent,
                                     merge_with_cb, data);
 }
+
+GtkWidget *
+osso_abook_touch_contact_starter_dialog_new(
+    GtkWindow *parent, OssoABookTouchContactStarter *starter)
+{
+  GtkWidget *dialog = gtk_dialog_new();
+
+  gtk_widget_hide(GTK_DIALOG(dialog)->action_area);
+  gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+  gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+  gtk_window_set_destroy_with_parent(GTK_WINDOW(dialog), TRUE);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(starter),
+                     TRUE, TRUE, 0);
+  g_signal_connect_swapped(starter, "action-started",
+                           G_CALLBACK(gtk_widget_destroy), dialog);
+  return dialog;
+}
