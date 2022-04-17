@@ -1634,7 +1634,7 @@ osso_abook_aggregator_add_filter(OssoABookAggregator *aggregator,
   OssoABookAggregatorPrivate *priv;
 
   g_return_if_fail(OSSO_ABOOK_IS_AGGREGATOR(aggregator));
-  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_FILTER(aggregator));
+  g_return_if_fail(OSSO_ABOOK_IS_CONTACT_FILTER(filter));
 
   priv = OSSO_ABOOK_AGGREGATOR_PRIVATE(aggregator);
 
