@@ -1,3 +1,11 @@
+libosso-abook (4.20220417) unstable; urgency=medium
+
+  * osso_abook_aggregator_add_filter: Fix wrong condition
+  * OssoABookTouchContactStarter: add osso_abook_touch_contact_starter_dialog_new
+  * osso_abook_contact_shortcut_exists: Fix logic
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Sun, 17 Apr 2022 06:09:32 +0300
+
 libosso-abook (4.20220415) unstable; urgency=medium
 
   * implement osso_abook_add_im_account_dialog_run
