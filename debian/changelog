@@ -1,3 +1,9 @@
+libosso-abook (4.20220516) unstable; urgency=medium
+
+  * ensure_channel_async_cb: Fix uninitialized variable
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 16 May 2022 16:35:53 +0300
+
 libosso-abook (4.20220417) unstable; urgency=medium
 
   * osso_abook_aggregator_add_filter: Fix wrong condition
