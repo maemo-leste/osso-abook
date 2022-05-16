@@ -4482,7 +4482,7 @@ ensure_channel_async_cb(GObject *source_object, GAsyncResult *res,
                                gpointer user_data)
 {
   TpAccountChannelRequest *request = TP_ACCOUNT_CHANNEL_REQUEST(source_object);
-  GError *error;
+  GError *error = NULL;
 
   if (!tp_account_channel_request_ensure_channel_finish(
         request, res, &error))
