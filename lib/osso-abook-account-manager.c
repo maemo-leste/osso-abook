@@ -78,6 +78,7 @@ struct _OssoABookAccountManagerPrivate
   gulong account_ready_id;
   gulong account_removed_id;
   gulong account_enabled_id;
+  gulong account_disabled_id;
   /* protocol_name -> protocol_object */
   GHashTable *protocols;
   GList *uri_schemes;
@@ -569,6 +570,12 @@ osso_abook_account_manager_dispose(GObject *object)
   {
     g_signal_handler_disconnect(priv->tp_am, priv->account_removed_id);
     priv->account_removed_id = 0;
+  }
+
+  if (priv->account_disabled_id)
+  {
+    g_signal_handler_disconnect(priv->tp_am, priv->account_disabled_id);
+    priv->account_disabled_id = 0;
   }
 
   if (priv->account_enabled_id)
@@ -1357,6 +1364,9 @@ get_accounts(OssoABookAccountManager *manager)
 
   priv->account_removed_id =
     g_signal_connect(priv->tp_am, "account-removed",
+                     G_CALLBACK(account_removed_cb), manager);
+  priv->account_disabled_id =
+    g_signal_connect(priv->tp_am, "account-disabled",
                      G_CALLBACK(account_removed_cb), manager);
 
   priv->account_enabled_id =
