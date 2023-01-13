@@ -1,3 +1,9 @@
+libosso-abook (4.20230113) unstable; urgency=medium
+
+  * osso-abook-account-manager: handle "account-disabled" as well
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Fri, 13 Jan 2023 16:04:52 +0200
+
 libosso-abook (4.20220516) unstable; urgency=medium
 
   * ensure_channel_async_cb: Fix uninitialized variable
