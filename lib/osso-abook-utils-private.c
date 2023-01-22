@@ -733,8 +733,6 @@ _mbpi_get_name(int mnc, int mcc)
         mnc);
       xmlXPathObjectPtr obj = xmlXPathEvalExpression(BAD_CAST xpath, ctx);
 
-      g_free(xpath);
-
       if (obj && obj->nodesetval)
       {
         xmlNodeSetPtr nodes = obj->nodesetval;
@@ -753,6 +751,7 @@ _mbpi_get_name(int mnc, int mcc)
       else
         OSSO_ABOOK_WARN("Unable to evaluate xpath expression '%s'", xpath);
 
+      g_free(xpath);
       xmlXPathFreeContext(ctx);
     }
     else
