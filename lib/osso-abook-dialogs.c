@@ -27,6 +27,7 @@
 #include "osso-abook-log.h"
 #include "osso-abook-roster.h"
 #include "osso-abook-utils-private.h"
+#include "osso-abook-contact-editor.h"
 
 #include "osso-abook-dialogs.h"
 
@@ -230,4 +231,185 @@ osso_abook_confirm_delete_contacts_dialog_run(GtkWindow *parent,
 
   for (; l; l = g_list_delete_link(l, l))
     osso_abook_weak_unref((GObject **)&(l->data));
+}
+
+enum
+{
+  COLUMN_VALUE,
+  COLUMN_ATRIBUTE,
+  N_COLUMNS
+};
+
+static GList *
+osso_abook_choose_attribute_run(GtkWindow *parent, EContact *contact,
+                                const char *title,
+                                HildonTouchSelectorSelectionMode mode,
+                                gboolean (*filter_func)(EVCardAttribute *,
+                                                        gpointer),
+                                gpointer user_data)
+{
+  GList *attributes = NULL;
+  GList *attrs;
+  GtkListStore *store;
+  EVCardAttribute *attr;
+  char *attr_value;
+  GtkWidget *selector;
+  GtkWidget *dialog;
+  GtkTreeIter iter;
+
+  g_return_val_if_fail(!parent || GTK_IS_WINDOW(parent), NULL);
+  g_return_val_if_fail(E_IS_CONTACT(contact), NULL);
+
+  store = gtk_list_store_new(N_COLUMNS, G_TYPE_STRING, G_TYPE_POINTER);
+
+  for (attrs = e_vcard_get_attributes(E_VCARD(contact)); attrs;
+       attrs = attrs->next)
+  {
+    if (filter_func(attrs->data, user_data))
+    {
+      attr_value = e_vcard_attribute_get_value(attr);
+      gtk_list_store_append(store, &iter);
+      gtk_list_store_set(store, &iter,
+                         COLUMN_VALUE, attr_value,
+                         COLUMN_ATRIBUTE, attr,
+                         -1);
+      g_free(attr_value);
+    }
+  }
+
+  selector = hildon_touch_selector_new();
+  hildon_touch_selector_append_text_column(HILDON_TOUCH_SELECTOR(selector),
+                                           GTK_TREE_MODEL(store), 1);
+
+  if (hildon_touch_selector_get_column_selection_mode(
+        HILDON_TOUCH_SELECTOR(selector)) != mode)
+  {
+    hildon_touch_selector_set_column_selection_mode(
+      HILDON_TOUCH_SELECTOR(selector), mode);
+  }
+
+  dialog = hildon_picker_dialog_new(parent);
+  gtk_window_set_title(GTK_WINDOW(dialog), title);
+  hildon_picker_dialog_set_selector(HILDON_PICKER_DIALOG(dialog),
+                                    HILDON_TOUCH_SELECTOR(selector));
+
+  if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK)
+  {
+    GList *paths = hildon_touch_selector_get_selected_rows(
+        HILDON_TOUCH_SELECTOR(selector), 0);
+
+    while (paths)
+    {
+      GtkTreePath *path = paths->data;
+
+      if (gtk_tree_model_get_iter(GTK_TREE_MODEL(store), &iter, path))
+      {
+        gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
+                           COLUMN_ATRIBUTE, &attr,
+                           -1);
+        attributes = g_list_prepend(attributes, attr);
+      }
+
+      paths = g_list_delete_link(paths, paths);
+      gtk_tree_path_free(path);
+    }
+  }
+
+  gtk_widget_destroy(dialog);
+
+  return attributes;
+}
+
+static gboolean
+filter_attribute_name(EVCardAttribute *attr, const gpointer user_data)
+{
+  return !strcmp(e_vcard_attribute_get_name(attr), user_data);
+}
+
+GList *
+osso_abook_choose_email_dialog_run(GtkWindow *parent, EContact *contact)
+{
+  GList *attrs;
+  GList *l;
+
+  attrs = osso_abook_choose_attribute_run(
+      parent, contact, g_dgettext("osso-addressbook", "addr_ti_select_email"),
+      HILDON_TOUCH_SELECTOR_SELECTION_MODE_MULTIPLE, filter_attribute_name,
+      EVC_EMAIL);
+
+  for (l = attrs; l; l = l->next)
+    l->data = e_vcard_attribute_get_value(l->data);
+
+  return attrs;
+}
+
+static gboolean
+filter_caps(EVCardAttribute *attr, gpointer user_data)
+{
+  if (GPOINTER_TO_UINT(user_data) & OSSO_ABOOK_CAPS_EMAIL)
+    return filter_attribute_name(attr, EVC_EMAIL);
+
+  return FALSE;
+}
+
+EVCardAttribute *
+osso_abook_choose_im_dialog_run(GtkWindow *parent, OssoABookContact *contact,
+                                OssoABookCapsFlags type)
+{
+  GList *attributes;
+  EVCardAttribute *attr = NULL;
+
+  attributes = osso_abook_choose_attribute_run(
+      parent, E_CONTACT(contact),
+      g_dgettext("osso-addressbook", "addr_ti_select_im"),
+      HILDON_TOUCH_SELECTOR_SELECTION_MODE_SINGLE, filter_caps,
+      GUINT_TO_POINTER(type));
+
+  if (attributes)
+    attr = attributes->data;
+
+  g_list_free(attributes);
+
+  return attr;
+}
+
+char *
+osso_abook_choose_url_dialog_run(GtkWindow *parent, EContact *contact)
+{
+  GList *attributes;
+  char *url = NULL;
+
+  attributes = osso_abook_choose_attribute_run(
+      parent, contact, g_dgettext("osso-addressbook", "addr_ti_select_url"),
+      HILDON_TOUCH_SELECTOR_SELECTION_MODE_SINGLE, filter_attribute_name,
+      EVC_URL);
+
+  if (attributes)
+    url = e_vcard_attribute_get_value(attributes->data);
+
+  g_list_free(attributes);
+
+  return url;
+}
+
+void
+osso_abook_add_contact_dialog_run(GtkWindow *parent)
+{
+  gint res;
+  GtkWidget *dialog;
+
+  g_return_if_fail(GTK_IS_WINDOW(parent));
+
+  dialog = hildon_note_new_confirmation(
+      parent, g_dgettext("osso-addressbook", "addr_nc_notification14"));
+  res = gtk_dialog_run(GTK_DIALOG(dialog));
+  gtk_widget_destroy(GTK_WIDGET(dialog));
+
+  if (res == GTK_RESPONSE_OK)
+  {
+    dialog = osso_abook_contact_editor_new_with_contact(
+        parent, NULL, OSSO_ABOOK_CONTACT_EDITOR_CREATE);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+  }
 }
