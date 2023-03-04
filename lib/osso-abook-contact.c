@@ -4275,3 +4275,19 @@ osso_abook_contact_delete_many(GList *contacts, EBook *book, GtkWindow *window)
 
   return;
 }
+
+OssoABookContact *
+osso_abook_contact_merge_roster_info(OssoABookContact *contact)
+{
+  OssoABookContact *merged;
+  GList *roster_contacts;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  merged = osso_abook_contact_new_from_template(E_CONTACT(contact));
+  roster_contacts = osso_abook_contact_get_roster_contacts(contact);
+  fetch_roster_info(contact, merged, roster_contacts);
+  g_list_free(roster_contacts);
+
+  return merged;
+}
