@@ -4377,6 +4377,28 @@ contact_action_url(GtkWindow *parent, const char *url)
   return TRUE;
 }
 
+static gboolean
+contact_action_tel_as_uri(GtkWindow *parent, const char *line_id)
+{
+  gchar *uri = g_strconcat("tel://", line_id, NULL);
+  HildonURIAction *action = hildon_uri_get_xdg_action();
+  gboolean ret = hildon_uri_open(uri, action, NULL);
+  hildon_uri_action_unref(action);
+  g_free(uri);
+  return ret;
+}
+
+static gboolean
+contact_action_sms_as_uri(GtkWindow *parent, const char *line_id)
+{
+  gchar *uri = g_strconcat("sms://", line_id, NULL);
+  HildonURIAction *action = hildon_uri_get_xdg_action();
+  gboolean ret = hildon_uri_open(uri, action, NULL);
+  hildon_uri_action_unref(action);
+  g_free(uri);
+  return ret;
+}
+
 static void
 handle_mmi_code_cb(DBusGProxy *proxy, DBusGProxyCall *call_id,
                    gpointer user_data)
@@ -4715,11 +4737,34 @@ osso_abook_contact_action_start_with_callback(
       if (contact_action_mmicode(data, values->data))
         return TRUE;
 
-      rv = request_channel(account, OSSO_ABOOK_CONTACT_ACTION_TEL,
+      if (TP_IS_ACCOUNT(account))
+      {
+        rv = request_channel(account, OSSO_ABOOK_CONTACT_ACTION_TEL,
                            values->data, &error);
+        if (!rv)
+          rv = contact_action_tel_as_uri(parent, values->data);
+      }
+      else
+      {
+        rv = contact_action_tel_as_uri(parent, values->data);
+      }
       break;
     }
     case OSSO_ABOOK_CONTACT_ACTION_SMS:
+    {
+      if (TP_IS_ACCOUNT(account))
+      {
+        rv = request_channel(account, OSSO_ABOOK_CONTACT_ACTION_TEL,
+                           values->data, &error);
+        if (!rv)
+          rv = contact_action_tel_as_uri(parent, values->data);
+      }
+      else
+      {
+        rv = contact_action_sms_as_uri(parent, values->data);
+      }
+      break;
+    }
     case OSSO_ABOOK_CONTACT_ACTION_CHATTO:
     case OSSO_ABOOK_CONTACT_ACTION_VOIPTO:
     case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_AUDIO:
