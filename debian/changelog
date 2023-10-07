@@ -1,3 +1,9 @@
+libosso-abook (4.3.0) unstable; urgency=medium
+
+  * osso_abook_contact_action_start_with_callback: try hildon_uri_open
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Sat, 07 Oct 2023 11:07:23 +0300
+
 libosso-abook (4.20230113) unstable; urgency=medium
 
   * osso-abook-account-manager: handle "account-disabled" as well
