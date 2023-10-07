@@ -628,7 +628,7 @@ contact_action_start_cb(const GError *error, GtkWindow *parent,
 
   if (error)
   {
-    if ((error->domain != osso_abook_error_quark()) ||
+    if ((error->domain != OSSO_ABOOK_ERROR) ||
         (error->code != OSSO_ABOOK_ERROR_CANCELLED))
     {
       osso_abook_handle_gerror(parent, g_error_copy(error));
