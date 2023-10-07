@@ -14,7 +14,7 @@ Build-Depends:
  librtcom-eventlogger-dev,
  maemo-launcher-dev,
  libhildonfm2-dev (>= 2.17),
- libhildonmime-dev,
+ libhildonmime-dev (>= 4.2.0),
  libcairo2-dev,
  libgofono-dev,
  mobile-broadband-provider-info,

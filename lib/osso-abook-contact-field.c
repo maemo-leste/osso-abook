@@ -4676,6 +4676,49 @@ contact_action_bind(GtkWindow *parent, TpAccount *account,
     g_object_unref(new_contact);
 }
 
+static gboolean
+request_uri_open(OssoABookContactAction action, const char *id, GError **error)
+{
+  const char *scheme;
+  gchar *uri;
+  gboolean rv;
+
+  switch (action)
+  {
+    case OSSO_ABOOK_CONTACT_ACTION_TEL:
+    {
+      scheme = "tel://";
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_SMS:
+    {
+      scheme = "sms://";
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_CHATTO:
+    {
+      scheme = "xmpp://";
+      break;
+    }
+    case OSSO_ABOOK_CONTACT_ACTION_VOIPTO:
+    case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_AUDIO:
+    case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_VIDEO:
+    {
+      scheme = "sip://";
+      break;
+    }
+    default:
+      g_return_val_if_reached(FALSE);
+  }
+
+  uri = g_strconcat(scheme, id, NULL);
+  rv = hildon_uri_open_filter(uri, HILDON_URI_MODIFIER_OPEN, NULL, NULL, error);
+
+  g_free(uri);
+
+  return rv;
+}
+
 /* *INDENT-OFF* */
 gboolean
 osso_abook_contact_action_start_with_callback(
@@ -4714,18 +4757,19 @@ osso_abook_contact_action_start_with_callback(
 
       if (contact_action_mmicode(data, values->data))
         return TRUE;
-
-      rv = request_channel(account, OSSO_ABOOK_CONTACT_ACTION_TEL,
-                           values->data, &error);
-      break;
     }
+    /* fallback */
     case OSSO_ABOOK_CONTACT_ACTION_SMS:
     case OSSO_ABOOK_CONTACT_ACTION_CHATTO:
     case OSSO_ABOOK_CONTACT_ACTION_VOIPTO:
     case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_AUDIO:
     case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_VIDEO:
     {
-      rv = request_channel(account, action, values->data, &error);
+      if (account)
+        rv = request_channel(account, action, values->data, &error);
+      else
+        rv = request_uri_open(action, values->data, &error);
+
       break;
     }
     case OSSO_ABOOK_CONTACT_ACTION_DATE:
