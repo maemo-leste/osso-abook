@@ -2346,6 +2346,46 @@ osso_abook_aggregator_find_contacts_for_phone_number(
 }
 
 static gboolean
+filter_im_predicate(OssoABookContact *contact, gpointer user_data)
+{
+  gpointer *data = user_data;
+  GList *roster_contacts = osso_abook_contact_get_roster_contacts(contact);
+  GList *l;
+  gboolean rv = FALSE;
+
+  for (l = roster_contacts; l; l = l->next)
+  {
+    if ((!data[1] || data[1] == osso_abook_contact_get_account(l->data)) &&
+        !strcasecmp(osso_abook_contact_get_bound_name(l->data), data[0]))
+    {
+      rv = TRUE;
+      break;
+    }
+  }
+
+  g_list_free(roster_contacts);
+
+  return rv;
+}
+
+GList *
+osso_abook_aggregator_find_contacts_for_im_contact(
+  OssoABookAggregator *aggregator, const char *username, TpAccount *account)
+{
+  gpointer data[2];
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AGGREGATOR(aggregator), NULL);
+  g_return_val_if_fail(account == NULL || TP_IS_ACCOUNT(account), NULL);
+  g_return_val_if_fail(username != NULL, NULL);
+
+  data[0] = (gpointer)username;
+  data[1] = account;
+
+    return osso_abook_aggregator_find_contacts_full(
+      aggregator, filter_im_predicate, data);
+}
+
+static gboolean
 filter_emails_predicate(OssoABookContact *contact, gpointer user_data)
 {
   GList *emails = e_contact_get(E_CONTACT(contact), E_CONTACT_EMAIL);
@@ -2377,6 +2417,62 @@ osso_abook_aggregator_find_contacts_for_email_address(
   return osso_abook_aggregator_find_contacts_full(aggregator,
                                                   filter_emails_predicate,
                                                   (gpointer)address);
+}
+
+static gboolean
+filter_sip_predicate(OssoABookContact *contact, gpointer user_data)
+{
+  GList *sip_addr = e_contact_get(E_CONTACT(contact), E_CONTACT_SIP);
+  gboolean rv = FALSE;
+  GList *l;
+
+  for (l = sip_addr; l; l = l->next)
+  {
+    if (!g_ascii_strcasecmp(osso_abook_strip_sip_prefix(l->data), user_data))
+    {
+      rv = TRUE;
+      break;
+    }
+  }
+
+  osso_abook_string_list_free(sip_addr);
+
+  return rv;
+}
+
+GList *
+osso_abook_aggregator_find_contacts_for_sip_address(
+  OssoABookAggregator *aggregator, const char *address)
+{
+  const gchar *stripped;
+  GList *contacts;
+  char *at;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_AGGREGATOR(aggregator), NULL);
+  g_return_val_if_fail(NULL != address, NULL);
+
+  stripped = osso_abook_strip_sip_prefix(address);
+  contacts = osso_abook_aggregator_find_contacts_full(
+        aggregator, filter_sip_predicate, (gpointer)stripped);
+
+  at = strchr(stripped, '@');
+
+  if (at)
+  {
+    gchar *tel = g_strndup(stripped, at - stripped);
+
+    if (tel && !tel[strspn(tel, "+0123456789PpWwXx")])
+    {
+      contacts = g_list_concat(
+            contacts,
+            osso_abook_aggregator_find_contacts_for_phone_number(aggregator,
+                                                                 tel, TRUE));
+    }
+
+    g_free(tel);
+  }
+
+  return contacts;
 }
 
 GList *
