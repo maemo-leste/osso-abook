@@ -3249,11 +3249,8 @@ get_dynamic_actions(OssoABookContactField *field)
       GList *accounts =
         osso_abook_account_manager_list_by_vcard_field(NULL, attr_name);
 
-      if (accounts)
-      {
-        while (!tp_account_is_enabled(accounts->data))
-          accounts = g_list_delete_link(accounts, accounts);
-      }
+      while (accounts && !tp_account_is_enabled(accounts->data))
+        accounts = g_list_delete_link(accounts, accounts);
 
       if (accounts)
       {
