@@ -1,3 +1,9 @@
+libosso-abook (1:4.3.3) unstable; urgency=medium
+
+  * fix segmentation fault
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 18 Dec 2023 06:46:34 +0200
+
 libosso-abook (1:4.3.2) unstable; urgency=medium
 
   * add osso_abook_aggregator_find_contacts_for_im_contact
