@@ -1200,7 +1200,7 @@ osso_abook_strip_sip_prefix(const gchar *address)
   };
   const char **prefix;
 
-  for (prefix = prefixes; prefix; prefix++)
+  for (prefix = prefixes; *prefix; prefix++)
   {
     const char *p = *prefix;
     size_t prefix_len = strlen(p);
