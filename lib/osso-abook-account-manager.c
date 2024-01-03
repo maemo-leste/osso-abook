@@ -1653,12 +1653,7 @@ match_vcard_field(gpointer key, gpointer value, gpointer user_data)
   gboolean rv = FALSE;
 
   if (vcf)
-  {
-    gchar *vcfup = g_ascii_strup(vcf, -1);
-    rv = g_strcmp0(vcfup, user_data) == 0;
-
-    g_free(vcfup);
-  }
+    rv = g_strcmp0(vcf, user_data) == 0;
 
   return rv;
 }
