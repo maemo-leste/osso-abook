@@ -1,3 +1,10 @@
+libosso-abook (1:4.3.6) unstable; urgency=medium
+
+  * Fix protocol-based action account identification
+  * fix user_action_time when making TP channel requests
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Wed, 03 Jan 2024 07:45:12 +0200
+
 libosso-abook (1:4.3.5) unstable; urgency=medium
 
   * account-manager: vcard field is in lowecase
