@@ -110,7 +110,7 @@ set_full_name(OssoABookContactDetailStore *store)
     OSSO_ABOOK_CONTACT_DETAIL_STORE_PRIVATE(store);
   gchar *name;
 
-  osso_abook_contact_get_name_components(E_CONTACT(priv->contact), order, 1,
+  osso_abook_contact_get_name_components(E_CONTACT(priv->contact), order, TRUE,
                                          &primary, &secondary);
   name = osso_abook_concat_names(order, primary, secondary);
   g_free(primary);
