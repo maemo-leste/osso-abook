@@ -4168,22 +4168,23 @@ osso_abook_contact_field_action_request_account(
   }
   else if (action->protocol)
   {
+    GList *l;
     gboolean is_tel = !g_strcmp0(e_vcard_attribute_get_name(field_attr), "tel");
 
-    accounts = osso_abook_account_manager_list_by_protocol(
+    l = accounts = osso_abook_account_manager_list_by_protocol(
         NULL, tp_protocol_get_name(action->protocol));
 
-    while (accounts)
+    while (l)
     {
-      GList *next = accounts->next;
+      GList *next = l->next;
 
       if (!tp_account_is_enabled(accounts->data) ||
           (is_tel && !secondary_vcard_field_is_tel(accounts->data)))
       {
-        accounts = g_list_delete_link(accounts, accounts);
+        accounts = g_list_delete_link(accounts, l);
       }
 
-      accounts = next;
+      l = next;
     }
   }
   else
