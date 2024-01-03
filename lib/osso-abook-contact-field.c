@@ -4508,7 +4508,7 @@ static gboolean
 request_channel(TpAccount *account, OssoABookContactAction action,
                 gchar *target_id, GError **error)
 {
-  guint32 user_action_time;
+  guint64 user_action_time;
 
   g_return_val_if_fail(TP_IS_ACCOUNT(account), FALSE);
 
@@ -4517,7 +4517,7 @@ request_channel(TpAccount *account, OssoABookContactAction action,
 
   TpAccountChannelRequest *request;
 
-  user_action_time = gtk_get_current_event_time();
+  user_action_time = tp_user_action_time_from_x11(gtk_get_current_event_time());
 
   switch (action)
   {
