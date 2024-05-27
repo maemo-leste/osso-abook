@@ -1,3 +1,9 @@
+libosso-abook (1:4.3.7) unstable; urgency=medium
+
+  * Fix protocol-based action account identification
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 27 May 2024 14:05:17 +0300
+
 libosso-abook (1:4.3.6) unstable; urgency=medium
 
   * Fix protocol-based action account identification
