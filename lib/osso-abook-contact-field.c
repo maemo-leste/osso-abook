@@ -4504,6 +4504,31 @@ ensure_channel_async_cb(GObject *source_object, GAsyncResult *res,
   }
 }
 
+static TpAccountChannelRequest *
+_request_new_audio_streamed_media(TpAccount *account, gint64 user_action_time)
+{
+  TpAccountChannelRequest *rv;
+  GHashTable *request;
+
+  g_return_val_if_fail(TP_IS_ACCOUNT (account), NULL);
+
+  request = tp_asv_new(
+              TP_PROP_CHANNEL_CHANNEL_TYPE, G_TYPE_STRING,
+              TP_IFACE_CHANNEL_TYPE_STREAMED_MEDIA,
+              TP_PROP_CHANNEL_TYPE_STREAMED_MEDIA_INITIAL_AUDIO, G_TYPE_BOOLEAN,
+              TRUE,
+              NULL);
+
+  rv = g_object_new(TP_TYPE_ACCOUNT_CHANNEL_REQUEST,
+                    "account", account,
+                    "request", request,
+                    "user-action-time", user_action_time,
+                    NULL);
+  g_hash_table_unref(request);
+
+  return rv;
+}
+
 static gboolean
 request_channel(TpAccount *account, OssoABookContactAction action,
                 gchar *target_id, GError **error)
@@ -4522,6 +4547,10 @@ request_channel(TpAccount *account, OssoABookContactAction action,
   switch (action)
   {
     case OSSO_ABOOK_CONTACT_ACTION_TEL:
+    {
+      request = _request_new_audio_streamed_media(account, user_action_time);
+      break;
+    }
     case OSSO_ABOOK_CONTACT_ACTION_VOIPTO:
     case OSSO_ABOOK_CONTACT_ACTION_VOIPTO_AUDIO:
     {
