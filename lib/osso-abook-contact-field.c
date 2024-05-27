@@ -137,7 +137,7 @@ enum
    osso_abook_contact_field_get_instance_private( \
      ((OssoABookContactField *)field)))
 
-#define A(n) const char *const A_##n = n
+#define A(n) static const char *const A_##n = n
 
 A(EVC_N);
 A(EVC_FN);
