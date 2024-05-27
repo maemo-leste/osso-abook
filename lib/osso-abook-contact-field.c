@@ -96,7 +96,6 @@ struct _OssoABookContactFieldPrivate
   gchar *display_title;
   gchar *secondary_title;
   gchar *display_value;
-  int field_24;
   GtkWidget *label;
   GtkWidget *editor_widget;
   GList *secondary_attributes;
