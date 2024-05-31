@@ -435,7 +435,7 @@ osso_abook_query_phone_number(const char *phone_number, gboolean fuzzy_match)
   EBookQuery *query;
   gchar *phone_num = NULL;
   int nqs = 1;
-  EBookQuery *qs[2];
+  EBookQuery *qs[3];
 
   g_return_val_if_fail(!IS_EMPTY(phone_number), NULL);
 
