@@ -1428,8 +1428,6 @@ get_phone_actions(OssoABookContactField *field)
                               OSSO_ABOOK_CONTACT_FIELD_ACTION_LAYOUT_PRIMARY));
   }
 
-  g_object_unref(protocol_tel);
-
   return actions;
 }
 
@@ -3225,6 +3223,9 @@ get_dynamic_actions(OssoABookContactField *field)
         g_free(title);
       }
     }
+
+    if (protocol)
+        g_object_unref(protocol);
   }
   else
   {
