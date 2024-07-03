@@ -236,8 +236,8 @@ create_table(OssoABookTemporaryContactDialog *dialog)
     else if (priv->account && tp_account_is_enabled(priv->account))
     {
       TpProtocol *protocol =
-        osso_abook_account_manager_get_protocol_object(
-          NULL, tp_account_get_protocol_name(priv->account));
+        osso_abook_account_manager_get_account_protocol_object(
+          NULL, priv->account);
 
       if (protocol)
       {

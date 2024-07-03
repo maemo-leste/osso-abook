@@ -375,12 +375,11 @@ OssoABookGroup *
 osso_abook_service_group_get(TpAccount *account)
 {
   OssoABookServiceGroup *group;
-  const char *protocol;
   const char *icon_name;
   gchar *display_name;
   OssoABookServiceGroupPrivate *priv;
   OssoABookAccountManager *manager;
-  TpProtocol *protocol_object = NULL;
+  TpProtocol *protocol = NULL;
   static gulong account_changed_id = 0;
   static gulong roster_created_id = 0;
   static gulong roster_removed_id = 0;
@@ -400,21 +399,16 @@ osso_abook_service_group_get(TpAccount *account)
   if (group)
     return OSSO_ABOOK_GROUP(group);
 
-  protocol = tp_account_get_protocol_name(account);
+  protocol =
+    osso_abook_account_manager_get_account_protocol_object(NULL, account);
 
-  if (protocol)
-  {
-    protocol_object =
-      osso_abook_account_manager_get_protocol_object(NULL, protocol);
-  }
-
-  if (!protocol_object)
+  if (!protocol)
   {
     OSSO_ABOOK_WARN("Cannot get protocol");
     return NULL;
   }
 
-  if (!tp_protocol_get_vcard_field(protocol_object))
+  if (!tp_protocol_get_vcard_field(protocol))
     return NULL;
 
   display_name = osso_abook_tp_account_get_display_string(
@@ -434,10 +428,10 @@ osso_abook_service_group_get(TpAccount *account)
   icon_name = tp_account_get_icon_name(account);
 
   if (IS_EMPTY(icon_name))
-    icon_name = tp_protocol_get_icon_name(protocol_object);
+    icon_name = tp_protocol_get_icon_name(protocol);
 
   priv->icon_name = g_strdup(icon_name);
-  priv->vcard_field = g_strdup(tp_protocol_get_vcard_field(protocol_object));
+  priv->vcard_field = g_strdup(tp_protocol_get_vcard_field(protocol));
 
   manager = osso_abook_account_manager_get_default();
 

@@ -270,8 +270,9 @@ modify_account(OssoABookTpAccountModel *model, TpAccount *account,
   {
     if (!data->user_data)
     {
-      TpProtocol *protocol = osso_abook_account_manager_get_protocol_object(
-        priv->account_manager, tp_account_get_protocol_name(account));
+      TpProtocol *protocol =
+        osso_abook_account_manager_get_account_protocol_object(
+          priv->account_manager, account);
       char *display_string = osso_abook_tp_account_get_display_string(
         account, NULL, NULL);
       const gchar *icon_name = tp_account_get_icon_name(account);

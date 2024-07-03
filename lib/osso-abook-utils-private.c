@@ -1058,14 +1058,8 @@ _osso_abook_tp_protocol_has_rosters(TpProtocol *protocol)
 __attribute__ ((visibility("hidden"))) gchar *
 _osso_abook_tp_account_get_vcard_field(TpAccount *account)
 {
-  const gchar *protocol_name = tp_account_get_protocol_name(account);
-  TpProtocol *protocol;
-
-  if (!protocol_name)
-    return NULL;
-
-  protocol = osso_abook_account_manager_get_protocol_object(NULL,
-                                                            protocol_name);
+  TpProtocol *protocol =
+    osso_abook_account_manager_get_account_protocol_object(NULL, account);
 
   if (!protocol)
     return NULL;
