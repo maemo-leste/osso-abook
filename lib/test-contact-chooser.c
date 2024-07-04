@@ -16,7 +16,7 @@ loop_quit (GtkWindow *window, gpointer data)
 
   g_return_if_fail(loop != NULL);
 
-  gtk_widget_hide(GTK_WIDGET(window));
+  gtk_widget_destroy(GTK_WIDGET(window));
 
   while (gtk_events_pending())
     gtk_main_iteration();
