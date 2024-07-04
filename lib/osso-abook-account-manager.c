@@ -54,6 +54,7 @@ struct account_info
   gboolean is_pending : 1; /* info->flags & 1 */
   gboolean is_visible : 1; /* info->flags & 2 */
   gboolean is_removed : 1; /* info->flags & 4 */
+  gboolean is_manager_default : 1;
   volatile gint refcount;
 };
 
@@ -309,7 +310,10 @@ account_info_unref(struct account_info *info)
   if (g_atomic_int_add(&info->refcount, -1) == 1)
   {
     account_info_disconnect_account_signals(info);
-    g_object_unref(info->manager);
+
+    if (!info->is_manager_default)
+      g_object_unref(info->manager);
+
     g_object_unref(info->account);
 
     if (info->cm)
@@ -1193,7 +1197,13 @@ account_enabled_cb(TpAccountManager *am, TpAccount *account, gpointer user_data)
   OSSO_ABOOK_NOTE(TP, "account enabled: %s", path_suffix);
 
   info = g_slice_new0(struct account_info);
-  info->manager = g_object_ref(manager);
+  info->manager = manager;
+
+  if (info->manager == osso_abook_account_manager_get_default())
+    info->is_manager_default = TRUE;
+  else
+    g_object_ref(manager);
+
   info->refcount = 1;
   info->account = g_object_ref(account);
 
@@ -1629,15 +1639,27 @@ osso_abook_account_manager_lookup_by_name(OssoABookAccountManager *manager,
   return NULL;
 }
 
+static OssoABookAccountManager *default_am = NULL;
+
+__attribute__((destructor)) static void
+release_default_account_manager()
+{
+  if (default_am)
+  {
+    OSSO_ABOOK_NOTE(TP, "%p: releasing default account manager", default_am);
+
+    g_object_unref(default_am);
+    default_am = NULL;
+  }
+}
+
 OssoABookAccountManager *
 osso_abook_account_manager_get_default()
 {
-  static OssoABookAccountManager *am = NULL;
+  if (!default_am)
+    default_am = osso_abook_account_manager_new();
 
-  if (!am)
-    am = osso_abook_account_manager_new();
-
-  return am;
+  return default_am;
 }
 
 OssoABookAccountManager *
