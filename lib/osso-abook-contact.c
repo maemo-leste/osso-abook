@@ -1871,29 +1871,32 @@ osso_abook_contact_remove_master_uid(OssoABookContact *roster_contact,
 
   priv = OSSO_ABOOK_CONTACT_PRIVATE(roster_contact);
   evc = E_VCARD(roster_contact);
+  attr = e_vcard_get_attributes(evc);
 
-  for (attr = e_vcard_get_attributes(evc); attr; attr = attr->next)
+  while (attr)
   {
+    GList *next = attr->next;
+
     if (!strcmp(e_vcard_attribute_get_name(attr->data),
                 OSSO_ABOOK_VCA_OSSO_MASTER_UID))
     {
       GList *values = e_vcard_attribute_get_values(attr->data);
 
-      if (!values)
-      {
-        g_warn_if_fail(NULL != values);
-        continue;
-      }
+      g_warn_if_fail(NULL != values);
 
-      if (values->next)
+      if (values)
+      {
         g_warn_if_fail(NULL == values->next);
 
-      if (!strcmp(values->data, master_uid))
-      {
-        removed = TRUE;
-        e_vcard_remove_attribute(evc, attr->data);
+        if (!strcmp(values->data, master_uid))
+        {
+          removed = TRUE;
+          e_vcard_remove_attribute(evc, attr->data);
+        }
       }
     }
+
+    attr = next;
   }
 
   if (removed)
