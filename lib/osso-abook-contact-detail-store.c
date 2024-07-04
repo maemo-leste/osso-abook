@@ -224,13 +224,14 @@ create_contact_fields(OssoABookContactDetailStorePrivate *priv,
       }
       else
       {
-        TpProtocol *protocol =
+        GList *protocol =
           osso_abook_contact_attribute_get_protocol(evcattr);
+        GList *l;
 
-        if (protocol)
+        for (l = protocol; l; l = l->next)
         {
           OssoABookCapsFlags caps_flags =
-            osso_abook_caps_from_tp_protocol(protocol);
+            osso_abook_caps_from_tp_protocol(l->data);
 
           if (((caps_flags & OSSO_ABOOK_CAPS_CHAT) &&
                (priv->filters & OSSO_ABOOK_CONTACT_DETAIL_IM_CHAT)) ||
@@ -240,10 +241,11 @@ create_contact_fields(OssoABookContactDetailStorePrivate *priv,
                (priv->filters & OSSO_ABOOK_CONTACT_DETAIL_IM_VIDEO)))
           {
             create_contact_field(priv, evcattr);
+            break;
           }
-
-          g_object_unref(protocol);
         }
+
+        g_list_free(protocol);
       }
     }
   }

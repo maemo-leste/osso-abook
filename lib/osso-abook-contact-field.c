@@ -1292,9 +1292,14 @@ get_phone_actions(OssoABookContactField *field)
 {
   OssoABookContact *master_contact;
   OssoABookContactFieldPrivate *priv = OSSO_ABOOK_CONTACT_FIELD_PRIVATE(field);
-  TpProtocol *protocol_tel =
-      osso_abook_account_manager_get_protocol_object(NULL, "tel");
+  GList *l = osso_abook_account_manager_get_protocol_object(NULL, "tel");
+  TpProtocol *protocol_tel = NULL;
   GList *actions = NULL;
+
+  if (l)
+      protocol_tel = l->data;
+
+  g_list_free(l);
 
   if ((osso_abook_contact_field_get_flags(field) &
        OSSO_ABOOK_CONTACT_FIELD_FLAGS_DEVICE_MASK) ==
@@ -3476,7 +3481,15 @@ osso_abook_contact_field_constructed(GObject *object)
   }
 
   if (!titles_set)
-    protocol = osso_abook_contact_attribute_get_protocol(priv->attribute);
+  {
+    /* take the first one, either ways we use icon/name only*/
+    GList *l = osso_abook_contact_attribute_get_protocol(priv->attribute);
+
+    if (l)
+      protocol = g_object_ref(l->data);
+
+    g_list_free(l);
+  }
 
   g_list_free(contacts);
 

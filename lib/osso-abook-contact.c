@@ -2325,17 +2325,17 @@ osso_abook_contact_real_find_roster_contacts(OssoABookContact *master_contact,
         {
           for (; l; l = l->next)
           {
-            TpProtocol *protocol =
+            GList *protocol =
               osso_abook_contact_attribute_get_protocol(l->data);
 
-            if (protocol)
-              g_object_unref(protocol);
-
-            if (protocol == data->protocol)
+            if (g_list_find(protocol, data->protocol))
             {
               g_list_free(attr);
+              g_list_free(protocol);
               break;
             }
+
+            g_list_free(protocol);
           }
         }
         else if (!attr || data->username)
@@ -2406,16 +2406,18 @@ osso_abook_contact_find_roster_contacts_for_attribute(
 
   if (values && !IS_EMPTY(values->data))
   {
-    data.protocol = osso_abook_contact_attribute_get_protocol(attribute);
+    GList *l = osso_abook_contact_attribute_get_protocol(attribute);
 
-    if (data.protocol)
+    if (l)
     {
+      data.protocol = l->data;
       data.vcard_field = e_vcard_attribute_get_name(attribute);
       data.username = values->data;
       contacts =
         osso_abook_contact_real_find_roster_contacts(master_contact, &data);
-      g_object_unref(data.protocol);
     }
+
+    g_list_free(l);
   }
 
   return contacts;
@@ -3373,11 +3375,14 @@ osso_abook_contact_reject_for_uid(OssoABookContact *contact,
   }
 }
 
-TpProtocol *
+GList *
 osso_abook_contact_attribute_get_protocol(EVCardAttribute *attribute)
 {
   const char *vcard_attr_name = e_vcard_attribute_get_name(attribute);
+  gchar *tmp;
   GList *params;
+  GList *rv = NULL;
+  GList *l;
 
   for (params = e_vcard_attribute_get_params(attribute); params;
        params = params->next)
@@ -3392,23 +3397,32 @@ osso_abook_contact_attribute_get_protocol(EVCardAttribute *attribute)
       {
         if (!IS_EMPTY(values->data))
         {
-          TpProtocol *protocol =
-            osso_abook_account_manager_get_protocol_object(NULL, values->data);
+          GList *p = osso_abook_account_manager_get_protocol_object(
+                NULL, values->data);
 
-          if (protocol)
+          for (l = p; l; l = l->next)
           {
-            const char *vcard_field = tp_protocol_get_vcard_field(protocol);
+            const char *vcard_field = tp_protocol_get_vcard_field(l->data);
 
             if (vcard_field && !strcmp(vcard_field, vcard_attr_name))
-              return g_object_ref(protocol);
+              rv = g_list_prepend(rv, l->data);
           }
+
+          g_list_free(p);
         }
       }
     }
   }
 
-  return osso_abook_account_manager_get_protocol_object_by_vcard_field(
-    NULL, vcard_attr_name);
+  if (rv)
+    return rv;
+
+  /* a little hack for fremantle where vcard field is in uppercase */
+  tmp = g_ascii_strdown(vcard_attr_name, -1);
+  rv = osso_abook_account_manager_get_protocol_object_by_vcard_field(NULL, tmp);
+  g_free(tmp);
+
+  return rv;
 }
 
 static void

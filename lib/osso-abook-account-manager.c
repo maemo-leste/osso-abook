@@ -67,6 +67,13 @@ static void
 osso_abook_account_manager_roster_manager_iface_init(
   OssoABookRosterManagerIface *iface);
 
+static void
+cm_notify_info_source_cb(
+    GObject *object, GParamSpec *pspec, gpointer user_data);
+
+static void
+cm_got_info_cb(TpConnectionManager *cm, guint source, gpointer user_data);
+
 struct _OssoABookAccountManagerPrivate
 {
   TpDBusDaemon *tp_dbus;
@@ -80,8 +87,10 @@ struct _OssoABookAccountManagerPrivate
   gulong account_removed_id;
   gulong account_enabled_id;
   gulong account_disabled_id;
-  /* protocol_name -> protocol_object */
-  GHashTable *protocols;
+  /* cm_name -> cm object */
+  GHashTable *cms;
+  GHashTable *prot_by_vcf;
+  GHashTable *prot_by_name;
   GList *uri_schemes;
   int presence;
   OssoABookCapsFlags allowed_capabilities;
@@ -174,20 +183,25 @@ static TpProtocol *
 get_tp_account_protocol(TpAccount *account,
                         OssoABookAccountManagerPrivate *priv)
 {
-  return g_hash_table_lookup(priv->protocols,
-                             tp_account_get_protocol_name(account));
+  const char *pname = tp_account_get_protocol_name(account);
+  GList *protocols = g_hash_table_lookup(priv->prot_by_name, pname);
+  const char *cm_name = tp_account_get_cm_name(account);
+  GList *l;
+
+  for (l = protocols; l; l = l->next)
+  {
+    if (!strcmp(cm_name, tp_protocol_get_cm_name(l->data)))
+      return l->data;
+  }
+
+  return NULL;
 }
 
 static const gchar *
 get_tp_account_vcard_field(TpAccount *account,
                            OssoABookAccountManagerPrivate *priv)
 {
-  TpProtocol *protocol;
-
-  if (!priv->protocols)
-    return NULL;
-
-  protocol = get_tp_account_protocol(account, priv);
+  TpProtocol *protocol = get_tp_account_protocol(account, priv);
 
   if (!protocol)
     return NULL;
@@ -556,10 +570,32 @@ osso_abook_account_manager_roster_manager_iface_init(
 }
 
 static void
+protocols_list_free(gpointer l)
+{
+  g_list_free_full(l, g_object_unref);
+}
+
+static void
+protocols_free(GHashTable *table)
+{
+  GList *keys, *values;
+
+  keys = g_hash_table_get_keys(table);
+  values = g_hash_table_get_values(table);
+
+  g_hash_table_steal_all(table);
+
+  g_list_free_full(keys, g_free);
+  g_list_free_full(values, protocols_list_free);
+}
+
+static void
 osso_abook_account_manager_dispose(GObject *object)
 {
   OssoABookAccountManagerPrivate *priv =
     OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(OSSO_ABOOK_ACCOUNT_MANAGER(object));
+  GHashTableIter iter;
+  gpointer cm;
 
   if (priv->error)
     g_clear_error(&priv->error);
@@ -603,7 +639,20 @@ osso_abook_account_manager_dispose(GObject *object)
   g_hash_table_remove_all(priv->rosters);
   g_hash_table_remove_all(priv->account_by_vcard_field);
   g_hash_table_remove_all(priv->protocol_rosters);
-  g_hash_table_remove_all(priv->protocols);
+
+  g_hash_table_iter_init (&iter, priv->cms);
+
+  while (g_hash_table_iter_next (&iter, NULL, &cm))
+  {
+    g_signal_handlers_disconnect_by_func(cm, cm_got_info_cb, object);
+    g_signal_handlers_disconnect_by_func(cm, cm_notify_info_source_cb, object);
+  }
+
+  g_hash_table_remove_all(priv->cms);
+
+  protocols_free(priv->prot_by_name);
+  protocols_free(priv->prot_by_vcf);
+
   osso_abook_waitable_reset(OSSO_ABOOK_WAITABLE(object));
 
   G_OBJECT_CLASS(osso_abook_account_manager_parent_class)->dispose(object);
@@ -624,7 +673,9 @@ osso_abook_account_manager_finalize(GObject *object)
   g_hash_table_destroy(priv->rosters);
   g_hash_table_destroy(priv->account_by_vcard_field);
   g_hash_table_destroy(priv->protocol_rosters);
-  g_hash_table_destroy(priv->protocols);
+  g_hash_table_destroy(priv->cms);
+  g_hash_table_destroy(priv->prot_by_name);
+  g_hash_table_destroy(priv->prot_by_vcf);
   osso_abook_string_list_free(priv->uri_schemes);
   g_free(priv->account_protocol);
   g_list_free(priv->allowed_accounts);
@@ -1385,6 +1436,96 @@ get_accounts(OssoABookAccountManager *manager)
 }
 
 static void
+cm_reset_protocols(GHashTable *protocols, const char *cm_name)
+{
+  GHashTableIter iter;
+  GList *p;
+
+  g_hash_table_iter_init(&iter, protocols);
+
+  while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&p))
+  {
+    GList *new = NULL;
+    GList *l;
+
+    for (l = p; l; l = l->next)
+    {
+      if (strcmp(tp_protocol_get_cm_name(l->data), cm_name))
+        new = g_list_prepend(new, l->data);
+    }
+
+    g_hash_table_iter_replace(&iter, new);
+    g_list_free(p);
+  }
+}
+
+static void
+add_cm_protocols(TpConnectionManager *cm, OssoABookAccountManagerPrivate *priv)
+{
+  gchar **names = tp_connection_manager_dup_protocol_names(cm);
+  const char *cm_name = tp_connection_manager_get_name(cm);
+  gchar **name = names;
+
+  if (!names)
+    return;
+
+  cm_reset_protocols(priv->prot_by_name, cm_name);
+  cm_reset_protocols(priv->prot_by_vcf, cm_name);
+
+  while (*name)
+  {
+    TpProtocol *protocol = tp_connection_manager_get_protocol_object(cm, *name);
+    const gchar *vcf = tp_protocol_get_vcard_field(protocol);
+    GList *l;
+
+    OSSO_ABOOK_NOTE(TP,
+                    "adding protocol (%s cm %s primary vcard field: %s)",
+                    *name, cm_name, vcf);
+
+    l = g_hash_table_lookup(priv->prot_by_name, *name);
+    l = g_list_prepend(l, g_object_ref(protocol));
+    g_hash_table_insert(priv->prot_by_name, g_strdup(*name), l);
+
+    if (vcf)
+    {
+      l = g_hash_table_lookup(priv->prot_by_vcf, vcf);
+      l = g_list_prepend(l, g_object_ref(protocol));
+      g_hash_table_insert(priv->prot_by_vcf, g_strdup(vcf), l);
+    }
+
+    name++;
+  }
+
+  g_strfreev(names);
+}
+
+static void
+cm_notify_info_source_cb(GObject *object, GParamSpec *pspec, gpointer user_data)
+{
+  OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(user_data);
+  TpConnectionManager *cm = TP_CONNECTION_MANAGER(object);
+
+  OSSO_ABOOK_NOTE(TP,
+                  "connection managed %s info source changed to %d",
+                  tp_connection_manager_get_name(cm),
+                  tp_connection_manager_get_info_source(cm));
+
+  add_cm_protocols(cm, OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager));
+}
+
+static void
+cm_got_info_cb(TpConnectionManager *cm, guint source, gpointer user_data)
+{
+  OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(user_data);
+
+  OSSO_ABOOK_NOTE(TP,
+                  "connection managed %s got info, source %d",
+                  tp_connection_manager_get_name(cm), source);
+
+  add_cm_protocols(cm, OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager));
+}
+
+static void
 cms_ready_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 {
   OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(user_data);
@@ -1406,22 +1547,16 @@ cms_ready_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 
     for (cm = cms; cm; cm = cm->next)
     {
-      GList *protocols = tp_connection_manager_dup_protocols(cm->data);
-      GList *p;
+      const char *cm_name = tp_connection_manager_get_name(cm->data);
 
-      for (p = protocols; p; p = p->next)
-      {
-        const gchar *vcard_field = tp_protocol_get_vcard_field(p->data);
-        const gchar *protocol_name = tp_protocol_get_name(p->data);
+      g_signal_connect(cm->data, "notify::info-source",
+                       G_CALLBACK(cm_notify_info_source_cb), manager);
+      g_signal_connect(cm->data, "got-info",
+                       G_CALLBACK(cm_got_info_cb), manager);
 
-        OSSO_ABOOK_NOTE(TP, "adding protocol (%s primary vcard field: %s)",
-                        protocol_name, vcard_field);
-
-        g_hash_table_insert(priv->protocols, g_strdup(protocol_name),
-                            g_object_ref(p->data));
-      }
-
-      g_list_free_full(protocols, g_object_unref);
+      g_object_set(cm->data, "always-introspect", TRUE, NULL);
+      g_hash_table_insert(priv->cms, g_strdup(cm_name), g_object_ref(cm->data));
+      add_cm_protocols(cm->data, priv);
     }
   }
 
@@ -1475,8 +1610,14 @@ osso_abook_account_manager_init(OssoABookAccountManager *manager)
     g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_list_free);
   priv->account_by_vcard_field = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                        g_free, NULL);
-  priv->protocols =
+  priv->cms =
     g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
+
+  priv->prot_by_name = g_hash_table_new_full(
+        g_str_hash, g_str_equal, g_free, NULL);
+
+  priv->prot_by_vcf = g_hash_table_new_full(
+        g_str_hash, g_str_equal, g_free, NULL);
 
   priv->tp_dbus = tp_dbus_daemon_dup(NULL);
   priv->tp_am = create_account_manager(priv->tp_dbus);
@@ -1668,33 +1809,22 @@ osso_abook_account_manager_new(void)
   return g_object_new(OSSO_ABOOK_TYPE_ACCOUNT_MANAGER, NULL);
 }
 
-static gboolean
-match_vcard_field(gpointer key, gpointer value, gpointer user_data)
-{
-  const gchar *vcf = tp_protocol_get_vcard_field(value);
-  gboolean rv = FALSE;
-
-  if (vcf)
-    rv = g_strcmp0(vcf, user_data) == 0;
-
-  return rv;
-}
-
 gboolean
 osso_abook_account_manager_has_primary_vcard_field(
   OssoABookAccountManager *manager,
   const char *vcard_field)
 {
+  OssoABookAccountManagerPrivate *priv;
+
   if (!manager)
     manager = osso_abook_account_manager_get_default();
 
   g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), FALSE);
   g_return_val_if_fail(NULL != vcard_field, FALSE);
 
-  return
-    g_hash_table_find(
-    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols,
-    match_vcard_field, (gpointer)vcard_field) != NULL;
+  priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+
+  return g_hash_table_contains(priv->prot_by_vcf, vcard_field);
 }
 
 gboolean
@@ -1823,18 +1953,17 @@ osso_abook_account_manager_list_protocols(OssoABookAccountManager *manager,
     if (no_roster_only)
     {
       GHashTable *props = NULL;
-      const GValue *value;
+      const gchar *const *ifaces;
 
       g_object_get(protocol, "protocol-properties", &props, NULL);
 
       if (!props)
         continue;
 
-      value = tp_asv_lookup(props, TP_PROP_PROTOCOL_CONNECTION_INTERFACES);
+      ifaces = tp_asv_get_strv(props, TP_PROP_PROTOCOL_CONNECTION_INTERFACES);
 
-      if (value && G_VALUE_HOLDS(value, G_TYPE_STRV) &&
-          g_strv_contains(g_value_get_boxed(value),
-                          TP_IFACE_CONNECTION_INTERFACE_CONTACT_LIST))
+      if (ifaces &&
+          g_strv_contains(ifaces, TP_IFACE_CONNECTION_INTERFACE_CONTACT_LIST))
       {
         g_hash_table_destroy(props);
         continue;
@@ -1869,8 +1998,13 @@ osso_abook_account_manager_get_account_protocol_object(
 {
   g_return_val_if_fail(account != NULL, NULL);
 
-  return osso_abook_account_manager_get_protocol_object(
-    manager, tp_account_get_protocol_name(account));
+  if (!manager)
+    manager = osso_abook_account_manager_get_default();
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+
+  return get_tp_account_protocol(account,
+                                 OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager));
 }
 
 GList *
@@ -1904,7 +2038,7 @@ osso_abook_account_manager_list_by_protocol(OssoABookAccountManager *manager,
   return accounts;
 }
 
-TpProtocol *
+GList *
 osso_abook_account_manager_get_protocol_object(OssoABookAccountManager *manager,
                                                const char *protocol)
 {
@@ -1917,15 +2051,15 @@ osso_abook_account_manager_get_protocol_object(OssoABookAccountManager *manager,
 
   priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
 
-  return g_hash_table_lookup(priv->protocols, protocol);
+  return g_list_copy(g_hash_table_lookup(priv->prot_by_name, protocol));
 }
 
-TpProtocol *
+GList *
 osso_abook_account_manager_get_protocol_object_by_vcard_field(
   OssoABookAccountManager *manager,
   const char *vcard_field)
 {
-  TpProtocol *protocol;
+  OssoABookAccountManagerPrivate *priv;
 
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1933,15 +2067,9 @@ osso_abook_account_manager_get_protocol_object_by_vcard_field(
   g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
   g_return_val_if_fail(NULL != vcard_field, NULL);
 
-  protocol =
-    g_hash_table_find(
-      OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols,
-      match_vcard_field, (gpointer)vcard_field);
+  priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
 
-  if (protocol)
-    g_object_ref(protocol);
-
-  return protocol;
+  return g_list_copy(g_hash_table_lookup(priv->prot_by_vcf, vcard_field));
 }
 
 /**
@@ -1949,18 +2077,29 @@ osso_abook_account_manager_get_protocol_object_by_vcard_field(
  *
  * @param manager #OssoABookAccountManager to get protocol objects of
  *
- * @return list of protocol objects. Free with g_list_free()
+ * @return list of protocol objects. Free with g_list_free();
  */
 GList *
 osso_abook_account_manager_get_protocols(OssoABookAccountManager *manager)
 {
+  OssoABookAccountManagerPrivate *priv;
+  GList *rv = NULL;
+  GHashTableIter iter;
+  GList *l;
+
   if (!manager)
     manager = osso_abook_account_manager_get_default();
 
   g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
 
-  return g_hash_table_get_values(
-    OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->protocols);
+  priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+
+  g_hash_table_iter_init(&iter, priv->prot_by_name);
+
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&l))
+    rv = g_list_concat(rv, g_list_copy(l));
+
+  return rv;
 }
 
 GList *

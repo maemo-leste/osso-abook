@@ -363,7 +363,7 @@ osso_abook_contact_attribute_set_protocol  (EVCardAttribute          *attribute,
                                             const char               *protocol);
 
 /* replaces osso_abook_contact_attribute_get_profile */
-TpProtocol *
+GList *
 osso_abook_contact_attribute_get_protocol (EVCardAttribute          *attribute);
 
 /**********************************************************************
