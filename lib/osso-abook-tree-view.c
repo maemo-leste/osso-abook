@@ -1089,7 +1089,8 @@ contact_presence_cell_data(GtkTreeViewColumn *tree_column,
       icon_name =
         osso_abook_presence_get_branded_icon_name(max_presence, protocol);
 #else
-      icon_name = osso_abook_presence_get_icon_name(max_presence);
+      if (max_presence)
+        icon_name = osso_abook_presence_get_icon_name(max_presence);
 #endif
     }
     else
