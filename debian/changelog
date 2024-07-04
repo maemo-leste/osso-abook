@@ -1,3 +1,9 @@
+libosso-abook (1:4.4.0) unstable; urgency=medium
+
+  * Fix stack buffer overflow
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Thu, 04 Jul 2024 19:51:37 +0300
+
 libosso-abook (1:4.3.8) unstable; urgency=medium
 
   * Fix stack buffer overflow
