@@ -48,7 +48,7 @@ prune_n_items(OssoABookAvatarCachePrivate *priv, guint n_items)
   guint queue_length = g_queue_get_length(&priv->queue);
   guint i;
 
-  g_warn_if_fail(queue_length != g_hash_table_size(priv->cached_images));
+  g_warn_if_fail(queue_length == g_hash_table_size(priv->cached_images));
 
   if (queue_length < n_items)
     n_items = queue_length;
