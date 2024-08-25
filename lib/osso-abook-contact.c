@@ -365,9 +365,9 @@ parse_capabilities(OssoABookContact *contact, OssoABookContactPrivate *priv)
     {
       if (!g_strcmp0(l->data, "text"))
         priv->caps |= OSSO_ABOOK_CAPS_CHAT;
-      else if (g_strcmp0(l->data, "video"))
+      else if (!g_strcmp0(l->data, "video"))
         priv->caps |= OSSO_ABOOK_CAPS_VIDEO;
-      else if (g_strcmp0(l->data, "voice"))
+      else if (!g_strcmp0(l->data, "voice"))
         priv->caps |= OSSO_ABOOK_CAPS_VOICE;
       else if (!g_strcmp0(l->data, "immutable-streams"))
         immutable_streams = TRUE;
