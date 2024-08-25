@@ -1,3 +1,9 @@
+libosso-abook (1:4.4.1) unstable; urgency=medium
+
+  * lib/osso-abook-contact: Fix telepathy addressbook capabilities processing
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Sun, 26 Aug 2024 22:13:43 +0300
+
 libosso-abook (1:4.4.0) unstable; urgency=medium
 
   * Fix stack buffer overflow
