@@ -1,3 +1,9 @@
+libosso-abook (1:4.4.2) unstable; urgency=medium
+
+  * fix vcard field/attribute names/parameter names being case sensitive
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 04 Nov 2024 17:09:28 +0200
+
 libosso-abook (1:4.4.1) unstable; urgency=medium
 
   * lib/osso-abook-contact: Fix telepathy addressbook capabilities processing
