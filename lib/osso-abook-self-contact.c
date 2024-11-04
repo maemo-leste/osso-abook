@@ -289,8 +289,10 @@ account_created(OssoABookAccountManager *manager, TpAccount *account,
     for (attrs = e_vcard_get_attributes(E_VCARD(self)); attrs;
          attrs = attrs->next)
     {
-      if (!strcmp(e_vcard_attribute_get_name(attrs->data), vcard_field) &&
-          !strcmp(e_vcard_attribute_get_value(attrs->data), account_name))
+      const gchar *name = attrs->data;
+
+      if (name && !g_ascii_strcasecmp(name, vcard_field) &&
+          !g_strcmp0(e_vcard_attribute_get_value(attrs->data), account_name))
       {
         break;
       }
@@ -452,10 +454,11 @@ modest_account_notify(GConfClient *client, guint cnxn_id, GConfEntry *entry,
   while (attrs)
   {
     EVCardAttribute *attr = attrs->data;
+    const gchar *name = e_vcard_attribute_get_name(attr);
 
     attrs = attrs->next;
 
-    if (!strcmp(e_vcard_attribute_get_name(attr), EVC_EMAIL) &&
+    if (name && !g_ascii_strcasecmp(name, EVC_EMAIL) &&
         osso_abook_contact_attribute_is_readonly(attr))
     {
       e_vcard_remove_attribute(E_VCARD(user_data), attr);

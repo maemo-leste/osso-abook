@@ -431,7 +431,7 @@ osso_abook_service_group_get(TpAccount *account)
     icon_name = tp_protocol_get_icon_name(protocol);
 
   priv->icon_name = g_strdup(icon_name);
-  priv->vcard_field = g_strdup(tp_protocol_get_vcard_field(protocol));
+  priv->vcard_field = g_ascii_strup(tp_protocol_get_vcard_field(protocol), -1);
 
   manager = osso_abook_account_manager_get_default();
 

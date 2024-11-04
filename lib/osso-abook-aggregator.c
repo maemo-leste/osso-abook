@@ -620,7 +620,7 @@ is_dangling_roster_contact(OssoABookAggregator *aggregator,
   for (attr = e_vcard_get_attributes(E_VCARD(master_contact)); attr;
        attr = attr->next)
   {
-    if (!strcmp(attr_name, e_vcard_attribute_get_name(attr->data)))
+    if (!g_ascii_strcasecmp(attr_name, e_vcard_attribute_get_name(attr->data)))
     {
       GList *v = e_vcard_attribute_get_values(attr->data);
 
@@ -1491,11 +1491,15 @@ create_temporary_master(OssoABookAggregator *aggregator,
       {
         const char *attr_name = e_vcard_attribute_get_name(l->data);
 
-        if (g_str_equal(attr_name, "N") || g_str_equal(attr_name, "NICKNAME") ||
-            (vcard_field && g_str_equal(attr_name, vcard_field)))
+        if (attr_name)
         {
-          e_vcard_add_attribute(E_VCARD(master_contact),
-                                e_vcard_attribute_copy(l->data));
+          if (!g_ascii_strcasecmp(attr_name, EVC_N) ||
+              !g_ascii_strcasecmp(attr_name, EVC_NICKNAME) ||
+              (vcard_field && !g_ascii_strcasecmp(attr_name, vcard_field)))
+          {
+            e_vcard_add_attribute(E_VCARD(master_contact),
+                                  e_vcard_attribute_copy(l->data));
+          }
         }
       }
 
@@ -1517,12 +1521,18 @@ create_temporary_master(OssoABookAggregator *aggregator,
       for (l = e_vcard_get_attributes(E_VCARD(master_contact)); l; l = l->next)
       {
         const char *attr_name = e_vcard_attribute_get_name(l->data);
+        gchar *up = attr_name ? g_ascii_strup(attr_name, -1) : NULL;
 
-        if (g_str_has_prefix(attr_name, "X-TELEPATHY-") ||
-            !strcmp(attr_name, OSSO_ABOOK_VCA_OSSO_MASTER_UID))
+        if (up)
         {
-          e_vcard_remove_attribute(E_VCARD(master_contact), l->data);
+          if (g_str_has_prefix(up, "X-TELEPATHY-") ||
+              !strcmp(up, OSSO_ABOOK_VCA_OSSO_MASTER_UID))
+          {
+            e_vcard_remove_attribute(E_VCARD(master_contact), l->data);
+          }
         }
+
+        g_free(up);
       }
 
       g_hash_table_insert(priv->temp_master_contacts, g_strdup(uid),

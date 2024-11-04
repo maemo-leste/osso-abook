@@ -165,19 +165,22 @@ static gboolean
 is_vcard_field(GQuark quark, const char *attr_name)
 {
   static GHashTable *vca_fields = NULL;
+  gchar *up;
 
-  if ((osso_abook_quark_vca_email() == quark) ||
-      (osso_abook_quark_vca_tel() == quark))
-  {
+  if (quark == OSSO_ABOOK_QUARK_VCA_EMAIL || quark == OSSO_ABOOK_QUARK_VCA_TEL)
     return TRUE;
-  }
+
+  up = g_ascii_strup(attr_name, -1);
 
   if (vca_fields)
   {
     gpointer val = g_hash_table_lookup(vca_fields, attr_name);
 
     if (val)
+    {
+      g_free(up);
       return GPOINTER_TO_INT(val) == 1;
+    }
   }
   else
     vca_fields = g_hash_table_new(g_str_hash, g_str_equal);
@@ -185,11 +188,11 @@ is_vcard_field(GQuark quark, const char *attr_name)
   if (osso_abook_account_manager_has_primary_vcard_field(NULL, attr_name) ||
       osso_abook_account_manager_has_secondary_vcard_field(NULL, attr_name))
   {
-    g_hash_table_insert(vca_fields, g_strdup(attr_name), GINT_TO_POINTER(1));
+    g_hash_table_insert(vca_fields, up, GINT_TO_POINTER(1));
     return TRUE;
   }
   else
-    g_hash_table_insert(vca_fields, g_strdup(attr_name), GINT_TO_POINTER(2));
+    g_hash_table_insert(vca_fields, up, GINT_TO_POINTER(2));
 
   return FALSE;
 }
@@ -399,21 +402,24 @@ parse_capabilities(OssoABookContact *contact, OssoABookContactPrivate *priv)
 
   for (attr = e_vcard_get_attributes(E_VCARD(contact)); attr; attr = attr->next)
   {
-    const char *attr_name;
+    const char *name;
 
     if ((priv->caps & OSSO_ABOOK_CAPS_ALL) == OSSO_ABOOK_CAPS_ALL)
       break;
 
-    attr_name = e_vcard_attribute_get_name(attr->data);
+    name = e_vcard_attribute_get_name(attr->data);
 
-    if (!g_strcmp0(attr_name, EVC_EMAIL))
+    if (!name)
+      continue;
+
+    if (!g_ascii_strcasecmp(name, EVC_EMAIL))
     {
       GList *v = e_vcard_attribute_get_values(attr->data);
 
       if (v && !IS_EMPTY(v->data))
         priv->caps |= OSSO_ABOOK_CAPS_EMAIL;
     }
-    else if (!g_strcmp0(attr_name, EVC_TEL))
+    else if (!g_ascii_strcasecmp(name, EVC_TEL))
     {
       GList *v = e_vcard_attribute_get_values(attr->data);
 
@@ -441,7 +447,10 @@ osso_abook_contact_update_attributes(OssoABookContact *contact,
                                      const gchar *attribute_name)
 {
   OssoABookContactPrivate *priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
-  GQuark quark = g_quark_from_string(attribute_name);
+  gchar *up = attribute_name ? g_ascii_strup(attribute_name, -1) : NULL;
+  GQuark quark = g_quark_from_string(up);
+
+  g_free(up);
 
   if (!quark)
     return;
@@ -1736,9 +1745,10 @@ parse_master_uids(OssoABookContact *contact, OssoABookContactPrivate *priv)
 
   for (attr = e_vcard_get_attributes(E_VCARD(contact)); attr; attr = attr->next)
   {
-    const char *attr_name = e_vcard_attribute_get_name(attr->data);
+    const gchar *attr_name = e_vcard_attribute_get_name(attr->data);
 
-    if (!strcmp(attr_name, OSSO_ABOOK_VCA_OSSO_MASTER_UID))
+    if (attr_name &&
+        !g_ascii_strcasecmp(attr_name, OSSO_ABOOK_VCA_OSSO_MASTER_UID))
     {
       GList *values = e_vcard_attribute_get_values(attr->data);
 
@@ -1876,9 +1886,10 @@ osso_abook_contact_remove_master_uid(OssoABookContact *roster_contact,
   while (attr)
   {
     GList *next = attr->next;
+    const gchar *attr_name = e_vcard_attribute_get_name(attr->data);
 
-    if (!strcmp(e_vcard_attribute_get_name(attr->data),
-                OSSO_ABOOK_VCA_OSSO_MASTER_UID))
+    if (attr_name &&
+        !g_ascii_strcasecmp(attr_name,OSSO_ABOOK_VCA_OSSO_MASTER_UID))
     {
       GList *values = e_vcard_attribute_get_values(attr->data);
 
@@ -2155,7 +2166,7 @@ osso_abook_contact_matches_username(OssoABookContact *contact,
 
     if (vcard_field)
     {
-      if (strcmp(attr_name, vcard_field))
+      if (!attr_name || g_ascii_strcasecmp(attr_name, vcard_field))
         continue;
     }
     else
@@ -2167,7 +2178,7 @@ osso_abook_contact_matches_username(OssoABookContact *contact,
       {
         const char *vcf = tp_protocol_get_vcard_field(protocols->data);
 
-        if (vcf && !strcmp(attr_name, vcf))
+        if (vcf && !g_ascii_strcasecmp(attr_name, vcf))
           break;
       }
 
@@ -2209,7 +2220,9 @@ osso_abook_contact_get_attributes(EContact *contact, const char *attr_name)
 
   for (attr = e_vcard_get_attributes(E_VCARD(contact)); attr; attr = attr->next)
   {
-    if (!strcmp(e_vcard_attribute_get_name(attr->data), attr_name))
+    const gchar *name = e_vcard_attribute_get_name(attr->data);
+
+    if (name && !g_ascii_strcasecmp(name, attr_name))
       attributes = g_list_prepend(attributes, attr->data);
   }
 
@@ -2258,7 +2271,7 @@ osso_abook_contact_real_find_roster_contacts(OssoABookContact *master_contact,
       return NULL;
     }
 
-    if (data->vcard_field && strcmp(data->vcard_field, vcard_field))
+    if (data->vcard_field && g_ascii_strcasecmp(data->vcard_field, vcard_field))
       return NULL;
   }
 
@@ -2296,8 +2309,11 @@ osso_abook_contact_real_find_roster_contacts(OssoABookContact *master_contact,
 
     if (roster_vcard_field)
     {
-      if (g_strcmp0(roster_vcard_field, roster_account_vcard_field))
+      if (!roster_account_vcard_field ||
+          g_ascii_strcasecmp(roster_vcard_field, roster_account_vcard_field))
+      {
         continue;
+      }
     }
     else
       roster_vcard_field = roster_account_vcard_field;
@@ -3210,7 +3226,7 @@ contact_has_attribute(OssoABookContact *contact, EVCardAttribute *attr)
   GList *vals = e_vcard_attribute_get_values(attr);
   gboolean rv = FALSE;
 
-  if (!strcmp(EVC_TEL, name) && vals->data)
+  if (name && !g_ascii_strcasecmp(EVC_TEL, name) && vals->data)
   {
     EBookQuery *q = osso_abook_query_phone_number(vals->data, TRUE);
     char *qs = e_book_query_to_string(q);
@@ -3266,8 +3282,11 @@ fetch_roster_info(OssoABookContact *contact, OssoABookContact *info_contact,
     {
       EVCardAttribute *attr = attrs->data;
       const char *name = e_vcard_attribute_get_name(attr);
-      GQuark quark = g_quark_from_string(name);
+      gchar *up = name ? g_ascii_strup(name, -1) : NULL;
+      GQuark quark = g_quark_from_string(up);
       gboolean add_it = FALSE;
+
+      g_free(up);
 
       if (osso_abook_contact_get_values(E_CONTACT(contact), name) ||
           osso_abook_contact_get_values(E_CONTACT(info_contact), name))
@@ -3292,7 +3311,7 @@ fetch_roster_info(OssoABookContact *contact, OssoABookContact *info_contact,
           (quark == OSSO_ABOOK_QUARK_VCA_NOTE) ||
           (quark == OSSO_ABOOK_QUARK_VCA_ORG) ||
           (quark == OSSO_ABOOK_QUARK_VCA_URL) ||
-          (vcard_field && !strcmp(name, vcard_field)))
+          (vcard_field && !g_ascii_strcasecmp(name, vcard_field)))
       {
         add_readonly_attribute(info_contact, attr);
       }
@@ -3378,8 +3397,7 @@ osso_abook_contact_reject_for_uid(OssoABookContact *contact,
 GList *
 osso_abook_contact_attribute_get_protocol(EVCardAttribute *attribute)
 {
-  const char *vcard_attr_name = e_vcard_attribute_get_name(attribute);
-  gchar *tmp;
+  const char *attr_name = e_vcard_attribute_get_name(attribute);
   GList *params;
   GList *rv = NULL;
   GList *l;
@@ -3387,10 +3405,10 @@ osso_abook_contact_attribute_get_protocol(EVCardAttribute *attribute)
   for (params = e_vcard_attribute_get_params(attribute); params;
        params = params->next)
   {
-    const char *param_name = e_vcard_attribute_param_get_name(params->data);
+    const char *pname = e_vcard_attribute_param_get_name(params->data);
     GList *values;
 
-    if (!strcmp(param_name, EVC_TYPE))
+    if (pname && !g_ascii_strcasecmp(pname, EVC_TYPE))
     {
       for (values = e_vcard_attribute_param_get_values(params->data);
            values; values = values->next)
@@ -3402,9 +3420,9 @@ osso_abook_contact_attribute_get_protocol(EVCardAttribute *attribute)
 
           for (l = p; l; l = l->next)
           {
-            const char *vcard_field = tp_protocol_get_vcard_field(l->data);
+            const char *vcf = tp_protocol_get_vcard_field(l->data);
 
-            if (vcard_field && !strcmp(vcard_field, vcard_attr_name))
+            if (attr_name && vcf && !g_ascii_strcasecmp(vcf, attr_name))
               rv = g_list_prepend(rv, l->data);
           }
 
@@ -3417,12 +3435,8 @@ osso_abook_contact_attribute_get_protocol(EVCardAttribute *attribute)
   if (rv)
     return rv;
 
-  /* a little hack for fremantle where vcard field is in uppercase */
-  tmp = g_ascii_strdown(vcard_attr_name, -1);
-  rv = osso_abook_account_manager_get_protocol_object_by_vcard_field(NULL, tmp);
-  g_free(tmp);
-
-  return rv;
+  return osso_abook_account_manager_get_protocol_object_by_vcard_field(
+        NULL, attr_name);
 }
 
 static void
@@ -3947,7 +3961,9 @@ osso_abook_contact_remove_value(EContact *contact, const char *attr_name,
 
   for (attrs = e_vcard_get_attributes(evc); attrs; attrs = attrs->next)
   {
-    if (!strcmp(e_vcard_attribute_get_name(attrs->data), attr_name))
+    const gchar *name = e_vcard_attribute_get_name(attrs->data);
+
+    if (name && !g_ascii_strcasecmp(name, attr_name))
     {
       e_vcard_attribute_remove_value(attrs->data, value);
 
@@ -4002,7 +4018,7 @@ get_protocols_by_vcard_field(const char *vcard_field)
   {
     const char *vcf = tp_protocol_get_vcard_field(protocols->data);
 
-    if (vcf && !(strcmp(vcf, vcard_field)))
+    if (vcf && !g_ascii_strcasecmp(vcf, vcard_field))
     {
       GList *removed = protocols;
 
@@ -4022,9 +4038,14 @@ find_protocol(GList *protocols, const char *protocol_name)
 {
   GList *l;
 
+  if (!protocol_name)
+    return NULL;
+
   for (l = protocols; l; l = l->next)
   {
-    if (!g_strcmp0(protocol_name, tp_protocol_get_name(l->data)))
+    const gchar *name = tp_protocol_get_name(l->data);
+
+    if (name && !g_ascii_strcasecmp(protocol_name, name))
       return l->data;
   }
 
@@ -4036,16 +4057,16 @@ osso_abook_contact_attribute_set_protocol(EVCardAttribute *attribute,
                                           const char *protocol)
 {
   const char *vcard_field = e_vcard_attribute_get_name(attribute);
-  GList *profiles = get_protocols_by_vcard_field(vcard_field);
+  GList *protocols = get_protocols_by_vcard_field(vcard_field);
 
-  if (find_protocol(profiles, protocol))
+  if (find_protocol(protocols, protocol))
   {
     GList *types = NULL;
     GList *param = e_vcard_attribute_get_param(attribute, EVC_TYPE);
 
     while (param)
     {
-      if (!find_protocol(profiles, param->data))
+      if (!find_protocol(protocols, param->data))
         types = g_list_prepend(types, g_strdup(param->data));
 
       param = param->next;
@@ -4067,7 +4088,7 @@ osso_abook_contact_attribute_set_protocol(EVCardAttribute *attribute,
       types = g_list_reverse(types);
       type_param = e_vcard_attribute_param_new(EVC_TYPE);
 
-      while ( types )
+      while (types)
       {
         gchar *type = types->data;
 
@@ -4085,7 +4106,7 @@ osso_abook_contact_attribute_set_protocol(EVCardAttribute *attribute,
                     vcard_field);
   }
 
-  g_list_free(profiles);
+  g_list_free(protocols);
 }
 
 gboolean

@@ -323,7 +323,7 @@ osso_abook_choose_attribute_run(GtkWindow *parent, EContact *contact,
 static gboolean
 filter_attribute_name(EVCardAttribute *attr, const gpointer user_data)
 {
-  return !strcmp(e_vcard_attribute_get_name(attr), user_data);
+  return !g_ascii_strcasecmp(e_vcard_attribute_get_name(attr), user_data);
 }
 
 GList *

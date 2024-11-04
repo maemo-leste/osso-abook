@@ -257,15 +257,20 @@ osso_abook_is_fax_attribute(EVCardAttribute *attribute)
 {
   GList *p;
   gboolean is_fax = FALSE;
+  const gchar *name;
 
   g_return_val_if_fail(attribute != NULL, FALSE);
 
-  if (g_strcmp0(e_vcard_attribute_get_name(attribute), EVC_TEL))
+  name = e_vcard_attribute_get_name(attribute);
+
+  if (!name || g_ascii_strcasecmp(name, EVC_TEL))
     return FALSE;
 
   for (p = e_vcard_attribute_get_params(attribute); p; p = p->next)
   {
-    if (!g_strcmp0(e_vcard_attribute_param_get_name(p->data), "TYPE"))
+    const gchar *pname = e_vcard_attribute_param_get_name(p->data);
+
+    if (pname && !g_ascii_strcasecmp(pname, EVC_TYPE))
     {
       GList *l;
 
@@ -294,15 +299,20 @@ gboolean
 osso_abook_is_mobile_attribute(EVCardAttribute *attribute)
 {
   GList *p;
+  const gchar *name;
 
   g_return_val_if_fail(attribute != NULL, FALSE);
 
-  if (g_strcmp0(e_vcard_attribute_get_name(attribute), EVC_TEL))
+  name = e_vcard_attribute_get_name(attribute);
+
+  if (!name || g_ascii_strcasecmp(name, EVC_TEL))
     return FALSE;
 
   for (p = e_vcard_attribute_get_params(attribute); p; p = p->next)
   {
-    if (!g_strcmp0(e_vcard_attribute_param_get_name(p->data), "TYPE"))
+    name = e_vcard_attribute_param_get_name(p->data);
+
+    if (name && !g_ascii_strcasecmp(name, EVC_TYPE))
     {
       GList *v;
 
@@ -543,7 +553,9 @@ osso_abook_sort_phone_number_matches(GList *matches, const char *phone_number)
     for (attr = e_vcard_get_attributes(E_VCARD(data->contact)); attr;
          attr = attr->next)
     {
-      if (!strcmp(e_vcard_attribute_get_name(attr->data), EVC_TEL))
+      const gchar *name = e_vcard_attribute_get_name(attr->data);
+
+      if (name && !g_ascii_strcasecmp(name, EVC_TEL))
       {
         GList *vals = e_vcard_attribute_get_values(attr->data);
 
@@ -1155,17 +1167,20 @@ osso_abook_convert_to_tel_attribute(EVCardAttribute *attribute)
   if (!value || values->next)
     return NULL;
 
-  if (!g_strcmp0(name, "X-SKYPE"))
-    tel = g_strdup(value);
-  else if (!g_strcmp0(name, "X-SIP"))
+  if (name)
   {
-    const char *p = osso_abook_strip_sip_prefix(value);
-    const char *q = strchr(p, '@');
+    if (!g_ascii_strcasecmp(name, "X-SKYPE"))
+      tel = g_strdup(value);
+    else if (!g_ascii_strcasecmp(name, "X-SIP"))
+    {
+      const char *p = osso_abook_strip_sip_prefix(value);
+      const char *q = strchr(p, '@');
 
-    if (q)
-      tel = g_strndup(p, q - p);
-    else
-      tel = g_strdup(p);
+      if (q)
+        tel = g_strndup(p, q - p);
+      else
+        tel = g_strdup(p);
+    }
   }
 
   if (!tel || (*tel != '+'))
@@ -1443,6 +1458,9 @@ osso_abook_e_vcard_attribute_equal(EVCardAttribute *attr_a,
 {
   EVCardAttributeParam *param_a, *param_b;
   GList *param_list_a, *param_list_b;
+  const gchar *s1;
+  const gchar *s2;
+
 
   if (!attr_a)
     return !attr_b;
@@ -1450,11 +1468,14 @@ osso_abook_e_vcard_attribute_equal(EVCardAttribute *attr_a,
   if (!attr_b)
     return FALSE;
 
-  if (g_strcmp0(e_vcard_attribute_get_name(attr_a),
-                e_vcard_attribute_get_name(attr_b)))
-  {
+  s1 = e_vcard_attribute_get_name(attr_a);
+  s2 = e_vcard_attribute_get_name(attr_b);
+
+  if (s1 && s2 && g_ascii_strcasecmp(s1, s2))
     return FALSE;
-  }
+
+  if ((s1 && !s2) || (!s1 && s2))
+    return FALSE;
 
   if (string_list_compare(e_vcard_attribute_get_values(attr_a),
                           e_vcard_attribute_get_values(attr_b)))
@@ -1469,12 +1490,14 @@ osso_abook_e_vcard_attribute_equal(EVCardAttribute *attr_a,
   {
     param_a = param_list_a->data;
     param_b = param_list_b->data;
+    s1 = e_vcard_attribute_param_get_name(param_a);
+    s2 = e_vcard_attribute_param_get_name(param_b);
 
-    if (g_strcmp0(e_vcard_attribute_param_get_name(param_a),
-                  e_vcard_attribute_param_get_name(param_b)))
-    {
+    if (s1 && s2 && g_ascii_strcasecmp(s1, s2))
       return FALSE;
-    }
+
+    if ((s1 && !s2) || (!s1 && s2))
+      return FALSE;
 
     if (string_list_compare(e_vcard_attribute_param_get_values(param_a),
                             e_vcard_attribute_param_get_values(param_b)))

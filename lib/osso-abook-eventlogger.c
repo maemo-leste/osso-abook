@@ -195,18 +195,28 @@ contact_get_attribute_values(OssoABookContact *contact, const char *attr_name)
 {
   GList *attr_values = NULL;
   GList *attr;
+  gchar *up;
 
   if (!contact)
     return NULL;
 
+  up = attr_name ? g_ascii_strup(attr_name, -1) : NULL;
+
   for (attr = e_vcard_get_attributes(E_VCARD(contact)); attr; attr = attr->next)
   {
-    if (!g_strcmp0(e_vcard_attribute_get_name(attr->data), attr_name))
+    const gchar *name = e_vcard_attribute_get_name(attr->data);
+    gchar *name_up = name ? g_ascii_strup(name, -1) : NULL;
+
+    if (!g_strcmp0(name_up, up))
     {
       attr_values = g_list_concat(
         g_list_copy(e_vcard_attribute_get_values(attr->data)), attr_values);
     }
+
+    g_free(name_up);
   }
+
+  g_free(up);
 
   return attr_values;
 }

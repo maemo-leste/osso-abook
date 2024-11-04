@@ -663,19 +663,20 @@ get_attr_list(OssoABookContactEditorPrivate *priv)
       EVCardAttribute *attr = ((struct managed_attribute *)(l->data))->evcattr;
       const char *name = e_vcard_attribute_get_name(attr);
 
-      if (!strcmp(name, EVC_PHOTO))
+      if (!g_ascii_strcasecmp(name, EVC_PHOTO))
         photo_is_missing = FALSE;
-      else if (!strcmp(name, EVC_N))
+      else if (!g_ascii_strcasecmp(name, EVC_N))
         n_is_missing = FALSE;
-      else if (!strcmp(name, EVC_EMAIL))
+      else if (!g_ascii_strcasecmp(name, EVC_EMAIL))
         email_is_missing = FALSE;
-      else if (!strcmp(name, EVC_TEL))
+      else if (!g_ascii_strcasecmp(name, EVC_TEL))
       {
         tel_is_missing = FALSE;
 
         if (!e_vcard_attribute_get_param(attr, EVC_TYPE))
         {
           EVCardAttributeParam *param = e_vcard_attribute_param_new(EVC_TYPE);
+
           e_vcard_attribute_param_add_value(param, "CELL");
           e_vcard_attribute_param_add_value(param, "VOICE");
           e_vcard_attribute_add_param(attr, param);
@@ -1216,7 +1217,8 @@ vcard_is_empty(EVCard *vcard)
   {
     const char *attr_name = e_vcard_attribute_get_name(attrs->data);
 
-    g_return_val_if_fail(!g_strcmp0(attr_name, EVC_UID), FALSE);
+    g_return_val_if_fail(attr_name &&
+                         !g_ascii_strcasecmp(attr_name, EVC_UID), FALSE);
   }
 
   return TRUE;
@@ -1280,9 +1282,10 @@ create_contact(OssoABookContactEditorPrivate *priv)
     {
       const char *attr_name = e_vcard_attribute_get_name(attrs->data);
 
-      if (strcmp(attr_name, EVC_FN) && strcmp(attr_name, EVC_LABEL))
+      if (g_ascii_strcasecmp(attr_name, EVC_FN) &&
+          g_ascii_strcasecmp(attr_name, EVC_LABEL))
       {
-        if (!strcmp(attr_name, EVC_VERSION))
+        if (!g_ascii_strcasecmp(attr_name, EVC_VERSION))
           no_version = FALSE;
 
         if (_osso_abook_e_vcard_attribute_has_value(attrs->data))

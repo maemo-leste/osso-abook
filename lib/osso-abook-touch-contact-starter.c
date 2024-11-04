@@ -596,15 +596,20 @@ evcard_attribute_name_value_equal(EVCardAttribute *a1, EVCardAttribute *a2)
 {
   const char *name1 = e_vcard_attribute_get_name(a1);
   const char *name2 = e_vcard_attribute_get_name(a2);
+  char *val1;
+  char *val2;
   gboolean rv;
 
-  char *val1 = e_vcard_attribute_get_value(a1);
-  char *val2 = e_vcard_attribute_get_value(a2);
+  if (name1 && name2 && g_ascii_strcasecmp(name1, name2))
+    return FALSE;
 
-  if (g_strcmp0(name1, name2) || g_strcmp0(val1, val2))
-    rv = FALSE;
-  else
-    rv = TRUE;
+  if ((name1 && !name2) || (!name1 && name2))
+    return FALSE;
+
+  val1 = e_vcard_attribute_get_value(a1);
+  val2 = e_vcard_attribute_get_value(a2);
+
+  rv = !g_strcmp0(val1, val2);
 
   g_free(val1);
   g_free(val2);
@@ -815,7 +820,7 @@ create_layout(OssoABookTouchContactStarter *starter, guint max_columns_per_row,
               osso_abook_contact_field_get_attribute(fld1);
             const char *attr_name = e_vcard_attribute_get_name(attr);
 
-            if (!g_strcmp0(attr_name, EVC_TEL) &&
+            if (attr_name && !g_ascii_strcasecmp(attr_name, EVC_TEL) &&
                 !(osso_abook_contact_field_get_flags(fld1) &
                   OSSO_ABOOK_CONTACT_FIELD_FLAGS_CELL))
             {

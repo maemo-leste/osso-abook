@@ -139,7 +139,11 @@ create_contact_fields(OssoABookContactDetailStorePrivate *priv,
   for (attr = e_vcard_get_attributes(E_VCARD(contact)); attr; attr = attr->next)
   {
     EVCardAttribute *evcattr = attr->data;
-    GQuark name = g_quark_from_string(e_vcard_attribute_get_name(evcattr));
+    const char *attr_name = e_vcard_attribute_get_name(evcattr);
+    gchar *up = attr_name ? g_ascii_strup(attr_name, -1) : NULL;
+    GQuark name = g_quark_from_string(up);
+
+    g_free(up);
 
     if ((name == OSSO_ABOOK_QUARK_VCA_EMAIL) &&
         (allow & OSSO_ABOOK_CONTACT_DETAIL_EMAIL))

@@ -1189,10 +1189,17 @@ update_presence_status(TpAccount *account,
 static gchar *
 get_vcard_field_account_id(const gchar *vcard_field, const gchar *vcard_value)
 {
+  gchar *vcf_up;
+  gchar *rv;
+
   if (!vcard_field || !vcard_value)
     return NULL;
 
-  return g_strconcat(vcard_field, ":", vcard_value, NULL);
+  vcf_up = g_ascii_strup(vcard_field, -1);
+  rv = g_strconcat(vcf_up, ":", vcard_value, NULL);
+  g_free(vcf_up);
+
+  return rv;
 }
 
 static gchar *
@@ -1477,10 +1484,7 @@ add_cm_protocols(TpConnectionManager *cm, OssoABookAccountManagerPrivate *priv)
     TpProtocol *protocol = tp_connection_manager_get_protocol_object(cm, *name);
     const gchar *vcf = tp_protocol_get_vcard_field(protocol);
     GList *l;
-
-    OSSO_ABOOK_NOTE(TP,
-                    "adding protocol (%s cm %s primary vcard field: %s)",
-                    *name, cm_name, vcf);
+    gchar *up = NULL;
 
     l = g_hash_table_lookup(priv->prot_by_name, *name);
     l = g_list_prepend(l, g_object_ref(protocol));
@@ -1488,10 +1492,16 @@ add_cm_protocols(TpConnectionManager *cm, OssoABookAccountManagerPrivate *priv)
 
     if (vcf)
     {
-      l = g_hash_table_lookup(priv->prot_by_vcf, vcf);
+      up = g_ascii_strup(vcf, -1);
+
+      l = g_hash_table_lookup(priv->prot_by_vcf, up);
       l = g_list_prepend(l, g_object_ref(protocol));
-      g_hash_table_insert(priv->prot_by_vcf, g_strdup(vcf), l);
+      g_hash_table_insert(priv->prot_by_vcf, up, l);
     }
+
+    OSSO_ABOOK_NOTE(TP,
+                    "adding protocol (%s cm %s primary vcard field: %s)",
+                    *name, cm_name, up);
 
     name++;
   }
@@ -1815,6 +1825,8 @@ osso_abook_account_manager_has_primary_vcard_field(
   const char *vcard_field)
 {
   OssoABookAccountManagerPrivate *priv;
+  gchar *up;
+  gboolean rv;
 
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -1823,8 +1835,12 @@ osso_abook_account_manager_has_primary_vcard_field(
   g_return_val_if_fail(NULL != vcard_field, FALSE);
 
   priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+  up = g_ascii_strup(vcard_field, -1);
 
-  return g_hash_table_contains(priv->prot_by_vcf, vcard_field);
+  rv = g_hash_table_contains(priv->prot_by_vcf, up);
+  g_free(up);
+
+  return rv;
 }
 
 gboolean
@@ -1840,7 +1856,7 @@ osso_abook_account_manager_has_secondary_vcard_field(
 
   return g_list_find_custom(
     OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager)->uri_schemes,
-    vcard_field, (GCompareFunc)&strcmp) != NULL;
+    vcard_field, (GCompareFunc)&g_ascii_strcasecmp) != NULL;
 }
 
 TpAccount *
@@ -1976,7 +1992,7 @@ osso_abook_account_manager_list_protocols(OssoABookAccountManager *manager,
     {
       const gchar *vcf = tp_protocol_get_vcard_field(protocol);
 
-      if (!vcf || strcmp(attr_name, vcf))
+      if (!vcf || g_ascii_strcasecmp(attr_name, vcf))
         continue;
     }
 
@@ -2043,15 +2059,21 @@ osso_abook_account_manager_get_protocol_object(OssoABookAccountManager *manager,
                                                const char *protocol)
 {
   OssoABookAccountManagerPrivate *priv;
+  gchar *down;
+  GList *rv;
 
   if (!manager)
     manager = osso_abook_account_manager_get_default();
 
   g_return_val_if_fail(OSSO_ABOOK_IS_ACCOUNT_MANAGER(manager), NULL);
+  g_return_val_if_fail(protocol != NULL, NULL);
 
   priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+  down = g_ascii_strdown(protocol, -1);
+  rv = g_list_copy(g_hash_table_lookup(priv->prot_by_name, down));
+  g_free(down);
 
-  return g_list_copy(g_hash_table_lookup(priv->prot_by_name, protocol));
+  return rv;
 }
 
 GList *
@@ -2060,6 +2082,8 @@ osso_abook_account_manager_get_protocol_object_by_vcard_field(
   const char *vcard_field)
 {
   OssoABookAccountManagerPrivate *priv;
+  gchar *up;
+  GList *rv;
 
   if (!manager)
     manager = osso_abook_account_manager_get_default();
@@ -2068,8 +2092,11 @@ osso_abook_account_manager_get_protocol_object_by_vcard_field(
   g_return_val_if_fail(NULL != vcard_field, NULL);
 
   priv = OSSO_ABOOK_ACCOUNT_MANAGER_PRIVATE(manager);
+  up = g_ascii_strup(vcard_field, -1);
+  rv = g_list_copy(g_hash_table_lookup(priv->prot_by_vcf, up));
+  g_free(up);
 
-  return g_list_copy(g_hash_table_lookup(priv->prot_by_vcf, vcard_field));
+  return rv;
 }
 
 /**
@@ -2123,7 +2150,7 @@ osso_abook_account_manager_list_by_vcard_field(OssoABookAccountManager *manager,
     TpProtocol *protocol = l->data;
     const char *vcf = tp_protocol_get_vcard_field(protocol);
 
-    if (vcf && !strcmp(vcard_field, vcf))
+    if (vcf && !g_ascii_strcasecmp(vcard_field, vcf))
     {
       GList *rosters = osso_abook_account_manager_list_by_protocol(
         manager, tp_protocol_get_name(protocol));

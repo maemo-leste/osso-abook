@@ -128,7 +128,9 @@ action_start(OssoABookTemporaryContactDialog *dialog,
 static void
 call_clicked_cb(OssoABookTemporaryContactDialog *dialog)
 {
-  if (!strcmp(e_vcard_attribute_get_name(PRIVATE(dialog)->attribute), EVC_TEL))
+  const gchar *name = e_vcard_attribute_get_name(PRIVATE(dialog)->attribute);
+
+  if (name && !g_ascii_strcasecmp(name, EVC_TEL))
     action_start(dialog, OSSO_ABOOK_CONTACT_ACTION_TEL);
   else
     action_start(dialog, OSSO_ABOOK_CONTACT_ACTION_VOIPTO);
@@ -228,7 +230,9 @@ create_table(OssoABookTemporaryContactDialog *dialog)
 
   if (priv->attribute)
   {
-    if (!strcmp(e_vcard_attribute_get_name(priv->attribute), EVC_TEL))
+    const gchar *name = e_vcard_attribute_get_name(priv->attribute);
+
+    if (name && !g_ascii_strcasecmp(name, EVC_TEL))
     {
       call = TRUE;
       sms = TRUE;
@@ -330,12 +334,14 @@ osso_abook_temporary_contact_dialog_constructed(GObject *object)
 
   if (!priv->contact)
   {
+    const gchar *name;
+
     priv->contact = osso_abook_contact_new();
     e_vcard_add_attribute(E_VCARD(priv->contact),
                           e_vcard_attribute_copy(priv->attribute));
+    name = e_vcard_attribute_get_name(priv->attribute);
 
-    if (g_strcmp0(e_vcard_attribute_get_name(priv->attribute), EVC_TEL) &&
-        priv->account)
+    if (name && g_ascii_strcasecmp(name, EVC_TEL) && priv->account)
     {
       OssoABookRoster *roster;
 

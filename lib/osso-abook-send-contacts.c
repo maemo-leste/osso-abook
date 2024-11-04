@@ -507,14 +507,17 @@ osso_abook_send_contacts_detail_dialog(OssoABookContact *contact,
     if (!n && !fn && detail)
     {
       attr_name = e_vcard_attribute_get_name(detail);
+      gchar *up = attr_name ? g_ascii_strup (attr_name, -1) : NULL;
 
-      if (g_strcmp0(attr_name, EVC_NICKNAME) && g_strcmp0(attr_name, EVC_ORG))
+      if (g_strcmp0(up, EVC_NICKNAME) && g_strcmp0(up, EVC_ORG))
       {
         n = e_vcard_get_attribute(E_VCARD(contact), EVC_NICKNAME);
 
         if (!n)
           n = e_vcard_get_attribute(E_VCARD(contact), EVC_ORG);
       }
+
+      g_free(up);
     }
 
     if (n)

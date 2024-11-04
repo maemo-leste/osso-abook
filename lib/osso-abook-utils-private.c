@@ -442,12 +442,16 @@ osso_abook_e_vcard_attribute_param_merge_value(EVCardAttributeParam *param,
                                                const char *value,
                                                GCompareFunc cmp_func)
 {
+  const gchar *name;
+
   g_return_if_fail(param != NULL);
 
   if (!cmp_func)
     cmp_func = (GCompareFunc)g_ascii_strcasecmp;
 
-  if (!strcmp(e_vcard_attribute_param_get_name(param), EVC_ENCODING))
+  name = e_vcard_attribute_param_get_name(param);
+
+  if (name && !g_ascii_strcasecmp(name, EVC_ENCODING))
   {
     /* replace the value */
     e_vcard_attribute_param_remove_values(param);

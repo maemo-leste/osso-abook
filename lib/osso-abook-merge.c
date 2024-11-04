@@ -812,16 +812,18 @@ get_attribute_weight(EVCardAttribute *attr)
 {
   GList *param;
   int weight = 0;
+  const char *name = e_vcard_attribute_get_name(attr);
 
-  if (g_ascii_strcasecmp(e_vcard_attribute_get_name(attr), EVC_TEL))
+  if (name && g_ascii_strcasecmp(e_vcard_attribute_get_name(attr), EVC_TEL))
     return 0;
 
   param = e_vcard_attribute_get_params(attr);
 
   while (param)
   {
-    if (!g_ascii_strcasecmp(e_vcard_attribute_param_get_name(param->data),
-                            EVC_TYPE))
+    name = e_vcard_attribute_param_get_name(param->data);
+
+    if (name && !g_ascii_strcasecmp(name, EVC_TYPE))
     {
       GList *v;
 
@@ -867,7 +869,10 @@ copy_safer_attribute(EVCardAttribute *attr_a, EVCardAttribute *attr_b)
   const char *attr_name_a = e_vcard_attribute_get_name(attr_a);
   const char *attr_name_b = e_vcard_attribute_get_name(attr_b);
 
-  g_return_val_if_fail(!g_strcmp0(attr_name_a, attr_name_b), NULL);
+  if (attr_name_a && attr_name_b)
+    g_return_val_if_fail(!g_ascii_strcasecmp(attr_name_a, attr_name_b), NULL);
+  else
+    g_return_val_if_fail(!attr_name_a && !attr_name_b, NULL);
 
   if (get_attribute_weight(attr_b) < get_attribute_weight(attr_b))
     return e_vcard_attribute_copy(attr_b);
@@ -878,7 +883,14 @@ copy_safer_attribute(EVCardAttribute *attr_a, EVCardAttribute *attr_b)
 static guint
 e_vcard_attribute_hash(EVCardAttribute *attr)
 {
-  return g_str_hash(e_vcard_attribute_get_name(attr));
+  guint rv;
+
+  const gchar *name = e_vcard_attribute_get_name(attr);
+  gchar *up = name ? g_ascii_strup(name, -1) : NULL;
+  rv  = g_str_hash(up);
+  g_free(up);
+
+  return rv;
 }
 
 static gboolean
@@ -917,18 +929,18 @@ merge_attributes(EVCardAttribute *key, gpointer value,
                  OssoABookContact *contact)
 {
   EVCardAttribute *attr = e_vcard_attribute_copy(key);
+  const char *name = e_vcard_attribute_get_name(attr);
 
-  if (!g_ascii_strcasecmp(e_vcard_attribute_get_name(attr), EVC_TEL))
+  if (name && !g_ascii_strcasecmp(name, EVC_TEL))
   {
     GList *param = e_vcard_attribute_get_params(attr);
 
     while (param)
     {
-      if (!g_ascii_strcasecmp(e_vcard_attribute_param_get_name(param->data),
-                              EVC_TYPE))
-      {
+      name = e_vcard_attribute_param_get_name(param->data);
+
+      if (name && !g_ascii_strcasecmp(name, EVC_TYPE))
         break;
-      }
 
       param = param->next;
     }
@@ -999,14 +1011,20 @@ param_values_compare(EVCardAttributeParam *param_a,
 {
   if (param_a)
   {
+    const char *n1;
+    const char *n2;
+
     if (!param_b)
       return FALSE;
 
-    if (g_ascii_strcasecmp(e_vcard_attribute_param_get_name(param_a),
-                           e_vcard_attribute_param_get_name(param_b)))
-    {
+    n1 = e_vcard_attribute_param_get_name(param_a);
+    n2 = e_vcard_attribute_param_get_name(param_b);
+
+    if (n1 && n2 && g_ascii_strcasecmp(n1, n2))
       return FALSE;
-    }
+
+    if ((!n1 && n2) || (n1 && !n2))
+      return FALSE;
 
     if (!attribute_values_cmp(
           e_vcard_attribute_param_get_values(param_a),
