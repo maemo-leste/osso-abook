@@ -85,8 +85,6 @@ struct _OssoABookAccountManagerPrivate
   GHashTable *override_rosters;
   gulong account_ready_id;
   gulong account_removed_id;
-  gulong account_enabled_id;
-  gulong account_disabled_id;
   /* cm_name -> cm object */
   GHashTable *cms;
   GHashTable *prot_by_vcf;
@@ -610,18 +608,6 @@ osso_abook_account_manager_dispose(GObject *object)
   {
     g_signal_handler_disconnect(priv->tp_am, priv->account_removed_id);
     priv->account_removed_id = 0;
-  }
-
-  if (priv->account_disabled_id)
-  {
-    g_signal_handler_disconnect(priv->tp_am, priv->account_disabled_id);
-    priv->account_disabled_id = 0;
-  }
-
-  if (priv->account_enabled_id)
-  {
-    g_signal_handler_disconnect(priv->tp_am, priv->account_enabled_id);
-    priv->account_enabled_id = 0;
   }
 
   if (priv->tp_am)
@@ -1242,7 +1228,7 @@ account_connection_cb(GObject *gobject, GParamSpec *pspec, gpointer user_data)
 }
 
 static void
-account_enabled_cb(TpAccountManager *am, TpAccount *account, gpointer user_data)
+account_created_cb(TpAccountManager *am, TpAccount *account, gpointer user_data)
 {
   OssoABookAccountManager *manager = OSSO_ABOOK_ACCOUNT_MANAGER(user_data);
   OssoABookAccountManagerPrivate *priv =
@@ -1374,7 +1360,7 @@ account_validity_changed_cb(TpAccountManager *am, TpAccount *account,
   OSSO_ABOOK_NOTE(TP, "account validity changed: %s", path_suffix);
 
   if (valid)
-    account_enabled_cb(am, account, user_data);
+    account_created_cb(am, account, user_data);
   else
     account_removed_cb(am, account, user_data);
 }
@@ -1433,13 +1419,6 @@ get_accounts(OssoABookAccountManager *manager)
   priv->account_removed_id =
     g_signal_connect(priv->tp_am, "account-removed",
                      G_CALLBACK(account_removed_cb), manager);
-  priv->account_disabled_id =
-    g_signal_connect(priv->tp_am, "account-disabled",
-                     G_CALLBACK(account_removed_cb), manager);
-
-  priv->account_enabled_id =
-    g_signal_connect(priv->tp_am, "account-enabled",
-                     G_CALLBACK(account_enabled_cb), manager);
 }
 
 static void
