@@ -1,3 +1,10 @@
+libosso-abook (1:4.4.4) unstable; urgency=medium
+
+  * implement osso_abook_contact_can_request_auth() and
+    osso_abook_contact_can_block()
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Wed, 13 Nov 2024 10:53:51 +0200
+
 libosso-abook (1:4.4.3) unstable; urgency=medium
 
   * osso-abook-account-manager: Do not track account enabled/disabled signals
