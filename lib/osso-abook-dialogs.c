@@ -17,6 +17,16 @@
  *
  */
 
+/**
+ * SECTION:osso-abook-dialogs
+ * @short_description: Collection of dialog helper routines.
+ *
+ * Helper routines to display dialogs and hook them up to all the necessary
+ * signals. Includes dialogs to delete and block contacts, create, delete and
+ * rename groups, choose email address from a contact and add a contact.
+ *
+ */
+
 #include "config.h"
 
 #include <glib.h>

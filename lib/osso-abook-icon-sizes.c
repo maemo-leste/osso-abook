@@ -17,6 +17,16 @@
  *
  */
 
+/**
+ * SECTION:osso-abook-icon-sizes
+ * @short_description: Common icon sizes used by Contacts.
+ *
+ * This module provides common icon sizes used by Contacts.
+ *
+ */
+
+#include "config.h"
+
 #include "osso-abook-icon-sizes.h"
 
 #define ICON_SIZE(f, name, size) \

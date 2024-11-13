@@ -1,4 +1,15 @@
 /*** BEGIN file-header ***/
+
+/**
+ * SECTION:osso-abook-enums
+ * @short_description: Introspection information for the library's
+ * enumeration types.
+ *
+ * This module provides introspection information for the library's enumeration
+ * types.
+ *
+ */
+
 #include "config.h"
 #include "osso-abook-enums.h"
 /*** END file-header ***/

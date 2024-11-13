@@ -17,6 +17,16 @@
  *
  */
 
+/**
+ * SECTION:osso-abook-quarks
+ * @short_description: GQuarks for commonly used strings.
+ *
+ * This module provides GQuarks for commonly used strings.
+ *
+ */
+
+#include "config.h"
+
 #include "osso-abook-contact.h"
 #include "osso-abook-quarks.h"
 

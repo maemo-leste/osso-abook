@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+  <!ENTITY % gtkdocentities SYSTEM "xml/gtkdocentities.ent">
+  %gtkdocentities;
+]>
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>&package_name; Reference Manual</title>
+    <releaseinfo>
+      for &package_string;.
+      The latest version of this documentation can be found on-line at
+      <ulink role="online-location" url="http://[SERVER]/&package_name;/index.html">http://[SERVER]/&package_name;/</ulink>.
+    </releaseinfo>
+  </bookinfo>
+
+  <chapter>
+    <title>Contact Handling</title>
+    <xi:include href="xml/osso-abook-aggregator.xml"/>
+    <xi:include href="xml/osso-abook-contact.xml"/>
+    <xi:include href="xml/osso-abook-contact-detail-store.xml"/>
+    <xi:include href="xml/osso-abook-contact-field.xml"/>
+    <xi:include href="xml/osso-abook-contact-filter.xml"/>
+    <xi:include href="xml/osso-abook-contact-subscriptions.xml"/>
+    <xi:include href="xml/osso-abook-gconf-contact.xml"/>
+    <xi:include href="xml/osso-abook-merge.xml"/>
+    <xi:include href="xml/osso-abook-roster-manager.xml"/>
+    <xi:include href="xml/osso-abook-roster.xml"/>
+    <xi:include href="xml/osso-abook-self-contact.xml"/>
+    <xi:include href="xml/osso-abook-voicemail-contact.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>List Widgets</title>
+    <xi:include href="xml/osso-abook-contact-model.xml"/>
+    <xi:include href="xml/osso-abook-contact-field-selector.xml"/>
+    <xi:include href="xml/osso-abook-contact-view.xml"/>
+    <xi:include href="xml/osso-abook-filter-model.xml"/>
+    <xi:include href="xml/osso-abook-list-store.xml"/>
+    <xi:include href="xml/osso-abook-tp-account-selector.xml"/>
+    <xi:include href="xml/osso-abook-tp-account-model.xml"/>
+    <xi:include href="xml/osso-abook-row-model.xml"/>
+    <xi:include href="xml/osso-abook-tree-view.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Dialogs</title>
+    <xi:include href="xml/osso-abook-avatar-chooser-dialog.xml"/>
+    <xi:include href="xml/osso-abook-avatar-editor-dialog.xml"/>
+    <xi:include href="xml/osso-abook-contact-detail-selector.xml"/>
+    <xi:include href="xml/osso-abook-contact-chooser.xml"/>
+    <xi:include href="xml/osso-abook-contact-editor.xml"/>
+    <xi:include href="xml/osso-abook-mecard-view.xml"/>
+    <xi:include href="xml/osso-abook-send-contacts.xml"/>
+    <xi:include href="xml/osso-abook-settings-dialog.xml"/>
+    <xi:include href="xml/osso-abook-temporary-contact-dialog.xml"/>
+    <xi:include href="xml/osso-abook-touch-contact-starter.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Groups</title>
+    <xi:include href="xml/osso-abook-all-group.xml"/>
+    <xi:include href="xml/osso-abook-group.xml"/>
+    <xi:include href="xml/osso-abook-profile-group.xml"/>
+    <xi:include href="xml/osso-abook-recent-group.xml"/>
+    <xi:include href="xml/osso-abook-service-group.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Widgets</title>
+    <xi:include href="xml/osso-abook-alpha-shortcuts.xml"/>
+    <xi:include href="xml/osso-abook-avatar-editor.xml"/>
+    <xi:include href="xml/osso-abook-button.xml"/>
+    <xi:include href="xml/osso-abook-live-search.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Presence</title>
+    <xi:include href="xml/osso-abook-account-manager.xml"/>
+    <xi:include href="xml/osso-abook-avatar-image.xml"/>
+    <xi:include href="xml/osso-abook-avatar.xml"/>
+    <xi:include href="xml/osso-abook-caps.xml"/>
+    <xi:include href="xml/osso-abook-presence-icon.xml"/>
+    <xi:include href="xml/osso-abook-presence.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Miscellaneous</title>
+    <xi:include href="xml/osso-abook-menu-extension.xml"/>
+    <xi:include href="xml/osso-abook-waitable.xml"/>
+    <xi:include href="xml/osso-abook-avatar-cache.xml"/>
+    <xi:include href="xml/osso-abook-dialogs.xml"/>
+    <xi:include href="xml/osso-abook-enums.xml"/>
+    <xi:include href="xml/osso-abook-errors.xml"/>
+    <xi:include href="xml/osso-abook-icon-sizes.xml"/>
+    <xi:include href="xml/osso-abook-init.xml"/>
+    <xi:include href="xml/osso-abook-message-map.xml"/>
+    <xi:include href="xml/osso-abook-quarks.xml"/>
+    <xi:include href="xml/osso-abook-settings.xml"/>
+    <xi:include href="xml/osso-abook-util.xml"/>
+  </chapter>
+
+  <!--chapter>
+    <title>Osso Addressbook Reference Manual</title>
+    <xi:include href="xml/avatar.xml"/>
+    <xi:include href="xml/eds.xml"/>
+    <xi:include href="xml/osso-abook-address-format.xml"/>
+    <xi:include href="xml/osso-abook-debug.xml"/>
+    <xi:include href="xml/osso-abook-log.xml"/>
+    <xi:include href="xml/osso-abook-marshal.xml"/>
+    <xi:include href="xml/osso-abook-msgids.xml"/>
+    <xi:include href="xml/osso-abook-plugin.xml"/>
+    <xi:include href="xml/osso-abook-plugin-manager.xml"/>
+    <xi:include href="xml/osso-abook-presence-label.xml"/>
+    <xi:include href="xml/osso-abook-string-list.xml"/>
+    <xi:include href="xml/osso-abook-types.xml"/>
+    <xi:include href="xml/osso-abook-utils-private.xml"/>
+    <xi:include href="xml/osso-abook-voicemail-selector.xml"/>
+    <xi:include href="xml/tp-glib-enums.xml"/>
+    <xi:include href="xml/tp-glib-enums.tmp.xml"/>
+  </chapter-->
+
+  <chapter id="object-tree">
+    <title>Object Hierarchy</title>
+    <xi:include href="xml/tree_index.sgml"/>
+  </chapter>
+
+  <index id="api-index-full">
+    <title>API Index</title>
+    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="deprecated-api-index" role="deprecated">
+    <title>Index of deprecated API</title>
+    <xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include>
+  </index>
+  <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
+</book>

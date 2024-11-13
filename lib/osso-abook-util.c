@@ -17,6 +17,15 @@
  *
  */
 
+/**
+ * SECTION:osso-abook-util
+ * @short_description: Various utility functions
+ *
+ * This module provides convenience functions for performing common tasks in
+ * libosso-abook.
+ *
+ */
+
 #include "config.h"
 
 #include <X11/Xatom.h>

@@ -17,6 +17,14 @@
  *
  */
 
+/**
+ * SECTION:osso-abook-message-map
+ * @short_description: Mapping of generic logical ids to context specific ids.
+ *
+ * This module provides #OssoABookMessageMapping functions.
+ *
+ */
+
 #include "config.h"
 
 #include <libintl.h>
@@ -24,6 +32,15 @@
 #include "osso-abook-debug.h"
 #include "osso-abook-message-map.h"
 
+/**
+ * osso_abook_message_map_new:
+ * @mappings: An array of mappings from a generic to contextual ids
+ *
+ * Creates a new message map based on the specified mappings
+ *
+ * Returns: (transfer full): a newly allocated GHashTable populated with the
+ * mappings
+ */
 GHashTable *
 osso_abook_message_map_new(const OssoABookMessageMapping *mappings)
 {
@@ -41,6 +58,15 @@ osso_abook_message_map_new(const OssoABookMessageMapping *mappings)
   return map;
 }
 
+/**
+ * osso_abook_message_map_lookup:
+ * @map: a message map created with #osso_abook_message_map_new()
+ * @msgid: a generic id to look up in the message map
+ *
+ * Looks up a contextual id for the specified msgid.
+ *
+ * Returns: (transfer none): The contextual id corresponding to the generic id
+ */
 const char *
 osso_abook_message_map_lookup(GHashTable *map, const char *msgid)
 {

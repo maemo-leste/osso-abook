@@ -25,6 +25,8 @@ PKG_CHECK_VAR([GLIB_GENMARSHAL], [glib-2.0], [glib_genmarshal])
 # Misc programs 
 #+++++++++++++++
 
+GTK_DOC_CHECK([1.3])
+
 #define API_VERSION_MAJOR
 API_VERSION_MAJOR=1.0
 AC_SUBST(API_VERSION_MAJOR)
@@ -69,4 +71,5 @@ lib/Makefile
 dist/Makefile
 pkgconfig/Makefile
 pkgconfig/libosso-abook-1.0.pc
+doc/Makefile
 ])
