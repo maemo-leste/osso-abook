@@ -90,7 +90,7 @@ struct _OssoABookAccountManagerPrivate
   GHashTable *prot_by_vcf;
   GHashTable *prot_by_name;
   GList *uri_schemes;
-  int presence;
+  TpConnectionPresenceType presence;
   OssoABookCapsFlags allowed_capabilities;
   GList *allowed_accounts;
   OssoABookCapsFlags required_capabilities;

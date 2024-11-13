@@ -4329,3 +4329,119 @@ osso_abook_contact_merge_roster_info(OssoABookContact *contact)
 
   return merged;
 }
+
+gboolean
+osso_abook_contact_can_request_auth(OssoABookContact *contact,
+                                    const char **infoprint)
+{
+  GHashTableIter iter;
+  struct roster_link *rl;
+  OssoABookContactPrivate *priv;
+  TpConnectionPresenceType presence;
+  OssoABookCapsFlags caps;
+  gboolean all_authorized = TRUE;
+  gboolean is_available = FALSE;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
+
+  priv = OSSO_ABOOK_CONTACT_PRIVATE(contact);
+  presence = osso_abook_account_manager_get_presence(NULL);
+
+  if (presence ==  TP_CONNECTION_PRESENCE_TYPE_OFFLINE ||
+      presence ==  TP_CONNECTION_PRESENCE_TYPE_UNSET)
+  {
+    if (infoprint)
+      *infoprint = _("addr_ib_not_available_offline");
+
+    return FALSE;
+  }
+
+  caps = osso_abook_caps_get_capabilities(OSSO_ABOOK_CAPS(contact));
+
+  if(!priv->roster_contacts ||
+     (!g_hash_table_size(priv->roster_contacts) &&
+      !(caps & (OSSO_ABOOK_CAPS_CHAT | OSSO_ABOOK_CAPS_VOICE))))
+  {
+    if (infoprint)
+      *infoprint = _("addr_ib_not_available");
+
+    return FALSE;
+  }
+
+  g_hash_table_iter_init(&iter, priv->roster_contacts);
+
+  while (g_hash_table_iter_next(&iter, 0, (gpointer *)&rl))
+  {
+    OssoABookContact *rc = rl->roster_contact;
+
+    if (!(osso_abook_caps_get_capabilities(OSSO_ABOOK_CAPS(rc)) &
+          OSSO_ABOOK_CAPS_ADDRESSBOOK))
+    {
+      OSSO_ABOOK_NOTE(GENERIC, "%s does not support auth requests, skipping...",
+                               osso_abook_contact_get_vcard_field(rc));
+      continue;
+    }
+
+    is_available = TRUE;
+
+    if (osso_abook_presence_get_presence_type(OSSO_ABOOK_PRESENCE(rc)) ==
+        TP_CONNECTION_PRESENCE_TYPE_UNSET)
+    {
+      all_authorized = FALSE;
+    }
+  }
+
+  OSSO_ABOOK_NOTE(GENERIC, "is-available: %s, all-authorized: %s",
+                  is_available ? "true" : "false",
+                  all_authorized ? "true" : "false");
+  if (!is_available)
+  {
+    if (infoprint)
+      *infoprint = _("addr_ib_not_available");
+
+    return FALSE;
+  }
+
+  if (all_authorized)
+  {
+    if (infoprint)
+      *infoprint = _("addr_ib_already_authorized");
+
+    return FALSE;
+  }
+
+  if (infoprint)
+    *infoprint = NULL;
+
+  return TRUE;
+}
+
+gboolean
+osso_abook_contact_can_block(OssoABookContact *contact, const char **infoprint)
+{
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), FALSE);
+
+  if (!osso_abook_contact_get_blocked(contact))
+  {
+    GList *accounts = osso_abook_account_manager_list_enabled_accounts(NULL);
+
+    if (accounts)
+    {
+      g_list_free(accounts);
+
+      if (osso_abook_caps_get_capabilities(OSSO_ABOOK_CAPS(contact)) &
+          (OSSO_ABOOK_CAPS_CHAT | OSSO_ABOOK_CAPS_VOICE))
+      {
+        if (infoprint)
+          *infoprint = NULL;
+
+        return TRUE;
+      }
+    }
+  }
+
+  if (infoprint)
+    *infoprint = _("addr_ib_not_available");
+
+  return FALSE;
+}
