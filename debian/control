@@ -22,9 +22,13 @@ Build-Depends:
  libmodest-dbus-client-dev,
  iso-codes,
  libglibutil-dev,
- librtcom-accounts-ui-client-dev
+ librtcom-accounts-ui-client-dev,
+ gtk-doc-tools
 Section: libs
 Standards-Version: 4.3.0
+Vcs-Browser: https://github.com/maemo-leste/osso-abook
+Vcs-Git: https://github.com/maemo-leste/osso-abook.git
+
 # Packages that could/should go in Build-Depends, but are currently missing:
 #conbtdialogs-dev,
 #libnavigation-dev (>= 0.105),
@@ -76,3 +80,11 @@ Description: Library to access addressbook and presence information
  .
  This package contains the libraries and header files for developing against
  libosso-abook.
+
+Package: libosso-abook-doc
+Section: doc
+Architecture: all
+Description: Documentation for the OSSO Addressbook library
+ Library to access addressbook and presence information
+ .
+ Contains the library reference

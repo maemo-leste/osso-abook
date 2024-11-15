@@ -19,15 +19,15 @@ HFILE_GLOB					= $(top_srcdir)/lib/*.h
 
 CFILE_GLOB					= $(top_srcdir)/lib/*.c
 
-IGNORE_HFILES 					= account-dialog-context.h
+IGNORE_HFILES 					=
 
-AM_CPPFLAGS 					= $(LIBACCOUNTS_CFLAGS) -I$(top_srcdir)/lib
+AM_CPPFLAGS 					= -I$(top_srcdir)/lib
 
 MKDB_OPTIONS					=--sgml-mode --output-format=xml
 
-GTKDOC_CFLAGS 					= $(LIBACCOUNTS_CFLAGS) $(MAEMO_GTK)
+GTKDOC_CFLAGS 					= $(MAEMO_GTK)
 
-GTKDOC_LIBS 					= $(LIBACCOUNTS_LIBS) $(top_builddir)/lib/libosso-abook-1.0.la
+GTKDOC_LIBS 					= $(top_builddir)/lib/libosso-abook-1.0.la
 
 version.xml: ../configure.ac
 	@echo $(VERSION) > version.xml
