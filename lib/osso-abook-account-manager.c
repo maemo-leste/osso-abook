@@ -1475,7 +1475,7 @@ add_cm_protocols(TpConnectionManager *cm, OssoABookAccountManagerPrivate *priv)
 
       l = g_hash_table_lookup(priv->prot_by_vcf, up);
       l = g_list_prepend(l, g_object_ref(protocol));
-      g_hash_table_insert(priv->prot_by_vcf, up, l);
+      g_hash_table_replace(priv->prot_by_vcf, up, l);
     }
 
     OSSO_ABOOK_NOTE(TP,
