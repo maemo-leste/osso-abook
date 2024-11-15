@@ -1,3 +1,10 @@
+libosso-abook (1:4.4.5) unstable; urgency=medium
+
+  * add documentation package
+  * lib/osso-abook-account-manager: Fix use-after-free
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Fri, 15 Nov 2024 07:53:37 +0200
+
 libosso-abook (1:4.4.4) unstable; urgency=medium
 
   * implement osso_abook_contact_can_request_auth() and
