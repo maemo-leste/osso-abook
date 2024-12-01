@@ -449,6 +449,7 @@ sync_view_idle(gpointer user_data)
     show_tree_view(priv);
 
   priv->sync_view_id = 0;
+
   return FALSE;
 }
 
@@ -457,11 +458,11 @@ sync_view(OssoABookTreeView *view)
 {
   OssoABookTreeViewPrivate *priv = OSSO_ABOOK_TREE_VIEW_PRIVATE(view);
 
-  if (!priv->sync_view_id)
-  {
-    priv->sync_view_id =
-      gdk_threads_add_idle_full(100, sync_view_idle, view, NULL);
-  }
+  if (priv->sync_view_id)
+    return;
+
+  priv->sync_view_id = gdk_threads_add_idle_full(G_PRIORITY_HIGH_IDLE,
+                                                 sync_view_idle, view, NULL);
 }
 
 static void
