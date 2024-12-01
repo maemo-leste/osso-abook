@@ -55,7 +55,7 @@ struct account_info
   gboolean is_visible : 1; /* info->flags & 2 */
   gboolean is_removed : 1; /* info->flags & 4 */
   gboolean is_manager_default : 1;
-  volatile gint refcount;
+  gint refcount;
 };
 
 typedef struct _OssoABookAccountManagerPrivate OssoABookAccountManagerPrivate;

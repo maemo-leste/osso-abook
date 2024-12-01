@@ -35,17 +35,17 @@ static const G@Type@Value @enum_name@_values[] =
 GType
 @enum_name@_get_type (void)
 {
-  static volatile gsize g_@type@_type_id__volatile;
+  static gsize g_@type@_type_id__fence;
 
-  if (g_once_init_enter (&g_@type@_type_id__volatile))
+  if (g_once_init_enter (&g_@type@_type_id__fence))
   {
     GType g_@type@_type_id = g_@type@_register_static (
       g_intern_static_string ("@EnumName@"), @enum_name@_values);
 
-    g_once_init_leave (&g_@type@_type_id__volatile, g_@type@_type_id);
+    g_once_init_leave (&g_@type@_type_id__fence, g_@type@_type_id);
   }
 
-  return g_@type@_type_id__volatile;
+  return g_@type@_type_id__fence;
 }
 
 G_CONST_RETURN G@Type@Value *

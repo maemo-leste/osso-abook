@@ -5,9 +5,9 @@
 GType
 osso_abook_row_model_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static gsize g_define_type_id__fence = 0;
 
-  if (g_once_init_enter(&g_define_type_id__volatile))
+  if (g_once_init_enter(&g_define_type_id__fence))
   {
     GType g_define_type_id =
       g_type_register_static_simple(
@@ -19,10 +19,10 @@ osso_abook_row_model_get_type (void)
         (GInstanceInitFunc)NULL,
         (GTypeFlags)0);
     g_type_interface_add_prerequisite(g_define_type_id, GTK_TYPE_TREE_MODEL);
-    g_once_init_leave(&g_define_type_id__volatile, g_define_type_id);
+    g_once_init_leave(&g_define_type_id__fence, g_define_type_id);
   }
 
-  return g_define_type_id__volatile;
+  return g_define_type_id__fence;
 }
 
 gpointer

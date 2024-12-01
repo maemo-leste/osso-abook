@@ -69,9 +69,7 @@ osso_abook_avatar_get_image_token(OssoABookAvatar *avatar)
 
   if (image)
   {
-    volatile gint image_ref_count = G_OBJECT(image)->ref_count;
-
-    g_return_val_if_fail(image_ref_count > 1, image);
+    g_return_val_if_fail(G_OBJECT(image)->ref_count > 1, image);
 
     g_object_unref(image);
   }
@@ -96,7 +94,7 @@ osso_abook_avatar_get_image(OssoABookAvatar *avatar)
 
     if (image)
     {
-      volatile gint image_ref_count = G_OBJECT(image)->ref_count;
+      guint image_ref_count = G_OBJECT(image)->ref_count;
 
       osso_abook_avatar_cache_add(cache, avatar, image);
 
