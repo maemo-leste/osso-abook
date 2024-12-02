@@ -4470,3 +4470,89 @@ osso_abook_contact_can_block(OssoABookContact *contact, const char **infoprint)
 
   return FALSE;
 }
+
+/**
+ * osso_abook_contact_get_avatar:
+ * @contact: a #OssoABookContact
+ * @username: the account's user name, or %NULL
+ * @vcard_field: the account's vCard field name, or %NULL
+ *
+ * Gets the #OssoABookAvatar associated to `contact`, using `username` and
+ * `vcard_field` to select the specific account. You should use this function
+ * if you want to have notification for when the avatar image changes.
+ * If `username` or `vcard_field` are %NULL, the returned object will monitor
+ * every account bound to contact.
+ *
+ * Returns: (transfer none): a #OssoABookAvatar object.
+ */
+OssoABookAvatar *
+osso_abook_contact_get_avatar(OssoABookContact *contact, const char *username,
+                              const char *vcard_field)
+{
+  OssoABookAvatar *avatar = NULL;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  if (username || vcard_field)
+  {
+    GList *rc = osso_abook_contact_find_roster_contacts(
+          contact, username, vcard_field);
+
+    if (rc)
+    {
+      avatar = rc->data;
+      g_list_free(rc);
+    }
+  }
+
+  if (!avatar)
+    avatar = OSSO_ABOOK_AVATAR(contact);
+
+  return avatar;
+}
+
+/**
+ * osso_abook_contact_get_avatar_pixbuf:
+ * @contact: a #OssoABookContact
+ * @username: the account's user name, or %NULL
+ * @vcard_field: the account's vCard field name, or %NULL
+ *
+ * Gets the avatar image set for `contact`, using `username` and `vcard_field`
+ * to get the specific image for an account. If `username` and `vcard_field` are
+ * %NULL, the returned image will be the first found. If you want to have
+ * notification for when the contact's avatar image changes you should use
+ * osso_abook_contact_get_avatar() to retrieve the OssoABookAvatar object and
+ * connect to the 'notify::avatar-image' signal of that object.
+ *
+ * Returns: (transfer full): a #GdkPixbuf containing the contact's avatar, or
+ * %NULL. You should use g_object_unref() on the returned pixbuf when done.
+ */
+GdkPixbuf *
+osso_abook_contact_get_avatar_pixbuf(OssoABookContact *contact,
+                                     const char *username,
+                                     const char *vcard_field)
+{
+  GdkPixbuf *pixbuf = NULL;
+
+  g_return_val_if_fail(OSSO_ABOOK_IS_CONTACT(contact), NULL);
+
+  if (username || vcard_field)
+  {
+    GList *roster_contacts = osso_abook_contact_find_roster_contacts(
+          contact, username, vcard_field);
+    GList *l;
+
+    for (l = roster_contacts; l && !pixbuf; l = l->next)
+        pixbuf = osso_abook_avatar_get_image_scaled(l->data, -1, -1, TRUE);
+
+    g_list_free(roster_contacts);
+  }
+
+  if (!pixbuf)
+  {
+    pixbuf = osso_abook_avatar_get_image_scaled(
+          OSSO_ABOOK_AVATAR(contact), -1, -1, TRUE);
+  }
+
+  return pixbuf;
+}
