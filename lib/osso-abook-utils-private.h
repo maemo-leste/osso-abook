@@ -87,9 +87,6 @@ _is_local_file(const gchar *uri);
 ESource *
 _osso_abook_create_source(const gchar *uid, const gchar *backend_name);
 
-void
-_osso_abook_unref_registry_idle(ESourceRegistry *registry);
-
 G_END_DECLS
 
 #endif /* __OSSO_ABOOK_UTILS_PRIVATE_H_INCLUDED__ */

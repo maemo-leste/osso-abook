@@ -235,7 +235,6 @@ osso_abook_system_book_dup_singleton(gboolean open, GError **error)
     book = e_book_new(source, error);
 
     g_object_unref(source);
-    _osso_abook_unref_registry_idle(registry);
 
     if (!book)
       return NULL;
