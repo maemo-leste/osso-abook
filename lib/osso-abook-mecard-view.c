@@ -245,7 +245,7 @@ email_clicked_cb(GtkButton *button, OssoABookMecardView *view)
 }
 
 static void
-show_resence(OssoABookMecardView *view)
+show_presence(OssoABookMecardView *view)
 {
   OssoABookMecardViewPrivate *priv = PRIVATE(view);
   GList *roster_contacts =
@@ -376,7 +376,7 @@ detail_store_changed_cb(OssoABookMecardView *view)
   GSequence *fields;
   GSequenceIter *iter;
 
-  show_resence(view);
+  show_presence(view);
 
   if (priv->pannable_area)
   {
