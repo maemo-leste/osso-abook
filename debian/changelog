@@ -1,3 +1,14 @@
+libosso-abook (1:4.4.7) unstable; urgency=medium
+
+  * lib/osso-abook-contact.c: add osso_abook_contact_get_avatar and
+    osso_abook_contact_get_avatar_pixbuf
+  * Do not unref ESourceRegistry
+  * osso-abook-touch-contact-starter:OssoABookMessageMapping: use empty string,
+    not NULL
+  * osso_abook_send_contacts_detail_dialog_default: Do not show name
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Wed, 04 Jun 2025 15:54:22 +0300
+
 libosso-abook (1:4.4.6) unstable; urgency=medium
 
   * drop 'volatile' usage
