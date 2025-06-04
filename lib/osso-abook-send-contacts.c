@@ -552,6 +552,6 @@ osso_abook_send_contacts_detail_dialog_default(OssoABookContact *contact,
 {
   osso_abook_send_contacts_detail_dialog(
         contact,
-        OSSO_ABOOK_CONTACT_DETAIL_ALL & ~OSSO_ABOOK_CONTACT_DETAIL_NICKNAME,
+        OSSO_ABOOK_CONTACT_DETAIL_ALL & ~OSSO_ABOOK_CONTACT_DETAIL_FULLNAME,
         parent_window);
 }
