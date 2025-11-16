@@ -72,7 +72,7 @@ osso_abook_debug_init(void)
 
 void
 _osso_abook_log(const char *domain, const char *strloc, const char *strfunc,
-                const char *strtype, int type, const char *format, ...)
+                const char *strtype, OssoABookDebugFlags type, const char *format, ...)
 {
   gchar *msg;
   const char *debug_type;
